@@ -1,1 +1,3 @@
+protobuf
+pypdf2
 $explain
