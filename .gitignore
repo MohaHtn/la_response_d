@@ -6,6 +6,17 @@ __pycache__/
 # C extensions
 *.so
 
+# Custom Ones
+src/apikey.json
+src/ocr_response_classic.json
+src/ocr_response.json
+src/ocr_response_classic.txt
+src/test.py
+src/test2.py
+.idea
+
+*.xml
+
 # Distribution / packaging
 .Python
 build/
