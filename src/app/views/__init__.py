@@ -1,1 +1,1 @@
-$explain
+"""Views package placeholder."""

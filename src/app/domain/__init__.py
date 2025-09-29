@@ -1,1 +1,1 @@
-$explain
+"""Domain package placeholder."""
