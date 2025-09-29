@@ -1,11 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
-// Styles centralisés
 const styles = {
   container: {
     textAlign: 'center',
     marginTop: '50px',
-    marginLeft: '450px',
   },
   button: {
     padding: '10px 20px',
@@ -15,46 +13,61 @@ const styles = {
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
-    transition: 'background-color 0.3s', // Animation au survol
+    transition: 'background-color 0.3s',
   },
   buttonHover: {
-    backgroundColor: '#0056b3', // Couleur au survol
+    backgroundColor: '#0056b3',
   },
   message: {
     marginTop: '20px',
     fontSize: '18px',
   },
+  fileInput: {
+    display: 'none', // Cache l'input natif
+  },
 };
 
-// Composant Bouton réutilisable
-const Button = ({ onClick, children }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <button
-      onClick={onClick}
-      style={isHovered ? { ...styles.button, ...styles.buttonHover } : styles.button}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {children}
-    </button>
-  );
-};
-
-// Composant principal
 function App() {
   const [message, setMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // Fonction appelée quand on clique sur le bouton
-  const handleClick = () => {
-    setMessage("Bouton cliqué");
+  // Fonction pour déclencher l'ouverture du gestionnaire de fichiers
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
+  };
+
+  // Fonction appelée quand un fichier est sélectionné
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type === 'application/pdf') {
+        setSelectedFile(file);
+        setMessage(`Fichier sélectionné : ${file.name}`);
+      } else {
+        setMessage("Erreur : Veuillez sélectionner un fichier PDF.");
+      }
+    }
   };
 
   return (
     <div style={styles.container}>
-      <h1>Mon App React + Python</h1>
-      <Button onClick={handleClick}>Clique-moi !</Button>
+      <h1>Sélectionner un PDF</h1>
+      <input
+        type="file"
+        accept=".pdf"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={styles.fileInput}
+      />
+      <button
+        onClick={handleButtonClick}
+        style={styles.button}
+        onMouseEnter={(e) => e.target.style.backgroundColor = styles.buttonHover.backgroundColor}
+        onMouseLeave={(e) => e.target.style.backgroundColor = styles.button.backgroundColor}
+      >
+        Sélectionner un PDF
+      </button>
       {message && <p style={styles.message}>{message}</p>}
     </div>
   );
