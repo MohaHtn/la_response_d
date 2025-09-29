@@ -5,6 +5,7 @@ const styles = {
   container: {
     textAlign: 'center',
     marginTop: '50px',
+    marginLeft: '450px',
   },
   button: {
     padding: '10px 20px',
@@ -47,7 +48,7 @@ function App() {
 
   // Fonction appelée quand on clique sur le bouton
   const handleClick = () => {
-    setMessage("Bouton cliqué ! 🎉");
+    setMessage("Bouton cliqué");
   };
 
   return (
