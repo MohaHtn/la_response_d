@@ -1,1 +1,1 @@
-$explain
+"""Infrastructure package placeholder."""

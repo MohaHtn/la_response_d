@@ -1,0 +1,25 @@
+# Glossaire Technique du projet
+
+- Diffuser automatiquement : Aucune intervention doit être nécessaire.
+- Format Markdown : Contrainte sur le format des fichiers dans la bibliothèque.
+- Format PDF : Contrainte sur le format des fichiers dans la bibliothèque.
+- Membre : Utilisateur de la bibliothèque numérique.
+- Espace disque partagé : Contrainte sur l’organisation du stockage par membres.
+- Période de deux semaines : Contrainte sur la location d’œuvres numériques.
+- Reconnaissance de texte : Utilisation de logiciels spécifiques pour reconnaître le texte d’une image.
+- Numériser : L’action de mettre sous forme numérique un document.
+- Permettre le téléchargement : L’action d’autoriser le téléchargement dans l’appareil de l’utilisateur.
+- Domaine Public : Le domaine où aucun droit d’auteur ne s’applique.
+- Gérer les droits : Pouvoir gérer les droits d’auteurs sur chaque œuvre.
+- Gérer les copies : Pouvoir gérer les copies d’œuvres sur chaque œuvre.
+- La législation en vigueur : La loi qui s’applique sur chaque pays actuellement.
+- Gérer un processus : L’action de savoir comment introduire un processus.
+- Résolu : L’action de résoudre.
+- Une bibliothèque d’œuvres numérisées : Une bibliothèque utilisable à travers un appareil numérique.
+- Utilisateur de la bibliothèque : Une personne qui utilisera la bibliothèque.
+- Demander : L’action de faire une demande particulière.
+- Œuvre : Un produit issu d’un artiste.
+- Propriété Intellectuelle : Les lois et règles régissant le droit de gestion d’une œuvre. Elle est régie principalement par le droit d’auteur.
+- Résolu : L’action de résoudre.
+- Modération : Une équipe dédiée à vérifier la bonne conformité d’un règlement.
+- Bibliothécaires : Les personnes dédiées à l’administration et à la maintenance d’une bibliothèque.

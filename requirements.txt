@@ -1,1 +1,6 @@
-$explain
+fastapi
+uvicorn
+mistralai
+PyPDF2
+protobuf
+python-multipart
