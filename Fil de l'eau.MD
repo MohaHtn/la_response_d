@@ -4,3 +4,7 @@
 * Rédaction du glossaire technique 
 * Test de l'API Gemini pour passer d'un PDF de livre scanné à un texte Markdown
 * Test des différentes solutions d'OCR potentielles pour le projet (problèmes liés à l'installation sur machine)
+
+# Session 3 : 29 Septembre 2025
+* Continuation du glossaire technique 
+* Avancement sur la conversion d'un livre PDF en Markdown
