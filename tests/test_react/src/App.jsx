@@ -43,6 +43,25 @@ function App() {
     if (file) {
       if (file.type === 'application/pdf') {
         setSelectedFile(file);
+      fetch("http://localhost:8000/api/send-book", {
+          method: "POST",
+          body: (() => {
+              const formData = new FormData();
+              formData.append('file', file);
+              return formData;
+          })(),
+      })
+          .then(async (response) => {
+              if (!response.ok) {
+                  const error = await response.json();
+                  setMessage(`Erreur serveur : ${error.detail}`);
+              } else {
+                  const result = await response.json();
+                  setMessage(`Réponse OCR : ${JSON.stringify(result)}`);
+              }
+          })
+          .catch((err) => setMessage(`Erreur réseau : ${err}`));
+
         setMessage(`Fichier sélectionné : ${file.name}`);
       } else {
         setMessage("Erreur : Veuillez sélectionner un fichier PDF.");
