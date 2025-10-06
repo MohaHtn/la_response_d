@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 const styles = {
   container: {
@@ -55,6 +56,69 @@ const styles = {
     marginTop: '10px',
     fontSize: '16px',
     color: '#007bff',
+  },
+  markdownContainer: {
+    marginTop: '30px',
+    textAlign: 'left',
+    maxWidth: '90%',
+    margin: '30px auto',
+  },
+  markdownPage: {
+    marginBottom: '40px',
+    padding: '20px',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
+    backgroundColor: '#f9f9f9',
+  },
+  markdownTitle: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    marginBottom: '15px',
+    color: '#333',
+  },
+  markdownContent: {
+    lineHeight: '1.6',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    padding: '15px',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    overflow: 'auto',
+    maxHeight: '400px',
+  },
+  // Style pour les éléments markdown
+  markdownElements: {
+    '& h1, & h2, & h3, & h4, & h5, & h6': {
+      marginTop: '1em',
+      marginBottom: '0.5em',
+      color: '#333',
+    },
+    '& p': {
+      marginBottom: '1em',
+    },
+    '& ul, & ol': {
+      marginLeft: '1.5em',
+      marginBottom: '1em',
+    },
+    '& code': {
+      backgroundColor: '#f4f4f4',
+      padding: '2px 4px',
+      borderRadius: '3px',
+      fontFamily: 'monospace',
+    },
+    '& pre': {
+      backgroundColor: '#f4f4f4',
+      padding: '10px',
+      borderRadius: '5px',
+      overflow: 'auto',
+      marginBottom: '1em',
+    },
+    '& blockquote': {
+      borderLeft: '4px solid #ddd',
+      paddingLeft: '1em',
+      margin: '1em 0',
+      color: '#666',
+    }
   }
 };
 
@@ -70,6 +134,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [images, setImages] = useState([]);
+  const [markdownPages, setMarkdownPages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -100,6 +165,23 @@ function App() {
     return out;
   };
 
+  // Extrait le markdown de chaque page de la réponse OCR
+  const extractMarkdownFromResult = (result) => {
+    const markdowns = [];
+    if (!result) return markdowns;
+
+    const pages = result.pages || [];
+    pages.forEach((page, pageIdx) => {
+      if (page.markdown) {
+        markdowns.push({
+          pageIndex: pageIdx,
+          content: page.markdown
+        });
+      }
+    });
+    return markdowns;
+  };
+
   // Fonction appelée quand un fichier est sélectionné
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -108,6 +190,7 @@ function App() {
         setSelectedFile(file);
         setMessage(`Fichier sélectionné : ${file.name}`);
         setImages([]);
+        setMarkdownPages([]);
         setIsLoading(true);
 
         fetch("http://localhost:8000/api/send-book", {
@@ -125,10 +208,13 @@ function App() {
               return;
             }
             const result = await response.json();
-            // Affiche un résumé texte et extrait les images
+            // Affiche un résumé texte et extrait les images et le markdown
             try {
               const imgs = extractImagesFromResult(result);
               setImages(imgs);
+
+              const markdowns = extractMarkdownFromResult(result);
+              setMarkdownPages(markdowns);
             } catch (_) { /* ignore extraction errors */ }
             setMessage(`Réponse OCR reçue (${new Date().toLocaleTimeString()}).`);
           })
@@ -176,6 +262,23 @@ function App() {
         )}
 
         {message && !isLoading && <p style={styles.message}>{message}</p>}
+
+        {markdownPages && markdownPages.length > 0 && !isLoading && (
+          <div style={styles.markdownContainer}>
+            <h2>Contenu Markdown extrait</h2>
+            {markdownPages.map((page) => (
+              <div key={page.pageIndex} style={styles.markdownPage}>
+                <div style={styles.markdownTitle}>
+                  Page {page.pageIndex + 1}
+                </div>
+                <div style={styles.markdownContent}>
+                  <ReactMarkdown>{page.content}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {images && images.length > 0 && !isLoading && (
           <div>
             <h2>Aperçus des pages OCR</h2>
