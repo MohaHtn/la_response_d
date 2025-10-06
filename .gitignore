@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Custom Ones
-src/apikey.json
+server/src/apikey.json
 src/ocr_response_classic.json
 src/ocr_response.json
 src/ocr_response_classic.txt

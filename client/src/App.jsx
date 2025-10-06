@@ -2,14 +2,58 @@ import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css'; // Import des styles KaTeX
+import 'katex/dist/katex.min.css';
+import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const styles = {
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: '100vh',
+    width: '100%',
+    margin: 0,
+    padding: 0,
+  },
+  appBar: {
+    backgroundColor: '#2196f3',
+    width: '100%',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+  },
+  toolbar: {
+    width: '100%',
+    display: 'flex',
+    padding: '0',
+  },
+  toolbarContent: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontWeight: 'bold',
+    marginLeft: '24px',
+  },
+  iconButton: {
+    marginRight: '0',
+  },
+  mainContent: {
+    width: '100%',
+    marginTop: '64px',
+  },
   container: {
-    textAlign: 'center',
-    marginTop: '50px',
+    width: '800px',
+    position: 'absolute',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    padding: '20px',
   },
   button: {
+    display: 'block',
+    margin: '20px auto',
     padding: '10px 20px',
     fontSize: '16px',
     backgroundColor: '#007bff',
@@ -61,10 +105,9 @@ const styles = {
     color: '#007bff',
   },
   markdownContainer: {
+    width: '100%',
     marginTop: '30px',
     textAlign: 'left',
-    maxWidth: '90%',
-    margin: '30px auto',
   },
   markdownDocument: {
     padding: '30px',
@@ -223,79 +266,93 @@ function App() {
   };
 
   return (
-    <>
+    <div style={styles.root}>
       <style>{spinAnimation}</style>
-      <div style={styles.container}>
-        <h1>Sélectionner un PDF</h1>
-        <input
-          type="file"
-          accept=".pdf"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          style={styles.fileInput}
-          disabled={isLoading}
-        />
-        <button
-          onClick={handleButtonClick}
-          style={{
-            ...styles.button,
-            ...(isLoading ? styles.buttonDisabled : {})
-          }}
-          disabled={isLoading}
-          onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = styles.buttonHover.backgroundColor)}
-          onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = styles.button.backgroundColor)}
-        >
-          {isLoading ? 'Traitement en cours...' : 'Sélectionner un PDF'}
-        </button>
-
-        {isLoading && (
-          <div style={styles.loadingContainer}>
-            <div style={styles.loader}></div>
-            <div style={styles.loadingText}>
-              Traitement du PDF en cours...
-            </div>
+      <AppBar position="fixed" style={styles.appBar}>
+        <Toolbar style={styles.toolbar}>
+          <div style={styles.toolbarContent}>
+            <Typography variant="h6" style={styles.title}>
+              La Réponse D
+            </Typography>
+            <IconButton color="inherit" style={styles.iconButton}>
+              <AccountCircleIcon />
+            </IconButton>
           </div>
-        )}
+        </Toolbar>
+      </AppBar>
+      <div style={styles.mainContent}>
+        <div style={styles.container}>
+          <h1>Sélectionner un PDF</h1>
+          <input
+            type="file"
+            accept=".pdf"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={styles.fileInput}
+            disabled={isLoading}
+          />
+          <button
+            onClick={handleButtonClick}
+            style={{
+              ...styles.button,
+              ...(isLoading ? styles.buttonDisabled : {})
+            }}
+            disabled={isLoading}
+            onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = styles.buttonHover.backgroundColor)}
+            onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = styles.button.backgroundColor)}
+          >
+            {isLoading ? 'Traitement en cours...' : 'Sélectionner un PDF'}
+          </button>
 
-        {message && !isLoading && <p style={styles.message}>{message}</p>}
-
-        {mergedMarkdown && !isLoading && (
-          <div style={styles.markdownContainer}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2>Document Markdown</h2>
-              <button
-                onClick={downloadMarkdown}
-                style={styles.downloadButton}
-                onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
-                onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
-              >
-                📥 Télécharger .md
-              </button>
-            </div>
-            <div style={styles.markdownDocument}>
-              <div style={styles.markdownContent}>
-                <ReactMarkdown
-                  children={mergedMarkdown}
-                  remarkPlugins={[remarkMath]}
-                  rehypePlugins={[rehypeKatex]}
-                />
+          {isLoading && (
+            <div style={styles.loadingContainer}>
+              <div style={styles.loader}></div>
+              <div style={styles.loadingText}>
+                Traitement du PDF en cours...
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {images && images.length > 0 && !isLoading && (
-          <div>
-            <h2>Aperçus des pages OCR</h2>
-            {images.map((img) => (
-              <div key={img.id}>
-                <img src={img.src} alt={img.id} style={styles.img} />
+          {message && !isLoading && <p style={styles.message}>{message}</p>}
+
+          {mergedMarkdown && !isLoading && (
+            <div style={styles.markdownContainer}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2>Document Markdown</h2>
+                <button
+                  onClick={downloadMarkdown}
+                  style={styles.downloadButton}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
+                >
+                  📥 Télécharger .md
+                </button>
               </div>
-            ))}
-          </div>
-        )}
+              <div style={styles.markdownDocument}>
+                <div style={styles.markdownContent}>
+                  <ReactMarkdown
+                    children={mergedMarkdown}
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {images && images.length > 0 && !isLoading && (
+            <div>
+              <h2>Aperçus des pages OCR</h2>
+              {images.map((img) => (
+                <div key={img.id}>
+                  <img src={img.src} alt={img.id} style={styles.img} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
