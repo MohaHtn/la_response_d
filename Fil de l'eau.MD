@@ -8,3 +8,7 @@
 # Session 3 : 29 Septembre 2025
 * Continuation du glossaire technique 
 * Avancement sur la conversion d'un livre PDF en Markdown
+
+# Session 4 : 6 Septembre 2025
+* Finalisation des scénarios et des glossaires techniques et métier.
+* Découverte des IA en local

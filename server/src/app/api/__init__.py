@@ -20,6 +20,7 @@ async def send_book(file: UploadFile = File(...)):
 
     try:
         ocr = process_pdf(file.filename, data)
+        print(ocr)
     except Exception as e:
         # Map general errors to 500
         raise HTTPException(status_code=500, detail=f"OCR processing failed: {e}")
