@@ -211,7 +211,7 @@ function App() {
           mergedContent += "\n\n---\n\n";
         }
 
-        // Optionnel: ajouter un en-tête de page
+        // Optionnel:  ajouter un en-tête de page
         // mergedContent += `# Page ${pageIdx + 1}\n\n`;
 
         mergedContent += page.markdown;
