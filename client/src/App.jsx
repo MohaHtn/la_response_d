@@ -1,5 +1,8 @@
 import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css'; // Import des styles KaTeX
 
 const styles = {
   container: {
@@ -63,62 +66,33 @@ const styles = {
     maxWidth: '90%',
     margin: '30px auto',
   },
-  markdownPage: {
-    marginBottom: '40px',
-    padding: '20px',
+  markdownDocument: {
+    padding: '30px',
     border: '1px solid #ddd',
     borderRadius: '8px',
-    backgroundColor: '#f9f9f9',
-  },
-  markdownTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    marginBottom: '15px',
-    color: '#333',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
   },
   markdownContent: {
-    lineHeight: '1.6',
-    fontSize: '14px',
-    backgroundColor: 'white',
-    padding: '15px',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    overflow: 'auto',
-    maxHeight: '400px',
+    lineHeight: '1.8',
+    fontSize: '16px',
+    color: '#333',
+    maxHeight: 'none',
+    overflow: 'visible',
   },
-  // Style pour les éléments markdown
-  markdownElements: {
-    '& h1, & h2, & h3, & h4, & h5, & h6': {
-      marginTop: '1em',
-      marginBottom: '0.5em',
-      color: '#333',
-    },
-    '& p': {
-      marginBottom: '1em',
-    },
-    '& ul, & ol': {
-      marginLeft: '1.5em',
-      marginBottom: '1em',
-    },
-    '& code': {
-      backgroundColor: '#f4f4f4',
-      padding: '2px 4px',
-      borderRadius: '3px',
-      fontFamily: 'monospace',
-    },
-    '& pre': {
-      backgroundColor: '#f4f4f4',
-      padding: '10px',
-      borderRadius: '5px',
-      overflow: 'auto',
-      marginBottom: '1em',
-    },
-    '& blockquote': {
-      borderLeft: '4px solid #ddd',
-      paddingLeft: '1em',
-      margin: '1em 0',
-      color: '#666',
-    }
+  downloadButton: {
+    marginTop: '20px',
+    padding: '8px 16px',
+    fontSize: '14px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s',
+  },
+  downloadButtonHover: {
+    backgroundColor: '#218838',
   }
 };
 
@@ -134,13 +108,28 @@ function App() {
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [images, setImages] = useState([]);
-  const [markdownPages, setMarkdownPages] = useState([]);
+  const [mergedMarkdown, setMergedMarkdown] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   // Fonction pour déclencher l'ouverture du gestionnaire de fichiers
   const handleButtonClick = () => {
     fileInputRef.current.click();
+  };
+
+  // Fonction pour télécharger le markdown fusionné
+  const downloadMarkdown = () => {
+    if (!mergedMarkdown) return;
+
+    const blob = new Blob([mergedMarkdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedFile?.name?.replace('.pdf', '') || 'document'}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Extrait et normalise les images base64 (data URI) de la réponse OCR
@@ -165,21 +154,28 @@ function App() {
     return out;
   };
 
-  // Extrait le markdown de chaque page de la réponse OCR
-  const extractMarkdownFromResult = (result) => {
-    const markdowns = [];
-    if (!result) return markdowns;
+  // Extrait et fusionne le markdown de toutes les pages
+  const extractAndMergeMarkdown = (result) => {
+    if (!result) return "";
 
     const pages = result.pages || [];
+    let mergedContent = "";
+
     pages.forEach((page, pageIdx) => {
       if (page.markdown) {
-        markdowns.push({
-          pageIndex: pageIdx,
-          content: page.markdown
-        });
+        // Ajouter un séparateur de page (sauf pour la première page)
+        if (pageIdx > 0) {
+          mergedContent += "\n\n---\n\n";
+        }
+
+        // Optionnel: ajouter un en-tête de page
+        // mergedContent += `# Page ${pageIdx + 1}\n\n`;
+
+        mergedContent += page.markdown;
       }
     });
-    return markdowns;
+
+    return mergedContent;
   };
 
   // Fonction appelée quand un fichier est sélectionné
@@ -190,7 +186,7 @@ function App() {
         setSelectedFile(file);
         setMessage(`Fichier sélectionné : ${file.name}`);
         setImages([]);
-        setMarkdownPages([]);
+        setMergedMarkdown("");
         setIsLoading(true);
 
         fetch("http://localhost:8000/api/send-book", {
@@ -208,13 +204,13 @@ function App() {
               return;
             }
             const result = await response.json();
-            // Affiche un résumé texte et extrait les images et le markdown
+            // Affiche un résumé texte et extrait les images et le markdown fusionné
             try {
               const imgs = extractImagesFromResult(result);
               setImages(imgs);
 
-              const markdowns = extractMarkdownFromResult(result);
-              setMarkdownPages(markdowns);
+              const markdown = extractAndMergeMarkdown(result);
+              setMergedMarkdown(markdown);
             } catch (_) { /* ignore extraction errors */ }
             setMessage(`Réponse OCR reçue (${new Date().toLocaleTimeString()}).`);
           })
@@ -263,19 +259,28 @@ function App() {
 
         {message && !isLoading && <p style={styles.message}>{message}</p>}
 
-        {markdownPages && markdownPages.length > 0 && !isLoading && (
+        {mergedMarkdown && !isLoading && (
           <div style={styles.markdownContainer}>
-            <h2>Contenu Markdown extrait</h2>
-            {markdownPages.map((page) => (
-              <div key={page.pageIndex} style={styles.markdownPage}>
-                <div style={styles.markdownTitle}>
-                  Page {page.pageIndex + 1}
-                </div>
-                <div style={styles.markdownContent}>
-                  <ReactMarkdown>{page.content}</ReactMarkdown>
-                </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2>Document Markdown</h2>
+              <button
+                onClick={downloadMarkdown}
+                style={styles.downloadButton}
+                onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
+                onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
+              >
+                📥 Télécharger .md
+              </button>
+            </div>
+            <div style={styles.markdownDocument}>
+              <div style={styles.markdownContent}>
+                <ReactMarkdown
+                  children={mergedMarkdown}
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
+                />
               </div>
-            ))}
+            </div>
           </div>
         )}
 
