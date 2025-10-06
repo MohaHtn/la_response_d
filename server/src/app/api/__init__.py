@@ -1,10 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from src.pixtral import process_pdf
+from .pixtral import process_pdf
 
 router = APIRouter(prefix="/api", tags=["api"])
 
-MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
+MAX_SIZE_BYTES = 200 * 1024 * 1024  # 200 MB
 
 @router.post("/send-book")
 @router.post("/send book")
@@ -20,7 +20,8 @@ async def send_book(file: UploadFile = File(...)):
 
     try:
         ocr = process_pdf(file.filename, data)
-        print(ocr)
+        with open("ocr_result.txt", "w", encoding="utf-8") as f:
+            f.write(str(ocr))
     except Exception as e:
         # Map general errors to 500
         raise HTTPException(status_code=500, detail=f"OCR processing failed: {e}")
