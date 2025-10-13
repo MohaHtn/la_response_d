@@ -136,6 +136,84 @@ const styles = {
   },
   downloadButtonHover: {
     backgroundColor: '#218838',
+  },
+  metadataContainer: {
+    marginTop: '30px',
+    padding: '20px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    backgroundColor: '#f9f9f9',
+  },
+  metadataTitle: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    marginBottom: '15px',
+    color: '#333',
+  },
+  metadataItem: {
+    marginBottom: '8px',
+    fontSize: '14px',
+  },
+  metadataLabel: {
+    fontWeight: 'bold',
+    color: '#555',
+  },
+  metadataValue: {
+    color: '#777',
+    marginLeft: '10px',
+  },
+  analysisContainer: {
+    marginTop: '20px',
+    padding: '15px',
+    borderRadius: '6px',
+    fontSize: '14px',
+  },
+  securityAnalysis: {
+    backgroundColor: '#e8f5e8',
+    border: '1px solid #4caf50',
+  },
+  securityAnalysisWarning: {
+    backgroundColor: '#fff3cd',
+    border: '1px solid #ffc107',
+  },
+  securityAnalysisError: {
+    backgroundColor: '#f8d7da',
+    border: '1px solid #dc3545',
+  },
+  contentAnalysis: {
+    backgroundColor: '#e3f2fd',
+    border: '1px solid #2196f3',
+  },
+  contentAnalysisWarning: {
+    backgroundColor: '#fff3cd',
+    border: '1px solid #ffc107',
+  },
+  analysisTitle: {
+    fontWeight: 'bold',
+    marginBottom: '8px',
+  },
+  analysisDetail: {
+    marginBottom: '5px',
+  },
+  riskBadge: {
+    display: 'inline-block',
+    padding: '2px 8px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    marginLeft: '8px',
+  },
+  riskLow: {
+    backgroundColor: '#4caf50',
+    color: 'white',
+  },
+  riskMedium: {
+    backgroundColor: '#ff9800',
+    color: 'white',
+  },
+  riskHigh: {
+    backgroundColor: '#f44336',
+    color: 'white',
   }
 };
 
@@ -152,6 +230,9 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [images, setImages] = useState([]);
   const [mergedMarkdown, setMergedMarkdown] = useState("");
+  const [metadata, setMetadata] = useState(null);
+  const [securityAnalysis, setSecurityAnalysis] = useState(null);
+  const [contentAnalysis, setContentAnalysis] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -178,15 +259,15 @@ function App() {
   // Extrait et normalise les images base64 (data URI) de la réponse OCR
   const extractImagesFromResult = (result) => {
     const out = [];
-    if (!result) return out;
+    if (!result || !result.ocr || !result.ocr.pages) return out;
 
-    const pages = result.pages || [];
+    const pages = result.ocr.pages;
     pages.forEach((page, pageIdx) => {
       const imgs = page.images || [];
       imgs.forEach((img, imgIdx) => {
-        let data = img.image_base64 || img.data || img.base64 || '';
+        let data = img.image_base64;
         if (!data) return;
-        // Si ce n'est pas déjà une data URI, on préfixe (suppose PNG par défaut)
+        // Si ce n'est pas déjà une data URI, on préfixe
         if (!data.startsWith('data:image')) {
           data = `data:image/png;base64,${data}`;
         }
@@ -197,28 +278,28 @@ function App() {
     return out;
   };
 
-  // Extrait et fusionne le markdown de toutes les pages
+  // Extrait le markdown fusionné directement depuis la réponse
   const extractAndMergeMarkdown = (result) => {
     if (!result) return "";
+    return result.markdown || "";
+  };
 
-    const pages = result.pages || [];
-    let mergedContent = "";
+  // Extrait les métadonnées du document
+  const extractMetadata = (result) => {
+    if (!result || !result.metadata) return null;
+    return result.metadata;
+  };
 
-    pages.forEach((page, pageIdx) => {
-      if (page.markdown) {
-        // Ajouter un séparateur de page (sauf pour la première page)
-        if (pageIdx > 0) {
-          mergedContent += "\n\n---\n\n";
-        }
+  // Extrait l'analyse de sécurité
+  const extractSecurityAnalysis = (result) => {
+    if (!result || !result.security_analysis) return null;
+    return result.security_analysis;
+  };
 
-        // Optionnel:  ajouter un en-tête de page
-        // mergedContent += `# Page ${pageIdx + 1}\n\n`;
-
-        mergedContent += page.markdown;
-      }
-    });
-
-    return mergedContent;
+  // Extrait l'analyse de contenu
+  const extractContentAnalysis = (result) => {
+    if (!result || !result.content_analysis) return null;
+    return result.content_analysis;
   };
 
   // Fonction appelée quand un fichier est sélectionné
@@ -230,6 +311,9 @@ function App() {
         setMessage(`Fichier sélectionné : ${file.name}`);
         setImages([]);
         setMergedMarkdown("");
+        setMetadata(null);
+        setSecurityAnalysis(null);
+        setContentAnalysis(null);
         setIsLoading(true);
 
         fetch("http://localhost:8000/api/send-book", {
@@ -247,15 +331,29 @@ function App() {
               return;
             }
             const result = await response.json();
-            // Affiche un résumé texte et extrait les images et le markdown fusionné
+
             try {
+              // Extraction des différents éléments de la réponse
               const imgs = extractImagesFromResult(result);
               setImages(imgs);
 
               const markdown = extractAndMergeMarkdown(result);
               setMergedMarkdown(markdown);
-            } catch (_) { /* ignore extraction errors */ }
-            setMessage(`Réponse OCR reçue (${new Date().toLocaleTimeString()}).`);
+
+              const meta = extractMetadata(result);
+              setMetadata(meta);
+
+              const security = extractSecurityAnalysis(result);
+              setSecurityAnalysis(security);
+
+              const content = extractContentAnalysis(result);
+              setContentAnalysis(content);
+
+              setMessage(`Traitement terminé (${new Date().toLocaleTimeString()})`);
+            } catch (err) {
+              console.error('Erreur lors de l\'extraction des données:', err);
+              setMessage('Erreur lors du traitement de la réponse');
+            }
           })
           .catch((err) => setMessage(`Erreur réseau : ${err}`))
           .finally(() => setIsLoading(false));
@@ -268,21 +366,9 @@ function App() {
   return (
     <div style={styles.root}>
       <style>{spinAnimation}</style>
-      <AppBar position="fixed" style={styles.appBar}>
-        <Toolbar style={styles.toolbar}>
-          <div style={styles.toolbarContent}>
-            <Typography variant="h6" style={styles.title}>
-              La Réponse D
-            </Typography>
-            <IconButton color="inherit" style={styles.iconButton}>
-              <AccountCircleIcon />
-            </IconButton>
-          </div>
-        </Toolbar>
-      </AppBar>
       <div style={styles.mainContent}>
         <div style={styles.container}>
-          <h1>Sélectionner un PDF</h1>
+            <h1 style={{ textAlign: 'center' }}>Sélectionner un PDF</h1>
           <input
             type="file"
             accept=".pdf"
@@ -348,6 +434,115 @@ function App() {
                   <img src={img.src} alt={img.id} style={styles.img} />
                 </div>
               ))}
+            </div>
+          )}
+
+          {metadata && !isLoading && (
+            <div style={styles.metadataContainer}>
+              <div style={styles.metadataTitle}>📋 Métadonnées du document</div>
+              <div style={styles.metadataItem}>
+                <span style={styles.metadataLabel}>Titre:</span>
+                <span style={styles.metadataValue}>{metadata.title || 'Non spécifié'}</span>
+              </div>
+              <div style={styles.metadataItem}>
+                <span style={styles.metadataLabel}>Auteur:</span>
+                <span style={styles.metadataValue}>{metadata.author || 'Non spécifié'}</span>
+              </div>
+              <div style={styles.metadataItem}>
+                <span style={styles.metadataLabel}>Date:</span>
+                <span style={styles.metadataValue}>{metadata.date || 'Non spécifiée'}</span>
+              </div>
+              <div style={styles.metadataItem}>
+                <span style={styles.metadataLabel}>Éditeur:</span>
+                <span style={styles.metadataValue}>{metadata.publisher || 'Non spécifié'}</span>
+              </div>
+              {metadata.description && (
+                <div style={styles.metadataItem}>
+                  <span style={styles.metadataLabel}>Description:</span>
+                  <span style={styles.metadataValue}>{metadata.description}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(securityAnalysis || contentAnalysis) && !isLoading && (
+            <div>
+              {securityAnalysis && (
+                <div style={{
+                  ...styles.analysisContainer,
+                  ...(securityAnalysis.risk_level === 'high' ? styles.securityAnalysisError :
+                      securityAnalysis.risk_level === 'medium' ? styles.securityAnalysisWarning :
+                      styles.securityAnalysis)
+                }}>
+                  <div style={styles.analysisTitle}>
+                    🔒 Analyse de sécurité
+                    <span style={{
+                      ...styles.riskBadge,
+                      ...(securityAnalysis.risk_level === 'high' ? styles.riskHigh :
+                          securityAnalysis.risk_level === 'medium' ? styles.riskMedium :
+                          styles.riskLow)
+                    }}>
+                      {securityAnalysis.risk_level?.toUpperCase() || 'INCONNU'}
+                    </span>
+                  </div>
+                  <div style={styles.analysisDetail}>
+                    <span style={styles.metadataLabel}>Prompts de sécurité détectés:</span>
+                    <span style={styles.metadataValue}>
+                      {securityAnalysis.has_security_prompts ? 'Oui' : 'Non'}
+                    </span>
+                  </div>
+                  {securityAnalysis.detected_prompts && securityAnalysis.detected_prompts.length > 0 && (
+                    <div style={styles.analysisDetail}>
+                      <span style={styles.metadataLabel}>Prompts détectés:</span>
+                      <span style={styles.metadataValue}>
+                        {securityAnalysis.detected_prompts.join(', ')}
+                      </span>
+                    </div>
+                  )}
+                  <div style={styles.analysisDetail}>
+                    <span style={styles.metadataLabel}>Détails:</span>
+                    <span style={styles.metadataValue}>{securityAnalysis.details}</span>
+                  </div>
+                </div>
+              )}
+
+              {contentAnalysis && (
+                <div style={{
+                  ...styles.analysisContainer,
+                  ...(contentAnalysis.severity === 'high' ? styles.contentAnalysisWarning :
+                      styles.contentAnalysis)
+                }}>
+                  <div style={styles.analysisTitle}>
+                    📖 Analyse de contenu inapproprié
+                    <span style={{
+                      ...styles.riskBadge,
+                      ...(contentAnalysis.severity === 'high' ? styles.riskHigh :
+                          contentAnalysis.severity === 'medium' ? styles.riskMedium :
+                          styles.riskLow)
+                    }}>
+                      {contentAnalysis.severity?.toUpperCase() || 'NONE'}
+                    </span>
+                  </div>
+                  <div style={styles.analysisDetail}>
+                    <span style={styles.metadataLabel}>Contenu approprié:</span>
+                    <span style={styles.metadataValue}>
+                      {contentAnalysis.is_appropriate ? 'Oui' : 'Non'}
+                    </span>
+                  </div>
+                  {contentAnalysis.content_warnings && contentAnalysis.content_warnings.length > 0 && (
+                    <div style={styles.analysisDetail}>
+                      <span style={styles.metadataLabel}>Avertissements:</span>
+                      <span style={styles.metadataValue}>
+                        {contentAnalysis.content_warnings.join(', ')}
+                      </span>
+                    </div>
+                  )}
+                  <div style={styles.analysisDetail}>
+                    <span style={styles.metadataLabel}>Détails:</span>
+                    <span style={styles.metadataValue}>{contentAnalysis.details}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

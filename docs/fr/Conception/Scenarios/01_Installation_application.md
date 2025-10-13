@@ -1,3 +1,5 @@
+← [Accueil des scénarios](_Scenarios.md)
+
 # Scénario 1 : Installation de l'application
 
 ## Nom du Scénario
@@ -30,3 +32,5 @@ Un utilisateur installe la bibliothèque numérique décentralisée sur son syst
 
 ## Résultat attendu
 L'application est installée et fonctionnelle, prête à être utilisée pour gérer les œuvres numériques.
+
+[Acceuil](_Scenarios.md)

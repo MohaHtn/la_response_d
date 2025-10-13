@@ -1,3 +1,5 @@
+← [Accueil des scénarios](_Scenarios.md)
+
 # Scénario 20 : Fichier PDF corrompu
 
 ## Nom du Scénario

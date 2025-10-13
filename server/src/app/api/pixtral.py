@@ -157,7 +157,7 @@ def _check_inappropriate_content(client: Mistral, text_content: str) -> Dict[str
 def process_pdf(
         file_name: str,
         content: bytes,
-        include_image_base64: bool = True,
+        include_image_base64: bool = False,
         return_markdown: bool = True,
         embed_data_uris: bool = True,
         image_output_dir: str = "ocr_images",
