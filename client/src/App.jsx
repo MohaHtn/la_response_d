@@ -35,7 +35,7 @@ const styles = {
   },
   title: {
     fontWeight: 'bold',
-    marginLeft: '24px',
+    marginLeft: '20px',
   },
   iconButton: {
     marginRight: '0',
@@ -43,6 +43,8 @@ const styles = {
   mainContent: {
     width: '100%',
     marginTop: '64px',
+
+
   },
   container: {
     width: '800px',
@@ -54,6 +56,7 @@ const styles = {
   button: {
     display: 'block',
     margin: '20px auto',
+    marginLeft: '200px',
     padding: '10px 20px',
     fontSize: '16px',
     backgroundColor: '#007bff',
@@ -73,6 +76,7 @@ const styles = {
   message: {
     marginTop: '20px',
     fontSize: '18px',
+
   },
   fileInput: {
     display: 'none', // Cache l'input natif

@@ -1,0 +1,25 @@
+# Scénario 1 : Accès à l'application web
+
+## Nom du Scénario
+Accès à l'application web
+
+## Description
+Un utilisateur accède à la bibliothèque numérique décentralisée via son navigateur web pour utiliser les services de partage et d'emprunt d'œuvres numériques.
+
+## Acteurs
+- **Utilisateur** : Personne souhaitant utiliser l'application
+- **Système** : Application web de bibliothèque numérique
+
+## Préconditions
+- L'utilisateur dispose d'un ordinateur ou d'un appareil mobile avec accès Internet
+- Un navigateur web moderne est installé sur le système
+
+## Étapes
+1. L'utilisateur ouvre son navigateur web
+2. L'utilisateur saisit l'URL de l'application web
+3. Le système charge l'interface utilisateur
+4. L'utilisateur peut se connecter ou s'inscrire
+5. L'utilisateur accède aux fonctionnalités de partage et d'emprunt d'œuvres numériques
+
+## Résultat attendu
+L'utilisateur accède à l'application web et peut utiliser ses fonctionnalités sans installation locale.
