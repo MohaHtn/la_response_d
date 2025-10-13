@@ -8,7 +8,7 @@ Repérage
 Objectifs fonctionnels :
 
 Permettre à chaque membre de numériser des œuvres au format pdf et de les proposer à l’emprunt.
-Permettre la reconnaissance de texte des œuvres numérisés via plusieurs IA (Gemini, Pixtral).
+Permettre la reconnaissance de texte des œuvres numérisés via plusieurs IA (Pixtral).
 Offrir un accès gratuit aux œuvres du domaine public.
 Permettre la location d’œuvres "numérique" sous droits pour une période de deux semaines.
 Diffuser automatiquement les œuvres devenues libres de droit à l’ensemble des membres disposant d’espace disque partagé.

@@ -3,7 +3,7 @@
 ## Organisation des scénarios
 
 ### Scénarios principaux (fonctionnalités de base)
-1. **Installation de l'application**
+1. **Accès à l'application web**
 2. **Devenir membre**
 3. **Numériser et proposer une œuvre**
 4. **Reconnaissance de texte d'une œuvre (OCR)**
@@ -33,7 +33,7 @@
 ## Classification par priorité
 
 ### Priorité 1 (Critique)
-- Installation de l'application
+- Accès à l'application web
 - Devenir membre
 - Numériser et proposer une œuvre
 - Modérer une œuvre
@@ -44,6 +44,7 @@
 - Consulter le fond commun
 - Retourner une œuvre empruntée
 - Exporter une œuvre au format Markdown
+- Gérer les métadonnées d'une œuvre
 
 ### Priorité 3 (Souhaitable)
 - Diffuser automatiquement les œuvres libres de droits
@@ -52,6 +53,5 @@
 - Consulter l'historique des emprunts
 
 ### Priorité 4 (Optionnel)
-- Gérer les métadonnées d'une œuvre
 - Synchroniser le dépôt Git
 - Tous les scénarios d'erreur

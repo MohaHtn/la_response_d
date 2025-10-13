@@ -8,7 +8,7 @@ Le système utilise l'intelligence artificielle pour extraire et reconnaître le
 
 ## Acteurs
 - **Système** : Application de bibliothèque numérique
-- **IA OCR** : Services Gemini (Google) ou Pixtral (Mistral)
+- **IA OCR** : (Pixtral) 
 - **Bibliothécaire** : Peut déclencher manuellement le processus
 
 ## Préconditions
@@ -18,16 +18,14 @@ Le système utilise l'intelligence artificielle pour extraire et reconnaître le
 
 ## Étapes
 1. Le système détecte un nouveau fichier PDF à traiter
-2. Le système sélectionne le service d'IA disponible (Gemini ou Pixtral)
-3. Le système découpe le PDF en pages individuelles
-4. Pour chaque page, le système envoie l'image à l'API d'IA
-5. L'IA analyse l'image et extrait le texte
+2. Le système sélectionne le service d'IA disponible (Pixtral)
+4.  le système envoie le pdf à l'API d'IA
+5. L'IA analyse le pdf et extrait le texte et les images 
 6. L'IA identifie la mise en page (titres, paragraphes, tableaux, images)
 7. Le système agrège les résultats de toutes les pages
 8. Le système structure le texte en format Markdown
 9. Le système sauvegarde le texte extrait dans la base de données
 10. Le système met à jour le statut de l'œuvre (OCR effectué)
-11. Le système génère un rapport de qualité de reconnaissance
 
 ## Résultat attendu
 L'œuvre dispose d'une version texte searchable et exportable en Markdown avec préservation de la mise en page.
