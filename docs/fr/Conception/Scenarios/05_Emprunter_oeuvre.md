@@ -11,6 +11,7 @@ Un membre emprunte une œuvre numérique sous droits pour une période de deux s
 ## Acteurs
 - **Membre** : Utilisateur authentifié souhaitant emprunter une œuvre
 - **Système** : Application de bibliothèque numérique
+- - **IA OCR** : (Pixtral)
 
 ## Préconditions
 - Le membre est connecté à son compte

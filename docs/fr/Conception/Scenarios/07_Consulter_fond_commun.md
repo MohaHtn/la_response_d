@@ -11,6 +11,7 @@ Un membre accède aux œuvres libres de droits disponibles gratuitement dans le 
 ## Acteurs
 - **Membre** : Utilisateur authentifié
 - **Système** : Application de bibliothèque numérique
+- **IA OCR** : (Pixtral)
 
 ## Préconditions
 - Le membre est connecté à son compte
@@ -20,7 +21,6 @@ Un membre accède aux œuvres libres de droits disponibles gratuitement dans le 
 ## Étapes
 1. Le membre accède à la section "Fond commun"
 2. Le système affiche la liste des œuvres libres de droits
-3. Le membre peut filtrer par catégorie (Livres, Musique, Vidéos, Articles)
 4. Le membre peut rechercher par titre, auteur ou mots-clés
 5. Le membre sélectionne une œuvre qui l'intéresse
 6. Le système affiche les détails de l'œuvre (métadonnées, description, aperçu)

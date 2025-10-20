@@ -11,6 +11,7 @@ Un bibliothécaire examine une œuvre proposée par un membre, vérifie sa confo
 ## Acteurs
 - **Bibliothécaire** : Utilisateur avec droits de modération
 - **Système** : Application de bibliothèque numérique
+- - **IA OCR** : (Pixtral)
 
 ## Préconditions
 - Le bibliothécaire est connecté avec ses droits de modération
@@ -22,7 +23,7 @@ Un bibliothécaire examine une œuvre proposée par un membre, vérifie sa confo
 2. Le bibliothécaire sélectionne une œuvre à examiner
 3. Le système affiche l'œuvre avec ses métadonnées actuelles
 4. Le bibliothécaire consulte le contenu de l'œuvre (aperçu PDF)
-5. Le bibliothécaire vérifie les droits d'auteur et la légalité
+5. Le bibliothécaire vérifie les droits d'auteur et la légalité aidé de l'ia 
 6. Le bibliothécaire enrichit les métadonnées (ISBN, description détaillée, mots-clés)
 7. Le bibliothécaire corrige les éventuelles erreurs de saisie
 8. Le bibliothécaire détermine la catégorie précise de l'œuvre

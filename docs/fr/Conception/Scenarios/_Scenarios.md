@@ -13,6 +13,8 @@
 8. **[Exporter une œuvre au format Markdown](08_Exporter_Markdown.md)**
 9. **[Retourner une œuvre empruntée](09_Retourner_oeuvre.md)**
 10. **[Diffuser automatiquement les œuvres libres de droits](10_Diffusion_automatique.md)**
+11. **[Prévenir les fuites de données sensibles (œuvre hors domaine public)](09_Prevenir_fuite_donnees_sensibles.md)**
+21. **[Vérification du domaine public et prévention des fuites (IA + Modérateur)](21_Verification_domaine_public.md)**
 
 ### Scénarios alternatifs
 11. **[Renouveler un emprunt](11_Renouveler_emprunt.md)**
