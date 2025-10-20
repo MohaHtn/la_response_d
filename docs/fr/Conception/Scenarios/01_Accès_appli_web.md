@@ -17,9 +17,9 @@ Un utilisateur accède à la bibliothèque numérique décentralisée via son na
 ## Étapes
 1. L'utilisateur ouvre son navigateur web
 2. L'utilisateur saisit l'URL de l'application web
-3. Le système charge l'interface utilisateur
+3. Le serveur répond à la requête de l'utilisateur
 4. L'utilisateur peut se connecter ou s'inscrire
-5. L'utilisateur accède aux fonctionnalités de partage et d'emprunt d'œuvres numériques
+5. Si l'utilisateur est connecté, il accède aux fonctionnalités de partage et d'emprunt d'œuvres numériques
 
 ## Résultat attendu
 L'utilisateur accède à l'application web et peut utiliser ses fonctionnalités sans installation locale.

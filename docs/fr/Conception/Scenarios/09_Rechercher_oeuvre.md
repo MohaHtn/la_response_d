@@ -20,7 +20,7 @@ Un membre utilise les fonctionnalités de recherche avancée pour trouver une œ
 ## Étapes
 1. Le membre accède à la fonction de recherche
 2. Le membre saisit ses critères de recherche (titre, auteur, mots-clés)
-3. Le membre peut appliquer des filtres (catégorie, année, disponibilité)
+3. Le membre peut appliquer des filtres (catégorie, année)
 4. Le système interroge l'index de recherche
 5. Le système applique les filtres de droits d'accès du membre
 6. Le système trie les résultats par pertinence

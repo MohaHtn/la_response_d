@@ -6,7 +6,10 @@
 Gérer les métadonnées d'une œuvre via l'application web et l'IA
 
 ## Description
-Un bibliothécaire ou un membre autorisé utilise l'application web pour modifier et enrichir les métadonnées d'une œuvre. L'IA intégrée propose automatiquement des métadonnées extraites à partir du fichier du livre (PDF, image, etc.), que le bibliothécaire peut valider ou corriger pour améliorer la découvrabilité et la classification.
+Un bibliothécaire ou un membre autorisé utilise l'application web pour modifier et enrichir 
+les métadonnées d'une œuvre. 
+L'IA intégrée propose automatiquement des métadonnées extraites à partir du fichier du livre (PDF, image, etc.), 
+que le bibliothécaire peut valider ou corriger pour améliorer la découvrabilité et la classification.
 
 ## Acteurs
 - **Bibliothécaire** : Utilisateur avec droits de modification des métadonnées

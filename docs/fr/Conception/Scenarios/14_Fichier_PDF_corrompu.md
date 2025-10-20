@@ -29,12 +29,9 @@ Un membre tente de proposer une œuvre mais le fichier PDF est corrompu ou illis
 7. Le système propose des solutions au membre :
    - Vérifier l'intégrité du fichier source
    - Re-scanner ou re-générer le PDF
-   - Utiliser un outil de réparation PDF
-   - Contacter le support technique
 8. Le système supprime le fichier défaillant du système
 9. Le système enregistre l'incident dans les logs pour analyse
 10. Le membre peut réessayer avec un nouveau fichier corrigé
-11. Le système conserve les métadonnées partielles pour faciliter une nouvelle soumission
 
 ## Résultat attendu
 Le fichier corrompu est rejeté avec un diagnostic clair et des conseils pour permettre au membre de corriger le problème et soumettre à nouveau.

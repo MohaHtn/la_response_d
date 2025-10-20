@@ -20,14 +20,13 @@ Le système utilise l'intelligence artificielle pour extraire et reconnaître le
 
 ## Étapes
 1. Le système détecte un nouveau fichier PDF à traiter
-2. Le système sélectionne le service d'IA disponible (Pixtral)
-4.  le système envoie le pdf à l'API d'IA
-5. L'IA analyse le pdf et extrait le texte et les images 
-6. L'IA identifie la mise en page (titres, paragraphes, tableaux, images)
-7. Le système agrège les résultats de toutes les pages
-8. Le système structure le texte en format Markdown
-9. Le système sauvegarde le texte extrait dans la base de données
-10. Le système met à jour le statut de l'œuvre (OCR effectué)
+2. le système envoie le pdf à l'API d'IA 
+3. L'IA analyse le pdf et extrait le texte et les images 
+4. L'IA identifie la mise en page (titres, paragraphes, tableaux, images)
+5. Le système agrège les résultats de toutes les pages
+6. Le système structure le texte en format Markdown 
+7. Le système sauvegarde le texte extrait dans la base de données 
+8. Le système met à jour le statut de l'œuvre (OCR effectué)
 
 ## Résultat attendu
 L'œuvre dispose d'une version texte searchable et exportable en Markdown avec préservation de la mise en page.

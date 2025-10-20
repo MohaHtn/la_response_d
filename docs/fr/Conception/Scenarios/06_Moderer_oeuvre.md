@@ -26,11 +26,10 @@ Un bibliothécaire examine une œuvre proposée par un membre, vérifie sa confo
 5. Le bibliothécaire vérifie les droits d'auteur et la légalité aidé de l'ia 
 6. Le bibliothécaire enrichit les métadonnées (ISBN, description détaillée, mots-clés)
 7. Le bibliothécaire corrige les éventuelles erreurs de saisie
-8. Le bibliothécaire détermine la catégorie précise de l'œuvre
-9. Le bibliothécaire prend une décision : Valider, Rejeter, ou Demander modifications
-10. Si validation : le système déplace l'œuvre vers le répertoire approprié (fond_commun ou séquestre)
-11. Si rejet : le système notifie le membre avec justification
-12. Le système met à jour le statut de l'œuvre et l'historique de modération
+8. Le bibliothécaire prend une décision : Valider, Rejeter, ou Demander modifications
+9. Si validation : le système déplace l'œuvre vers le répertoire approprié 
+10. Si rejet : le système notifie le membre avec justification
+11. Le système met à jour le statut de l'œuvre et l'historique de modération
 
 ## Résultat attendu
-L'œuvre est soit validée et disponible aux membres, soit rejetée avec justification, soit renvoyée au membre pour modifications.
+L'œuvre est soit validée et disponible aux membres, soit rejetée avec justification.

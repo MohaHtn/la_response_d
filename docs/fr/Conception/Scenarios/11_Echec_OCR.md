@@ -10,7 +10,7 @@ Le processus de reconnaissance de texte échoue lors du traitement d'une œuvre 
 
 ## Acteurs
 - **Système** : Application de bibliothèque numérique
-- **IA OCR** : Services Gemini ou Pixtral (en échec)
+- **IA OCR** : Pixtral (en échec)
 - **Bibliothécaire** : Intervient pour résoudre le problème
 
 ## Préconditions
@@ -23,13 +23,12 @@ Le processus de reconnaissance de texte échoue lors du traitement d'une œuvre 
 2. Le système tente d'envoyer les pages à l'API d'IA sélectionnée
 3. L'API retourne une erreur (quota dépassé, service indisponible, fichier non supporté)
 4. Le système détecte l'échec de l'OCR
-5. Le système tente automatiquement avec l'autre service d'IA disponible
-6. Si le second service échoue aussi, le système marque l'OCR comme "échec"
-7. Le système enregistre l'erreur dans les logs avec détails techniques
-8. Le système notifie un bibliothécaire de l'échec
-9. Le système met l'œuvre en statut "OCR échoué - intervention manuelle requise"
-10. Le bibliothécaire peut relancer manuellement ou marquer comme "texte non extractible"
-11. L'œuvre reste accessible en PDF uniquement sans fonctionnalité de recherche textuelle
+5. Le système le déplace dans un dossier 'echec_analyse'
+6. Le système enregistre l'erreur dans les logs avec détails techniques
+7. Le système notifie un bibliothécaire de l'échec
+8. Le système met l'œuvre en statut "OCR échoué - intervention manuelle requise"
+9. Le bibliothécaire peut relancer manuellement ou détruire le fichier s'il n'est pas conforme.
+10. La notification de ce qui a été fait sur le document est envoyé à l'utilisateur.
 
 ## Résultat attendu
-L'échec OCR est géré gracieusement, l'œuvre reste disponible mais sans contenu textuel searchable.
+L'échec OCR est géré gracieusement.

@@ -37,5 +37,5 @@ On a fini par penser que c'était peut-être un peu overkill, et que
 juste le dossier NOK et Bientôt Libre de Droit doivent être chiffrés.
 
 La structure du dossier chiffré sera un dossier qui contiendra le livre,
-lui-même contiendra plusieurs sous-dossiers chiffrées. Le livre est donc
+lui-même contiendra plusieurs sous-dossiers chiffrés. Le livre est donc
 découpé en plusieurs sous-fichiers.

@@ -32,7 +32,6 @@ Un bibliothécaire rejette une œuvre proposée par un membre lors du processus 
    - Les actions possibles (correction, contestation)
 9. Le système met à jour les statistiques de modération
 10. Le membre reçoit l'email de notification de rejet
-11. Le membre peut contester la décision ou proposer une version corrigée
 
 ## Résultat attendu
 L'œuvre non conforme est rejetée avec justification claire et le membre est informé des possibilités de recours.
