@@ -240,5 +240,7 @@ Ce projet est sous licence [GNU](LICENSE).
 ---
 
 **Contact** : Projet étudiant dans le cadre du PJE
+
 **Version** : 0.1.0
+
 **Date** : Octobre 2025
