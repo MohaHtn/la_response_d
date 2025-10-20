@@ -235,10 +235,10 @@ cd client && npm run lint
 
 ## Licence
 
-Ce projet est sous licence [LICENSE](LICENSE).
+Ce projet est sous licence [GNU](LICENSE).
 
 ---
 
-**Contact** : Projet étudiant dans le cadre du cours d'Architecture Logicielle
+**Contact** : Projet étudiant dans le cadre du PJE
 **Version** : 0.1.0
 **Date** : Octobre 2025
