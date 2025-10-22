@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import Button from '@mui/material/Button';
 import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
@@ -55,8 +56,7 @@ const styles = {
   },
   button: {
     display: 'block',
-    margin: '20px auto',
-    marginLeft: '200px',
+    margin: 'auto',
     padding: '10px 20px',
     fontSize: '16px',
     backgroundColor: '#007bff',
@@ -369,6 +369,20 @@ function App() {
 
   return (
     <div style={styles.root}>
+        <AppBar>
+            <Toolbar>
+                <Typography>
+                    La réponse D | Bibliothéko
+                </Typography>
+                <IconButton
+                    size="large"
+                    edge="end"
+                    color="inherit"
+                    aria-label="open drawer">
+                    Se connecter
+                </IconButton>
+            </Toolbar>
+        </AppBar>
       <style>{spinAnimation}</style>
       <div style={styles.mainContent}>
         <div style={styles.container}>
@@ -381,7 +395,7 @@ function App() {
             style={styles.fileInput}
             disabled={isLoading}
           />
-          <button
+          <Button
             onClick={handleButtonClick}
             style={{
               ...styles.button,
@@ -392,7 +406,7 @@ function App() {
             onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = styles.button.backgroundColor)}
           >
             {isLoading ? 'Traitement en cours...' : 'Sélectionner un PDF'}
-          </button>
+          </Button>
 
           {isLoading && (
             <div style={styles.loadingContainer}>

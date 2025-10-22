@@ -1,3 +1,5 @@
+pydantic
+cryptography
 fastapi
 uvicorn
 mistralai
