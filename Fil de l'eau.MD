@@ -43,4 +43,4 @@ découpé en plusieurs sous-fichiers.
 On a aussi bossé sur le front !!! (UX Design)
 
 # Session 7 : 3 Novembre 2025
-Discussion sur ce qu'on a dit plus haut 
+Discussion sur ce qu'on a dit plus haut !
