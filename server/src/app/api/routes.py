@@ -9,9 +9,7 @@ from ..infra.config import config
 from ..domain.services import AuthService
 from ..infra.repositories import user_repository
 
-
 router = APIRouter(prefix="/api", tags=["api"])
-
 
 @router.post("/send-book")
 async def send_book(file: UploadFile = File(...)):

@@ -3,7 +3,6 @@ Configuration module for application settings
 """
 from pathlib import Path
 
-
 class Config:
     """Configuration settings for the application"""
 
@@ -24,7 +23,7 @@ class Config:
 
     # API settings
     API_PREFIX = "/api"
-    API_TITLE = "la_response_d API"
+    API_TITLE = "La Réponse D"
 
     @classmethod
     def get_key_file_path(cls) -> str:
