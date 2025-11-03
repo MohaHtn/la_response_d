@@ -63,7 +63,7 @@ async def register_user(user_credentials: UserCredentials):
     Returns:
         JSON response with registration confirmation
     """
-    # Check if user already exists
+    # Check if a user already exists
     if await user_repository.user_exists(user_credentials.username):
         raise HTTPException(
             status_code=400,

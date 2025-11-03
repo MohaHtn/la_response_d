@@ -9,7 +9,6 @@ from typing import Dict, Tuple
 from ...infra.security import crypto_manager
 from ...infra.config import config
 
-
 class AuthService:
     """Service for authentication operations"""
 
