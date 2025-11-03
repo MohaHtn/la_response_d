@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Button from '@mui/material/Button';
 import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Header from './components/Header';
 
 const styles = {
   root: {
@@ -43,6 +44,7 @@ const styles = {
   },
   mainContent: {
     width: '100%',
+    // adjusted to account for fixed header height
     marginTop: '64px',
 
 
@@ -218,6 +220,28 @@ const styles = {
   riskHigh: {
     backgroundColor: '#f44336',
     color: 'white',
+  },
+  navigationButtons: {
+    display: 'flex',
+    gap: '15px',
+    justifyContent: 'center',
+    marginTop: '30px',
+    marginBottom: '30px',
+  },
+  navButton: {
+    padding: '12px 24px',
+    fontSize: '16px',
+    backgroundColor: '#4caf50',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    transition: 'background-color 0.3s',
+    fontWeight: '500',
+  },
+  navButtonHover: {
+    backgroundColor: '#45a049',
   }
 };
 
@@ -320,6 +344,8 @@ function App() {
         setContentAnalysis(null);
         setIsLoading(true);
 
+          //fetch("http://localhost:8000/api/login", {
+              //method: "POST",
         fetch("http://localhost:8000/api/send-book", {
           method: "POST",
           body: (() => {
@@ -369,24 +395,39 @@ function App() {
 
   return (
     <div style={styles.root}>
-        <AppBar>
-            <Toolbar>
-                <Typography>
-                    La réponse D | Bibliothéko
-                </Typography>
-                <IconButton
-                    size="large"
-                    edge="end"
-                    color="inherit"
-                    aria-label="open drawer">
-                    Se connecter
-                </IconButton>
-            </Toolbar>
-        </AppBar>
+        <Header />
       <style>{spinAnimation}</style>
       <div style={styles.mainContent}>
         <div style={styles.container}>
             <h1 style={{ textAlign: 'center' }}>Sélectionner un PDF</h1>
+
+          <div style={styles.navigationButtons}>
+            <Link
+              to="/page2"
+              style={styles.navButton}
+              onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
+              onMouseLeave={(e) => e.target.style.backgroundColor = styles.navButton.backgroundColor}
+            >
+              📄 Page 2
+            </Link>
+            <Link
+              to="/page3"
+              style={styles.navButton}
+              onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
+              onMouseLeave={(e) => e.target.style.backgroundColor = styles.navButton.backgroundColor}
+            >
+              📄 Page 3
+            </Link>
+            <Link
+              to="/page4"
+              style={styles.navButton}
+              onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
+              onMouseLeave={(e) => e.target.style.backgroundColor = styles.navButton.backgroundColor}
+            >
+              📄 Page 4
+            </Link>
+          </div>
+
           <input
             type="file"
             accept=".pdf"
