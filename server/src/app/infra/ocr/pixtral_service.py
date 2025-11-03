@@ -1,5 +1,9 @@
+"""
+Pixtral OCR service for PDF processing
+"""
 import json
 import os
+import base64
 from typing import Dict, Any
 from mistralai import Mistral
 
@@ -8,12 +12,18 @@ OCR_MODEL = "mistral-ocr-latest"
 
 
 def _load_api_key() -> str:
-    """Loads the Pixtral/Mistral API key from apikey.json located in src/ directory.
+    """Loads the Pixtral/Mistral API key from apikey.json.
 
     Searches relative to this file's directory to be robust to working directory.
     """
-    here = os.path.dirname(__file__)
-    path = os.path.join(here, "apikey.json")
+    # Look for apikey.json in the api directory
+    api_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'api')
+    path = os.path.join(api_dir, "apikey.json")
+
+    if not os.path.exists(path):
+        # Fallback to old location
+        path = os.path.join(os.path.dirname(__file__), "apikey.json")
+
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)["apikeys"]["pixtral"]
 
@@ -235,7 +245,6 @@ def process_pdf(
                     out_name = f"{out_name}.{ext}"
                 out_path = os.path.join(image_output_dir, out_name)
                 if b64data:
-                    import base64
                     try:
                         with open(out_path, "wb") as out_f:
                             out_f.write(base64.b64decode(b64data))
@@ -294,5 +303,51 @@ def process_pdf(
     return result
 
 
-
 __all__ = ["process_pdf", "get_client", "MODEL", "OCR_MODEL"]
+"""
+Configuration module for application settings
+"""
+from pathlib import Path
+
+
+class Config:
+    """Configuration settings for the application"""
+
+    # File paths
+    BASE_DIR = Path(__file__).parent.parent.parent
+    KEY_FILE = BASE_DIR / "key.key"
+    USERS_FILE = BASE_DIR / "users.json"
+    OCR_RESULT_FILE = BASE_DIR / "ocr_result.txt"
+
+    # Security settings
+    PBKDF2_ITERATIONS = 100000
+    HASH_ALGORITHM = 'sha256'
+    SALT_LENGTH = 16
+
+    # File upload settings
+    MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024  # 200 MB
+    ALLOWED_CONTENT_TYPES = ["application/pdf", "application/octet-stream"]
+
+    # API settings
+    API_PREFIX = "/api"
+    API_TITLE = "la_response_d API"
+
+    @classmethod
+    def get_key_file_path(cls) -> str:
+        """Get the path to the encryption key file"""
+        return str(cls.KEY_FILE)
+
+    @classmethod
+    def get_users_file_path(cls) -> str:
+        """Get the path to the users database file"""
+        return str(cls.USERS_FILE)
+
+    @classmethod
+    def get_ocr_result_path(cls) -> str:
+        """Get the path to the OCR result file"""
+        return str(cls.OCR_RESULT_FILE)
+
+
+# Create a global config instance
+config = Config()
+
