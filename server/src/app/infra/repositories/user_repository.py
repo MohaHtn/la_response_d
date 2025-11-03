@@ -3,7 +3,7 @@ User data management and storage
 """
 import json
 from typing import List, Dict, Optional
-from .config import config
+from ..config import config
 
 
 class UserRepository:

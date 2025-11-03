@@ -3,7 +3,6 @@ Models for API request/response validation
 """
 from pydantic import BaseModel, EmailStr
 
-
 class UserCredentials(BaseModel):
     """User registration credentials"""
     username: str

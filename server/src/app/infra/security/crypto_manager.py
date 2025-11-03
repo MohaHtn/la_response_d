@@ -3,19 +3,20 @@ Cryptography utilities for secure data storage
 """
 from cryptography.fernet import Fernet
 import os
+from ..config import config
 
 
 class CryptoManager:
     """Manages encryption/decryption operations"""
 
-    def __init__(self, key_file: str = 'key.key'):
+    def __init__(self, key_file: str = None):
         """
         Initialize the crypto manager with a key file
 
         Args:
-            key_file: Path to the encryption key file
+            key_file: Path to the encryption key file (uses config default if None)
         """
-        self.key_file = key_file
+        self.key_file = key_file or config.get_key_file_path()
         self._fernet = None
 
     @property

@@ -1,17 +1,17 @@
 """
-Configuration module for API settings
+Configuration module for application settings
 """
 from pathlib import Path
 
 
 class Config:
-    """Configuration settings for the API module"""
+    """Configuration settings for the application"""
 
     # File paths
-    BASE_DIR = Path(__file__).parent
-    KEY_FILE = BASE_DIR.parent / "key.key"
-    USERS_FILE = BASE_DIR.parent / "users.json"
-    OCR_RESULT_FILE = BASE_DIR.parent / "ocr_result.txt"
+    BASE_DIR = Path(__file__).parent.parent.parent
+    KEY_FILE = BASE_DIR / "key.key"
+    USERS_FILE = BASE_DIR / "users.json"
+    OCR_RESULT_FILE = BASE_DIR / "ocr_result.txt"
 
     # Security settings
     PBKDF2_ITERATIONS = 100000

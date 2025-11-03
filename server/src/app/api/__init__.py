@@ -3,10 +3,10 @@ API module - exposes the main router and components
 """
 from .routes import router
 from .models import UserCredentials, LoginCredentials
-from .auth import AuthService
-from .users import user_repository
-from .crypto_utils import crypto_manager
-from .config import config
+from ..domain.services import AuthService
+from ..infra.repositories import user_repository
+from ..infra.security import crypto_manager
+from ..infra.config import config
 
 __all__ = [
     "router",
