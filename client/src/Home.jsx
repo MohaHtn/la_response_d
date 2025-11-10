@@ -180,39 +180,12 @@ function Home() {
     .filter(Boolean);
 
   return (
-    <div style={styles.container}>
-      <Header />
-
-      <h1 style={styles.title}>Bibliothèque — Accueil</h1>
     <div style={{minHeight: '100vh'}}>
       <Header />
       <div style={{paddingTop: '64px'}}>
         <div style={styles.container}>
           <h1 style={styles.title}>Bibliothèque — Accueil</h1>
 
-
-      <div>
-        <div style={styles.sectionTitle}>En cours de lecture</div>
-        <div style={styles.startedContainer}>
-          {startedBooks.length === 0 ? (
-            <div style={{ color: '#666' }}>Vous n'avez pas encore commencé de livre.</div>
-          ) : (
-            startedBooks.map((b) => (
-              <div key={b.bookId} style={styles.startedCard}>
-                <div style={styles.coverPlaceholder} aria-hidden />
-                <div style={styles.bookInfo}>
-                  <div style={styles.bookTitle}>{b.title}</div>
-                  <div style={styles.bookAuthor}>{b.author}</div>
-                  <div style={styles.progressBarOuter}>
-                    <div style={styles.progressBarInner(b.progress)} />
-                  </div>
-                  <Link to="/page2" style={styles.continueButton}>Continuer</Link>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
           <div>
             <div style={styles.sectionTitle}>En cours de lecture</div>
             <div style={styles.startedContainer}>
