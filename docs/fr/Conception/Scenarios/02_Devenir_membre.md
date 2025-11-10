@@ -22,9 +22,10 @@ Un utilisateur s'inscrit à la bibliothèque numérique via l'application web po
 3. L'utilisateur choisit un nom d'utilisateur unique
 4. L'utilisateur définit un mot de passe sécurisé
 5. Le système vérifie l'unicité du nom d'utilisateur
+6.  Le système vérifie l'unicité de l'email
 6. Le système valide le format de l'email
 7. Le système crée le compte utilisateur
-8. Le système envoie un email de confirmation
+8. Le système envoie un email de confirmation 
 9. L'utilisateur confirme son inscription via le lien reçu par email
 10. Le système active le compte membre
 

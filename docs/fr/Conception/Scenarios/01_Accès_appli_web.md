@@ -18,8 +18,8 @@ Un utilisateur accède à la bibliothèque numérique décentralisée via son na
 1. L'utilisateur ouvre son navigateur web
 2. L'utilisateur saisit l'URL de l'application web
 3. Le serveur répond à la requête de l'utilisateur
-4. L'utilisateur peut se connecter ou s'inscrire
-5. Si l'utilisateur est connecté, il accède aux fonctionnalités de partage et d'emprunt d'œuvres numériques
+4. L'utilisateur accède a une présentation de l'application et peut se connecter ou s'inscrire
+5. Si l'utilisateur est connecté, il accède aux fonctionnalités de l'application 
 
 ## Résultat attendu
-L'utilisateur accède à l'application web et peut utiliser ses fonctionnalités sans installation locale.
+L'utilisateur accède à l'application web et peut utiliser ses fonctionnalités si il se connecte
