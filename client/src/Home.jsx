@@ -127,14 +127,30 @@ const styles = {
   },
   readButton: {
     marginTop: 'auto',
-    alignSelf: 'stretch',
-    padding: '8px 10px',
+        padding: '8px 10px',
     backgroundColor: '#388e3c',
     color: 'white',
     borderRadius: '6px',
     textDecoration: 'none',
     textAlign: 'center',
     fontSize: '13px',
+    flex: '1',
+  },
+  moderateButton: {
+    marginTop: 'auto',
+    padding: '8px 10px',
+    backgroundColor: '#f57c00',
+    color: 'white',
+    borderRadius: '6px',
+    textDecoration: 'none',
+    textAlign: 'center',
+    fontSize: '13px',
+    flex: '1',
+  },
+  buttonContainer: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: 'auto',
   },
   backButton: {
     marginTop: '18px',
@@ -201,7 +217,9 @@ function Home() {
                       <div style={styles.progressBarOuter}>
                         <div style={styles.progressBarInner(b.progress)} />
                       </div>
-                      <Link to="/page2" style={styles.continueButton}>Continuer</Link>
+                      <Link to={`/book/${b.bookId}`} style={styles.continueButton}>
+                        Continuer
+                      </Link>
                     </div>
                   </div>
                 ))
@@ -219,7 +237,14 @@ function Home() {
                     <div style={styles.libraryTitle}>{book.title}</div>
                     <div style={styles.libraryAuthor}>{book.author}</div>
                   </div>
-                  <Link to="/page2" style={styles.readButton}>Lire</Link>
+                  <div style={styles.buttonContainer}>
+                    <Link to={`/book/${book.id}`} style={styles.readButton}>
+                      Lire
+                    </Link>
+                    <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                      Modérer
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
