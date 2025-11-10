@@ -8,6 +8,8 @@ from ..infra.ocr import process_pdf
 from ..infra.config import config
 from ..domain.services import AuthService
 from ..infra.repositories import user_repository
+from datetime import datetime, timedelta
+import jwt
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -132,14 +134,26 @@ async def login_user(login_credentials: LoginCredentials):
                 detail="Pseudonyme ou mot de passe incorrect."
             )
 
+        secret_key = config.JWT_SECRET_KEY
+        expiration = datetime.now() + timedelta(hours=1)
+        token = jwt.encode(
+        {
+            "username": user_record["username"].lower(),
+            "email": user_record["email"],
+            "exp": expiration
+        },
+        secret_key,
+        algorithm="HS256"
+    )
         return JSONResponse(content={
             "message": "Vous êtes connecté !",
             "username": user_record["username"],
-            "email": user_record["email"]
+            "email": user_record["email"],
+            "token": token
         })
 
     except Exception as e:
         raise HTTPException(
             status_code=401,
-            detail="Pseudonyme ou mot de passe incorrect."
+            detail=f"Pseudonyme ou mot de passe incorrect."
         )

@@ -40,19 +40,20 @@ class AuthService:
         return password_hash, salt
 
     @staticmethod
-    def verify_password(password: str, stored_hash: bytes, salt: bytes) -> bool:
+    def verify_password(password: str, stored_hash: bytes, stored_salt: bytes) -> bool:
         """
         Verify a password against a stored hash
 
         Args:
             password: The password to verify
             stored_hash: The stored password hash
-            salt: The salt used for hashing
+            stored_salt: The salt used for hashing
 
         Returns:
             True if password matches, False otherwise
         """
-        computed_hash, _ = AuthService.hash_password(password, salt)
+        computed_hash, _ = AuthService.hash_password(password, stored_salt)
+        print("is_equal : " + str(computed_hash == stored_hash))
         return computed_hash == stored_hash
 
     @staticmethod

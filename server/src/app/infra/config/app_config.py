@@ -11,6 +11,8 @@ class Config:
     KEY_FILE = BASE_DIR / "key.key"
     USERS_FILE = BASE_DIR / "users.json"
     OCR_RESULT_FILE = BASE_DIR / "ocr_result.txt"
+    # TODO: A stocker autre part un jour
+    JWT_SECRET_KEY = "4c7004d38e046586ba9de4f54be233583abfa405101e54a36e4ccaa5583edd12"
 
     # Security settings
     PBKDF2_ITERATIONS = 100000
