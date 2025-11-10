@@ -48,7 +48,7 @@ export default function Header() {
             La réponse D | Bibliothéko
           </Typography>
           <div>
-            <Link to="/page2" style={headerStyles.navButton}>Se connecter</Link>
+            <Link to="/auth" style={headerStyles.navButton}>Se connecter</Link>
           </div>
         </div>
       </Toolbar>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Header from "./components/Header.jsx";
 
 const styles = {
   container: {
@@ -17,6 +18,7 @@ const styles = {
   title: {
     fontSize: '28px',
     fontWeight: '700',
+    marginTop: '48px',
     marginBottom: '18px',
     color: '#0d47a1',
   },
@@ -163,7 +165,7 @@ const MOCK_STARTED = [
   { bookId: 'b4', progress: 58 },
 ];
 
-function Page3() {
+function Home() {
   const [library, setLibrary] = useState([]);
   const [started, setStarted] = useState([]);
 
@@ -179,7 +181,10 @@ function Page3() {
 
   return (
     <div style={styles.container}>
+      <Header />
+
       <h1 style={styles.title}>Bibliothèque — Accueil</h1>
+
 
       <div>
         <div style={styles.sectionTitle}>En cours de lecture</div>
@@ -227,4 +232,4 @@ function Page3() {
   );
 }
 
-export default Page3;
+export default Home;

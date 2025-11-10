@@ -26,7 +26,7 @@ async def send_book(file: UploadFile = File(...)):
     if file.content_type not in config.ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="Unsupported file type. Please upload a PDF."
+            detail="Type de fichier non supporté. Veuillez envoyer un PDF."
         )
 
     # Read and enforce size limit
@@ -34,7 +34,7 @@ async def send_book(file: UploadFile = File(...)):
     if len(data) > config.MAX_FILE_SIZE_BYTES:
         raise HTTPException(
             status_code=413,
-            detail="File too large. Max 200 MB."
+            detail="Fichier trop volumineux. Taille maximale : 200 Mo."
         )
 
     try:
@@ -46,7 +46,7 @@ async def send_book(file: UploadFile = File(...)):
         # Map general errors to 500
         raise HTTPException(
             status_code=500,
-            detail=f"OCR processing failed: {e}"
+            detail=f"Échec du traitement OCR : {e}"
         )
 
     return JSONResponse(content=ocr)
@@ -67,7 +67,7 @@ async def register_user(user_credentials: UserCredentials):
     if await user_repository.user_exists(user_credentials.username):
         raise HTTPException(
             status_code=400,
-            detail="Username already exists"
+            detail="Le nom d'utilisateur existe déjà."
         )
 
     # Hash the password with salt
@@ -88,13 +88,13 @@ async def register_user(user_credentials: UserCredentials):
         await user_repository.add_user(user_record)
 
         return JSONResponse(content={
-            "message": "User registered successfully",
+            "message": "Utilisateur enregistré avec succès.",
             "username": user_credentials.username
         })
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to register user: {str(e)}"
+            detail=f"Échec de l'enregistrement de l'utilisateur : {str(e)}"
         )
 
 
@@ -129,11 +129,11 @@ async def login_user(login_credentials: LoginCredentials):
         ):
             raise HTTPException(
                 status_code=401,
-                detail="Invalid username or password"
+                detail="Pseudonyme ou mot de passe incorrect."
             )
 
         return JSONResponse(content={
-            "message": "Login successful",
+            "message": "Vous êtes connecté !",
             "username": user_record["username"],
             "email": user_record["email"]
         })
@@ -141,6 +141,5 @@ async def login_user(login_credentials: LoginCredentials):
     except Exception as e:
         raise HTTPException(
             status_code=401,
-            detail="Invalid username or password"
+            detail="Pseudonyme ou mot de passe incorrect."
         )
-

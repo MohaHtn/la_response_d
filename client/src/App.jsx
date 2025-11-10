@@ -403,12 +403,12 @@ function App() {
 
           <div style={styles.navigationButtons}>
             <Link
-              to="/page3"
+              to="/home"
               style={styles.navButton}
               onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
               onMouseLeave={(e) => e.target.style.backgroundColor = styles.navButton.backgroundColor}
             >
-              📄 Page 3
+              📄 Page 3 (Accueil une fois connecté)
             </Link>
             <Link
               to="/page4"
@@ -416,7 +416,7 @@ function App() {
               onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
               onMouseLeave={(e) => e.target.style.backgroundColor = styles.navButton.backgroundColor}
             >
-              📄 Page 4
+              📄 Page 4 (Page d'upload)
             </Link>
           </div>
 

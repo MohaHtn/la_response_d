@@ -110,7 +110,7 @@ async function sendUserData(path, data) {
   }
 }
 
-function Page2() {
+function Auth() {
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -276,4 +276,4 @@ function Page2() {
   );
 }
 
-export default Page2;
+export default Auth;
