@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 
 const styles = {
@@ -110,19 +110,18 @@ async function sendUserData(path, data) {
   }
 }
 
-function Page2() {
+function Auth() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('info');
 
   // login state
-  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
   // signup state
   const [username, setUsername] = useState('');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -147,7 +146,8 @@ function Page2() {
       if (res?.token) {
         try { localStorage.setItem('authToken', res.token); } catch { /* localStorage peut être bloqué dans certains environnements */ }
       }
-      // Ici on pourrait aussi rediriger l'utilisateur vers une page protégée
+      // Rediriger vers /home après une connexion réussie
+      setTimeout(() => navigate('/home'), 1000);
     } catch (err) {
       setMessageType('error');
       console.log(err);
@@ -178,7 +178,7 @@ function Page2() {
       setMessageType('success');
       setMessage(res?.message || 'Inscription réussie');
       // Réinitialiser le formulaire ou basculer vers login
-      setName(''); setEmail(''); setPassword(''); setPasswordConfirm('');
+      setUsername(''); setEmail(''); setPassword(''); setPasswordConfirm('');
       setTab('login');
     } catch (err) {
       setMessageType('error');
@@ -276,4 +276,4 @@ function Page2() {
   );
 }
 
-export default Page2;
+export default Auth;

@@ -6,3 +6,5 @@ mistralai
 PyPDF2
 protobuf
 python-multipart
+
+pyjwt

@@ -53,7 +53,7 @@ export default function Header() {
 
           {/* Groupe droit : Se connecter */}
           <div>
-            <Link to="/page2" style={headerStyles.navButton}>Se connecter</Link>
+            <Link to="/auth" style={headerStyles.navButton}>Se connecter</Link>
           </div>
         </div>
       </Toolbar>

@@ -2,19 +2,19 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
-import Page2 from './Page2.jsx'
-import Page3 from './Page3.jsx'
+import App from './App.jsx'
+import Page2 from './Auth.jsx'
+import Home from './Home.jsx'
 import Page4 from './Page4.jsx'
-import Presentation from './Presentation.jsx'
-import ModeratorPage from './pages/ModeratorPage.jsx'
+import Auth from "./Auth.jsx";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Presentation />} />
-        <Route path="/page2" element={<Page2 />} />
-        <Route path="/page3" element={<Page3 />} />
+        <Route path="/" element={<App />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/page4" element={<Page4 />} />
         <Route path="/presentation" element={<Presentation />} />
         <Route path="/moderator" element={<ModeratorPage />} />

@@ -18,6 +18,7 @@ const styles = {
   title: {
     fontSize: '28px',
     fontWeight: '700',
+    marginTop: '48px',
     marginBottom: '18px',
     color: '#0d47a1',
   },
@@ -164,7 +165,7 @@ const MOCK_STARTED = [
   { bookId: 'b4', progress: 58 },
 ];
 
-function Page3() {
+function Home() {
   const [library, setLibrary] = useState([]);
   const [started, setStarted] = useState([]);
 
@@ -179,12 +180,39 @@ function Page3() {
     .filter(Boolean);
 
   return (
+    <div style={styles.container}>
+      <Header />
+
+      <h1 style={styles.title}>Bibliothèque — Accueil</h1>
     <div style={{minHeight: '100vh'}}>
       <Header />
       <div style={{paddingTop: '64px'}}>
         <div style={styles.container}>
           <h1 style={styles.title}>Bibliothèque — Accueil</h1>
 
+
+      <div>
+        <div style={styles.sectionTitle}>En cours de lecture</div>
+        <div style={styles.startedContainer}>
+          {startedBooks.length === 0 ? (
+            <div style={{ color: '#666' }}>Vous n'avez pas encore commencé de livre.</div>
+          ) : (
+            startedBooks.map((b) => (
+              <div key={b.bookId} style={styles.startedCard}>
+                <div style={styles.coverPlaceholder} aria-hidden />
+                <div style={styles.bookInfo}>
+                  <div style={styles.bookTitle}>{b.title}</div>
+                  <div style={styles.bookAuthor}>{b.author}</div>
+                  <div style={styles.progressBarOuter}>
+                    <div style={styles.progressBarInner(b.progress)} />
+                  </div>
+                  <Link to="/page2" style={styles.continueButton}>Continuer</Link>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
           <div>
             <div style={styles.sectionTitle}>En cours de lecture</div>
             <div style={styles.startedContainer}>
@@ -233,4 +261,4 @@ function Page3() {
   );
 }
 
-export default Page3;
+export default Home;
