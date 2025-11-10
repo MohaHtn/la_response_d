@@ -28,3 +28,4 @@ discussion sur les design pattern
 puis refactor du frontend 
 puis jai fait la page de presentatiion puis reconnecter les pages changer un peu l'app bar pour avoir la navigation globale dans la headbar 
 puis la création du composant de moderation genre de tableau qui montre lequel de moderateur a validé tel ou tel livre 
+mise e forme des chemins ajout de la partie moderation au niveau des livres sans la gestion des comptes moderateurs ou pas pour l'instant
