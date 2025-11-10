@@ -46,3 +46,6 @@ On a aussi bossé sur le front !!! (UX Design)
 Discussion sur ce qu'on a dit plus haut !
 
 Refactorisation du code, en essayant d'avoir l'architecture la plus clean possible.
+
+# Session 8 : 10 Novembre 2025
+

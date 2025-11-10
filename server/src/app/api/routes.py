@@ -115,7 +115,7 @@ async def login_user(login_credentials: LoginCredentials):
     if not user_record:
         raise HTTPException(
             status_code=401,
-            detail="Invalid username or password"
+            detail="Pseudonyme ou mot de passe incorrect."
         )
 
     # Decrypt and verify password

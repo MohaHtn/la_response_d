@@ -77,6 +77,7 @@ const styles = {
     borderRadius: '6px',
     backgroundColor: type === 'error' ? '#f8d7da' : '#d4edda',
     color: type === 'error' ? '#721c24' : '#155724',
+    marginBottom: '5px',
   })
 };
 
@@ -85,7 +86,7 @@ async function sendUserData(path, data) {
   // path: endpoint relatif (par ex. '/api/login' ou '/api/register')
   // data: objet JS qui sera sérialisé en JSON
   try {
-    const res = await fetch(path, {
+    const res = await fetch(`http://localhost:8000${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,6 +121,7 @@ function Page2() {
   const [loginPassword, setLoginPassword] = useState('');
 
   // signup state
+  const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -129,7 +131,7 @@ function Page2() {
     e.preventDefault();
     setMessage(null);
 
-    if (!loginEmail || !loginPassword) {
+    if (!username || !loginPassword) {
       setMessageType('error');
       setMessage('Veuillez renseigner l\'email et le mot de passe.');
       return;
@@ -138,7 +140,7 @@ function Page2() {
     setLoading(true);
     try {
       // Appeler l'API (adapter le chemin si nécessaire)
-      const res = await sendUserData('/api/login', { email: loginEmail, password: loginPassword });
+      const res = await sendUserData('/api/login', {username: username, password: loginPassword});
       setMessageType('success');
       setMessage(res?.message || 'Connexion réussie');
       // Si le backend renvoie un token, on le stocke localement pour les requêtes suivantes
@@ -148,6 +150,7 @@ function Page2() {
       // Ici on pourrait aussi rediriger l'utilisateur vers une page protégée
     } catch (err) {
       setMessageType('error');
+      console.log(err);
       setMessage(err.message || 'Erreur lors de la connexion');
     } finally {
       setLoading(false);
@@ -158,7 +161,7 @@ function Page2() {
     e.preventDefault();
     setMessage(null);
 
-    if (!name || !email || !password) {
+    if (!username || !email || !password) {
       setMessageType('error');
       setMessage('Veuillez remplir tous les champs d\'inscription.');
       return;
@@ -171,7 +174,7 @@ function Page2() {
 
     setLoading(true);
     try {
-      const res = await sendUserData('/api/register', { name, email, password });
+      const res = await sendUserData('/api/register', { username, email, password });
       setMessageType('success');
       setMessage(res?.message || 'Inscription réussie');
       // Réinitialiser le formulaire ou basculer vers login
@@ -190,7 +193,7 @@ function Page2() {
       <Header />
       <div style={{ paddingTop: '64px' }}>
         <div style={styles.container}>
-          <h1 style={styles.title}>Page 2 — Connexion / Inscription</h1>
+          <h1 style={styles.title}>Connexion / Inscription</h1>
 
           <div style={styles.tabBar}>
             <button type="button" onClick={() => setTab('login')} style={styles.tabButton(tab === 'login')}>Connexion</button>
@@ -207,12 +210,11 @@ function Page2() {
             <form style={styles.form} onSubmit={onSubmitLogin}>
               <input
                 style={styles.input}
-                type="email"
-                placeholder="Email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="Pseudonyme"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={loading}
-              />
+                />
               <input
                 style={styles.input}
                 type="password"
@@ -230,9 +232,9 @@ function Page2() {
               <input
                 style={styles.input}
                 type="text"
-                placeholder="Pseudo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="Pseudonyme"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={loading}
               />
               <input

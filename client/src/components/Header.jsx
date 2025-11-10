@@ -3,6 +3,7 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+import {Link} from "react-router-dom";
 
 const headerStyles = {
   appBar: {
@@ -21,6 +22,18 @@ const headerStyles = {
     paddingLeft: '16px',
     paddingRight: '16px',
   },
+  navButton: {
+    padding: '12px 24px',
+    fontSize: '16px',
+    backgroundColor: '#ffffff',
+    color: 'black',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    transition: 'background-color 0.3s',
+    fontWeight: '500',
+  },
   title: {
     fontWeight: 'bold',
   },
@@ -35,7 +48,7 @@ export default function Header() {
             La réponse D | Bibliothéko
           </Typography>
           <div>
-            <Button color="inherit">Se connecter</Button>
+            <Link to="/page2" style={headerStyles.navButton}>Se connecter</Link>
           </div>
         </div>
       </Toolbar>

@@ -403,14 +403,6 @@ function App() {
 
           <div style={styles.navigationButtons}>
             <Link
-              to="/page2"
-              style={styles.navButton}
-              onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
-              onMouseLeave={(e) => e.target.style.backgroundColor = styles.navButton.backgroundColor}
-            >
-              📄 Page 2
-            </Link>
-            <Link
               to="/page3"
               style={styles.navButton}
               onMouseEnter={(e) => e.target.style.backgroundColor = styles.navButtonHover.backgroundColor}
