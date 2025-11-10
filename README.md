@@ -138,7 +138,7 @@ npm run preview  # Prévisualisation du build
 la_response_d/
 ├── client/                 # Application React (Frontend)
 │   ├── src/
-│   │   ├── App.jsx        # Composant principal
+│   │   ├── Upload.jsx        # Composant principal
 │   │   └── main.jsx       # Point d'entrée
 │   ├── package.json
 │   └── vite.config.js

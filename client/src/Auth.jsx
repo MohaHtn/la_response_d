@@ -146,6 +146,12 @@ function Auth() {
       if (res?.token) {
         try { localStorage.setItem('authToken', res.token); } catch { /* localStorage peut être bloqué dans certains environnements */ }
       }
+      // Stocker un token fictif pour la démo (le backend actuel ne renvoie pas de token)
+      try {
+        localStorage.setItem('authToken', 'demo-token-' + Date.now());
+        // Notifier le changement d'authentification
+        window.dispatchEvent(new Event('authChange'));
+      } catch { /* localStorage peut être bloqué */ }
       // Rediriger vers /home après une connexion réussie
       setTimeout(() => navigate('/home'), 1000);
     } catch (err) {

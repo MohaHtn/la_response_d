@@ -35,7 +35,7 @@ client/
 ├── public/                 # Ressources statiques
 │   └── vite.svg           # Favicon Vite
 ├── src/                   # Code source principal
-│   ├── App.jsx            # Composant principal (600+ lignes)
+│   ├── Upload.jsx            # Composant principal (600+ lignes)
 │   ├── App.css            # Styles CSS pour App
 │   ├── main.jsx           # Point d'entrée React
 │   ├── index.css          # Styles globaux
@@ -89,7 +89,7 @@ client/
 
 ## Architecture des Composants
 
-### Composant Principal (App.jsx)
+### Composant Principal (Upload.jsx)
 
 **État de l'Application :**
 ```javascript
@@ -148,7 +148,7 @@ client/
 ## Points d'Amélioration Identifiés
 
 ### 1. Architecture
-- **Séparation des responsabilités** : Le composant App.jsx est très volumineux (600+ lignes)
+- **Séparation des responsabilités** : Le composant Upload.jsx est très volumineux (600+ lignes)
 - **Modularisation** : Diviser en composants plus petits et réutilisables
 - **Gestion d'état** : Considérer l'utilisation de Context API ou Redux pour un état global
 
@@ -169,7 +169,7 @@ client/
 
 ## Recommandations pour l'Évolution
 
-1. **Refactoring architectural** : Diviser App.jsx en composants métier distincts
+1. **Refactoring architectural** : Diviser Upload.jsx en composants métier distincts
 2. **Implémentation d'un router** : Pour une navigation multi-pages
 3. **Gestion d'état centralisée** : Pour une meilleure scalabilité
 4. **Intégration CI/CD** : Automatisation des tests et déploiements
