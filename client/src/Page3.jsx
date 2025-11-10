@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Header from './components/Header';
 
 const styles = {
   container: {
@@ -178,50 +179,55 @@ function Page3() {
     .filter(Boolean);
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Bibliothèque — Accueil</h1>
+    <div style={{minHeight: '100vh'}}>
+      <Header />
+      <div style={{paddingTop: '64px'}}>
+        <div style={styles.container}>
+          <h1 style={styles.title}>Bibliothèque — Accueil</h1>
 
-      <div>
-        <div style={styles.sectionTitle}>En cours de lecture</div>
-        <div style={styles.startedContainer}>
-          {startedBooks.length === 0 ? (
-            <div style={{ color: '#666' }}>Vous n'avez pas encore commencé de livre.</div>
-          ) : (
-            startedBooks.map((b) => (
-              <div key={b.bookId} style={styles.startedCard}>
-                <div style={styles.coverPlaceholder} aria-hidden />
-                <div style={styles.bookInfo}>
-                  <div style={styles.bookTitle}>{b.title}</div>
-                  <div style={styles.bookAuthor}>{b.author}</div>
-                  <div style={styles.progressBarOuter}>
-                    <div style={styles.progressBarInner(b.progress)} />
+          <div>
+            <div style={styles.sectionTitle}>En cours de lecture</div>
+            <div style={styles.startedContainer}>
+              {startedBooks.length === 0 ? (
+                <div style={{ color: '#666' }}>Vous n'avez pas encore commencé de livre.</div>
+              ) : (
+                startedBooks.map((b) => (
+                  <div key={b.bookId} style={styles.startedCard}>
+                    <div style={styles.coverPlaceholder} aria-hidden />
+                    <div style={styles.bookInfo}>
+                      <div style={styles.bookTitle}>{b.title}</div>
+                      <div style={styles.bookAuthor}>{b.author}</div>
+                      <div style={styles.progressBarOuter}>
+                        <div style={styles.progressBarInner(b.progress)} />
+                      </div>
+                      <Link to="/page2" style={styles.continueButton}>Continuer</Link>
+                    </div>
                   </div>
-                  <Link to="/page2" style={styles.continueButton}>Continuer</Link>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div style={{ marginTop: '8px' }}>
-        <div style={styles.sectionTitle}>Tous les livres</div>
-        <div style={styles.libraryGrid}>
-          {library.map((book) => (
-            <div key={book.id} style={styles.libraryCard}>
-              <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
-              <div>
-                <div style={styles.libraryTitle}>{book.title}</div>
-                <div style={styles.libraryAuthor}>{book.author}</div>
-              </div>
-              <Link to="/page2" style={styles.readButton}>Lire</Link>
+                ))
+              )}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <div>
-        <Link to="/" style={styles.backButton}>← Retour</Link>
+          <div style={{ marginTop: '8px' }}>
+            <div style={styles.sectionTitle}>Tous les livres</div>
+            <div style={styles.libraryGrid}>
+              {library.map((book) => (
+                <div key={book.id} style={styles.libraryCard}>
+                  <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                  <div>
+                    <div style={styles.libraryTitle}>{book.title}</div>
+                    <div style={styles.libraryAuthor}>{book.author}</div>
+                  </div>
+                  <Link to="/page2" style={styles.readButton}>Lire</Link>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Link to="/" style={styles.backButton}>← Retour</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

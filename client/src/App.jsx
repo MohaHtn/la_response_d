@@ -5,7 +5,6 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Button from '@mui/material/Button';
-import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import Header from './components/Header';
 
 const styles = {
@@ -51,9 +50,6 @@ const styles = {
   },
   container: {
     width: '800px',
-    position: 'absolute',
-    left: '50%',
-    transform: 'translateX(-50%)',
     padding: '20px',
   },
   button: {
@@ -398,7 +394,7 @@ function App() {
         <Header />
       <style>{spinAnimation}</style>
       <div style={styles.mainContent}>
-        <div style={styles.container}>
+        <div style={{...styles.container, position: 'relative', left: 0, transform: 'none', width: '100%', maxWidth: '1000px', margin: '0 auto'}}>
             <h1 style={{ textAlign: 'center' }}>Sélectionner un PDF</h1>
 
           <div style={styles.navigationButtons}>

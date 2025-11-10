@@ -2,7 +2,6 @@ import React from 'react'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import Button from '@mui/material/Button'
 import {Link} from "react-router-dom";
 
 const headerStyles = {
@@ -44,9 +43,15 @@ export default function Header() {
     <AppBar style={headerStyles.appBar}>
       <Toolbar>
         <div style={headerStyles.toolbarContent}>
-          <Typography variant="h6" component="div" style={headerStyles.title}>
-            La réponse D | Bibliothéko
-          </Typography>
+          {/* Groupe gauche : titre + Upload (Upload après le titre) */}
+          <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+            <Typography variant="h6" component="div" style={headerStyles.title}>
+              La réponse D | Bibliothéko
+            </Typography>
+            <Link to="/page4" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Upload</Link>
+          </div>
+
+          {/* Groupe droit : Se connecter */}
           <div>
             <Link to="/page2" style={headerStyles.navButton}>Se connecter</Link>
           </div>
@@ -55,4 +60,3 @@ export default function Header() {
     </AppBar>
   )
 }
-
