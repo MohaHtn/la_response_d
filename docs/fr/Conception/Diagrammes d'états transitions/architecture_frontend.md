@@ -2,9 +2,9 @@
 
 ## Diagramme de l'architecture
 
-Voir le fichier : [architecture_frontend.puml](../Diagrammes%20de%20classes/architecture_frontend.puml)
+Voir le fichier : [architecture_frontend.puml](architecture_frontend.puml)
 
-![Diagramme d'architecture frontend](../Diagrammes%20de%20classes/architecture_frontend.puml)
+![Diagramme d'architecture frontend](architecture_frontend.puml)
 
 ## Description de l'architecture
 
