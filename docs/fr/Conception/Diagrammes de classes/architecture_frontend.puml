@@ -1,0 +1,91 @@
+@startuml ArchitectureFrontend_LaResponseD
+
+' Configuration
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam package {
+    BackgroundColor LightBlue
+    BorderColor Black
+}
+skinparam component {
+    BackgroundColor<<app>> LightCyan
+    BackgroundColor<<router>> LightSkyBlue
+    BackgroundColor<<page>> White
+    BackgroundColor<<component>> LightYellow
+    BackgroundColor<<lib>> LavenderBlush
+    BorderColor Black
+}
+
+' ==================== Application React ====================
+
+package "Application React" <<Rectangle>> {
+    component "main.jsx\nPoint d'entrée" as Main <<app>>
+    component "React Router\nGestion des routes" as Router <<router>>
+}
+
+' ==================== Pages Principales ====================
+
+package "Pages Principales" <<Rectangle>> {
+    component "Presentation.jsx\nPage d'accueil publique" as Presentation <<page>>
+    component "Auth.jsx\nAuthentification/Inscription" as Auth <<page>>
+    component "Home.jsx\nBibliothèque principale" as Home <<page>>
+    component "Upload.jsx\nUpload de PDF" as Upload <<page>>
+}
+
+' ==================== Pages Livres ====================
+
+package "Pages Livres" <<Rectangle>> {
+    component "ReadBookPage.jsx\nLecture d'un livre" as ReadBook <<page>>
+    component "ModerationPage.jsx\nModération d'un livre" as Moderation <<page>>
+}
+
+' ==================== Composants Réutilisables ====================
+
+package "Composants Réutilisables" <<Rectangle>> {
+    component "Header.jsx\nBarre de navigation" as Header <<component>>
+    component "ModeratorValidationTable.jsx\nTableau de validation" as ModTable <<component>>
+}
+
+' ==================== Bibliothèques Externes ====================
+
+package "Bibliothèques Externes" <<Rectangle>> {
+    component "Material-UI\nComposants UI" as MUI <<lib>>
+    component "ReactMarkdown\nRendu Markdown" as Markdown <<lib>>
+    component "KaTeX\nFormules mathématiques" as Math <<lib>>
+}
+
+' ==================== Relations ====================
+
+Main --> Router
+
+Router --> Presentation
+Router --> Auth
+Router --> Home
+Router --> Upload
+Router --> ReadBook
+Router --> Moderation
+
+Presentation --> Header
+Auth --> Header
+Home --> Header
+Upload --> Header
+ReadBook --> Header
+Moderation --> Header
+Moderation --> ModTable
+
+Home ..> ReadBook : navigation
+Home ..> Moderation : navigation
+
+Presentation --> MUI
+Auth --> MUI
+ReadBook --> MUI
+ReadBook --> Markdown
+ReadBook --> Math
+Moderation --> MUI
+ModTable --> MUI
+Upload --> Markdown
+Upload --> Math
+Header --> MUI
+
+@enduml
+
