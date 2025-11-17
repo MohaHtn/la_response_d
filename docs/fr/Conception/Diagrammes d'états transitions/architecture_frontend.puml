@@ -133,8 +133,7 @@ package "Models" <<Rectangle>> {
         + id: str
         + title: str
         + author: str
-        + cover: str
-        + progress: int
+        + progress: int #a voir si implementation
     }
 
     class LoginCredentials {
