@@ -2,80 +2,9 @@
 
 ## Diagramme de l'architecture
 
-```plantuml
-@startuml
-!define RECTANGLE class
+Voir le fichier : [architecture_frontend.puml](../Diagrammes%20de%20classes/architecture_frontend.puml)
 
-skinparam packageStyle rectangle
-skinparam component {
-  BackgroundColor<<app>> #e3f2fd
-  BackgroundColor<<router>> #bbdefb
-  BackgroundColor<<page>> White
-  BackgroundColor<<component>> #fff9c4
-  BackgroundColor<<lib>> #f3e5f5
-}
-
-package "Application React" {
-  component [main.jsx\nPoint d'entrée] as Main <<app>>
-  component [React Router\nGestion des routes] as Router <<router>>
-}
-
-package "Pages Principales" {
-  component [Presentation.jsx\nPage d'accueil publique] as Presentation <<page>>
-  component [Auth.jsx\nAuthentification/Inscription] as Auth <<page>>
-  component [Home.jsx\nBibliothèque principale] as Home <<page>>
-  component [Upload.jsx\nUpload de PDF] as Upload <<page>>
-}
-
-package "Pages Livres" {
-  component [ReadBookPage.jsx\nLecture d'un livre] as ReadBook <<page>>
-  component [ModerationPage.jsx\nModération d'un livre] as Moderation <<page>>
-}
-
-package "Composants Réutilisables" {
-  component [Header.jsx\nBarre de navigation] as Header <<component>>
-  component [ModeratorValidationTable.jsx\nTableau de validation] as ModTable <<component>>
-}
-
-package "Bibliothèques Externes" {
-  component [Material-UI\nComposants UI] as MUI <<lib>>
-  component [ReactMarkdown\nRendu Markdown] as Markdown <<lib>>
-  component [KaTeX\nFormules mathématiques] as Math <<lib>>
-}
-
-Main --> Router
-
-Router --> Presentation
-Router --> Auth
-Router --> Home
-Router --> Upload
-Router --> ReadBook
-Router --> Moderation
-
-Presentation --> Header
-Auth --> Header
-Home --> Header
-Upload --> Header
-ReadBook --> Header
-Moderation --> Header
-Moderation --> ModTable
-
-Home ..> ReadBook : Lien
-Home ..> Moderation : Lien
-
-Presentation --> MUI
-Auth --> MUI
-ReadBook --> MUI
-ReadBook --> Markdown
-ReadBook --> Math
-Moderation --> MUI
-ModTable --> MUI
-Upload --> Markdown
-Upload --> Math
-Header --> MUI
-
-@enduml
-```
+![Diagramme d'architecture frontend](../Diagrammes%20de%20classes/architecture_frontend.puml)
 
 ## Description de l'architecture
 
@@ -175,57 +104,13 @@ Header --> MUI
 
 ## Diagramme de flux utilisateur
 
-```plantuml
-@startuml
-[*] --> Presentation
+Voir le fichier : [flux_utilisateur.puml](flux_utilisateur.puml)
 
-Presentation --> Auth : Connexion
-Auth --> Home : Authentifié
-Home --> ReadBook : Lire un livre
-Home --> Moderation : Modérer
-Home --> Upload : Via Header
-ReadBook --> Home : Retour
-Moderation --> Home : Retour
-Upload --> Home : Retour
-Home --> Auth : Déconnexion
-Auth --> [*]
-
-@enduml
-```
+![Diagramme de flux utilisateur](flux_utilisateur.puml)
 
 ## Diagramme de composants
 
-```plantuml
-@startuml
+Voir le fichier : [composants_reutilisables.puml](../Diagrammes%20de%20classes/composants_reutilisables.puml)
 
-skinparam component {
-  BackgroundColor<<shared>> #ffeb3b
-  BackgroundColor<<page>> White
-}
-
-package "Composants UI Partagés" {
-  component [Header] as H <<shared>>
-  component [ModeratorValidationTable] as MVT <<shared>>
-}
-
-package "Pages" {
-  component [Presentation] as P <<page>>
-  component [Auth] as A <<page>>
-  component [Home] as Ho <<page>>
-  component [Upload] as U <<page>>
-  component [ReadBookPage] as RB <<page>>
-  component [ModerationPage] as M <<page>>
-}
-
-H .down.> P : utilisé par
-H .down.> A : utilisé par
-H .down.> Ho : utilisé par
-H .down.> U : utilisé par
-H .down.> RB : utilisé par
-H .down.> M : utilisé par
-
-MVT .down.> M : utilisé par
-
-@enduml
-```
+![Diagramme de composants réutilisables](../Diagrammes%20de%20classes/composants_reutilisables.puml)
 
