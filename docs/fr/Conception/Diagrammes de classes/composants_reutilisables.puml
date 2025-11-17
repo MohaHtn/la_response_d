@@ -1,0 +1,64 @@
+@startuml ComposantsReutilisables_LaResponseD
+
+' Configuration
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam component {
+    BackgroundColor<<shared>> LightYellow
+    BackgroundColor<<page>> White
+    BorderColor Black
+}
+
+' ==================== Composants Partagés ====================
+
+package "Composants UI Partagés" <<Rectangle>> {
+    component "Header.jsx" as Header <<shared>> {
+        + Navigation fixe
+        + Liens vers Home, Upload
+        + Barre de navigation
+    }
+
+    component "ModeratorValidationTable.jsx" as ModTable <<shared>> {
+        + Tableau de validation
+        + 3 modérateurs
+        + États: En attente, Approuvé, Rejeté
+    }
+}
+
+' ==================== Pages ====================
+
+package "Pages" <<Rectangle>> {
+    component "Presentation.jsx" as Presentation <<page>>
+    component "Auth.jsx" as Auth <<page>>
+    component "Home.jsx" as Home <<page>>
+    component "Upload.jsx" as Upload <<page>>
+    component "ReadBookPage.jsx" as ReadBook <<page>>
+    component "ModerationPage.jsx" as Moderation <<page>>
+}
+
+' ==================== Relations d'utilisation ====================
+
+Header .down.> Presentation : utilisé par
+Header .down.> Auth : utilisé par
+Header .down.> Home : utilisé par
+Header .down.> Upload : utilisé par
+Header .down.> ReadBook : utilisé par
+Header .down.> Moderation : utilisé par
+
+ModTable .down.> Moderation : utilisé par
+
+note right of Header
+  Composant partagé utilisé
+  par toutes les pages pour
+  assurer une navigation
+  cohérente
+end note
+
+note bottom of ModTable
+  Composant spécialisé pour
+  afficher le statut de
+  validation des modérateurs
+end note
+
+@enduml
+
