@@ -1,0 +1,58 @@
+@startuml FluxUtilisateur_LaResponseD
+
+' Configuration
+skinparam state {
+    BackgroundColor LightYellow
+    BorderColor Black
+    ArrowColor Black
+}
+
+' ==================== Diagramme d'États ====================
+
+[*] --> Presentation : Accès initial
+
+state Presentation {
+    Presentation : Page d'accueil publique
+    Presentation : Présentation du projet
+    Presentation : Accès à la documentation
+}
+
+state Auth {
+    Auth : Connexion / Inscription
+    Auth : Formulaires d'authentification
+}
+
+state Home {
+    Home : Bibliothèque principale
+    Home : Livres commencés
+    Home : Tous les livres
+}
+
+state ReadBook {
+    ReadBook : Lecture d'un livre
+    ReadBook : Rendu Markdown + LaTeX
+}
+
+state Moderation {
+    Moderation : Modération d'un livre
+    Moderation : Tableau de validation
+}
+
+state Upload {
+    Upload : Upload de PDF
+    Upload : Prévisualisation
+}
+
+Presentation --> Auth : Clic sur\n"Se connecter"
+Auth --> Home : Authentification\nréussie
+Home --> ReadBook : Clic sur\n"Lire"
+Home --> Moderation : Clic sur\n"Modérer"
+Home --> Upload : Clic sur\n"Upload" (Header)
+ReadBook --> Home : Retour
+Moderation --> Home : Retour
+Upload --> Home : Retour
+Home --> Auth : Déconnexion
+Auth --> [*] : Fermeture
+
+@enduml
+
