@@ -82,6 +82,7 @@ async def register_user(user_credentials: UserCredentials):
     user_record = {
         "username": user_credentials.username,
         "email": user_credentials.email,
+        "account_type": "USER",
         "encrypted_auth": encrypted_auth
     }
 
@@ -149,11 +150,12 @@ async def login_user(login_credentials: LoginCredentials):
             "message": "Vous êtes connecté !",
             "username": user_record["username"],
             "email": user_record["email"],
+            "account_type": user_record["account_type"],
             "token": token
         })
 
     except Exception as e:
         raise HTTPException(
-            status_code=401,
-            detail=f"Pseudonyme ou mot de passe incorrect."
+            status_code=500,
+            detail=f"Erreur interne lors de l'authentification : {str(e)}"
         )
