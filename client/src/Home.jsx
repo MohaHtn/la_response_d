@@ -166,29 +166,49 @@ const styles = {
   }
 };
 
-// Mock data - remplacer par un fetch réel plus tard
-const MOCK_LIBRARY = [
-  { id: 'b1', title: "Les Misérables", author: 'Victor Hugo' },
-  { id: 'b2', title: "Le Petit Prince", author: 'Antoine de Saint-Exupéry' },
-  { id: 'b3', title: 'La Recherche', author: 'Marcel Proust' },
-  { id: 'b4', title: "L'Étranger", author: 'Albert Camus' },
-  { id: 'b5', title: 'Candide', author: 'Voltaire' },
-  { id: 'b6', title: 'Germinal', author: 'Émile Zola' },
-];
-
-const MOCK_STARTED = [
-  { bookId: 'b2', progress: 34 },
-  { bookId: 'b4', progress: 58 },
-];
-
 function Home() {
   const [library, setLibrary] = useState([]);
   const [started, setStarted] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simuler un fetch léger — remplacer par un appel API réel si nécessaire
-    setLibrary(MOCK_LIBRARY);
-    setStarted(MOCK_STARTED);
+    // Récupérer tous les documents depuis l'API
+    const fetchDocuments = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8000/api/documents');
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des documents');
+        }
+
+        const data = await response.json();
+
+        // Transformer les documents pour correspondre au format attendu
+        const books = data.documents.map(doc => ({
+          id: doc.document_id,
+          title: doc.metadata?.title || 'Sans titre',
+          author: doc.metadata?.author || 'Auteur inconnu',
+          status: doc.moderation?.status || 'unknown'
+        }));
+
+        setLibrary(books);
+
+        // TODO: Récupérer la progression depuis localStorage ou une API dédiée
+        const savedProgress = JSON.parse(localStorage.getItem('readingProgress') || '[]');
+        setStarted(savedProgress);
+
+        setError(null);
+      } catch (err) {
+        console.error('Erreur:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocuments();
   }, []);
 
   const startedBooks = started
@@ -202,7 +222,31 @@ function Home() {
         <div style={styles.container}>
           <h1 style={styles.title}>Bibliothèque — Accueil</h1>
 
-          <div>
+          {error && (
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#ffebee',
+              color: '#c62828',
+              borderRadius: '8px',
+              marginBottom: '16px'
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          {loading && (
+            <div style={{
+              padding: '32px',
+              textAlign: 'center',
+              color: '#666'
+            }}>
+              Chargement des documents...
+            </div>
+          )}
+
+          {!loading && (
+            <>
+              <div>
             <div style={styles.sectionTitle}>En cours de lecture</div>
             <div style={styles.startedContainer}>
               {startedBooks.length === 0 ? (
@@ -253,6 +297,8 @@ function Home() {
           <div>
             <Link to="/" style={styles.backButton}>← Retour</Link>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -39,27 +39,7 @@ const styles = {
   },
 };
 
-// Exemple de données mockées - à remplacer par un appel API
-const MOCK_BOOKS = {
-  'b1': {
-    title: "Les Misérables",
-    author: "Victor Hugo",
-    content: `# Les Misérables
-
-## Chapitre 1
-
-En 1815, M. Charles-François-Bienvenu Myriel était évêque de Digne...`
-  },
-  'b2': {
-    title: "Le Petit Prince",
-    author: "Antoine de Saint-Exupéry",
-    content: `# Le Petit Prince
-
-## Chapitre 1
-
-Lorsque j'avais six ans j'ai vu, une fois, une magnifique image...`
-  }
-};
+const API_URL = 'http://localhost:8000/api';
 
 function ReadBookPage() {
   const { bookId } = useParams();
@@ -72,14 +52,28 @@ function ReadBookPage() {
     const fetchBook = async () => {
       try {
         setLoading(true);
-        // Simuler un appel API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const bookData = MOCK_BOOKS[bookId];
-        if (!bookData) {
-          throw new Error('Livre non trouvé');
+
+        const response = await fetch(`${API_URL}/documents/${bookId}`);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Livre non trouvé');
+          }
+          throw new Error(`Erreur lors du chargement du document: ${response.status}`);
         }
-        
+
+        const data = await response.json();
+
+        // Transformer les données de l'API au format attendu par le composant
+        const bookData = {
+          title: data.metadata?.title || 'Sans titre',
+          author: data.metadata?.author || 'Auteur inconnu',
+          content: data.markdown?.content || 'Aucun contenu disponible',
+          uploadDate: data.uploader?.upload_date,
+          uploader: data.uploader?.username,
+          status: data.moderation?.approval_process?.status
+        };
+
         setBook(bookData);
         setError(null);
       } catch (err) {
