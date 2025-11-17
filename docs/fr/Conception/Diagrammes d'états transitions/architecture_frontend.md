@@ -2,73 +2,79 @@
 
 ## Diagramme de l'architecture
 
-```mermaid
-graph TB
-    subgraph "Application React"
-        Main[main.jsx<br/>Point d'entrée]
-        Router[React Router<br/>Gestion des routes]
-    end
-    
-    subgraph "Pages Principales"
-        Presentation[Presentation.jsx<br/>Page d'accueil publique]
-        Auth[Auth.jsx<br/>Authentification/Inscription]
-        Home[Home.jsx<br/>Bibliothèque principale]
-        Upload[Upload.jsx<br/>Upload de PDF]
-    end
-    
-    subgraph "Pages Livres"
-        ReadBook[ReadBookPage.jsx<br/>Lecture d'un livre]
-        Moderation[ModerationPage.jsx<br/>Modération d'un livre]
-    end
-    
-    subgraph "Composants Réutilisables"
-        Header[Header.jsx<br/>Barre de navigation]
-        ModTable[ModeratorValidationTable.jsx<br/>Tableau de validation]
-    end
-    
-    subgraph "Bibliothèques Externes"
-        MUI[Material-UI<br/>Composants UI]
-        Markdown[ReactMarkdown<br/>Rendu Markdown]
-        Math[KaTeX<br/>Formules mathématiques]
-    end
-    
-    Main --> Router
-    Router --> Presentation
-    Router --> Auth
-    Router --> Home
-    Router --> Upload
-    Router --> ReadBook
-    Router --> Moderation
-    
-    Presentation --> Header
-    Auth --> Header
-    Home --> Header
-    Upload --> Header
-    ReadBook --> Header
-    Moderation --> Header
-    Moderation --> ModTable
-    
-    Home -.Lien.-> ReadBook
-    Home -.Lien.-> Moderation
-    
-    Presentation --> MUI
-    Auth --> MUI
-    ReadBook --> MUI
-    ReadBook --> Markdown
-    ReadBook --> Math
-    Moderation --> MUI
-    ModTable --> MUI
-    Upload --> Markdown
-    Upload --> Math
-    Header --> MUI
-    
-    style Main fill:#e3f2fd
-    style Router fill:#bbdefb
-    style Header fill:#fff9c4
-    style ModTable fill:#fff9c4
-    style MUI fill:#f3e5f5
-    style Markdown fill:#f3e5f5
-    style Math fill:#f3e5f5
+```plantuml
+@startuml
+!define RECTANGLE class
+
+skinparam packageStyle rectangle
+skinparam component {
+  BackgroundColor<<app>> #e3f2fd
+  BackgroundColor<<router>> #bbdefb
+  BackgroundColor<<page>> White
+  BackgroundColor<<component>> #fff9c4
+  BackgroundColor<<lib>> #f3e5f5
+}
+
+package "Application React" {
+  component [main.jsx\nPoint d'entrée] as Main <<app>>
+  component [React Router\nGestion des routes] as Router <<router>>
+}
+
+package "Pages Principales" {
+  component [Presentation.jsx\nPage d'accueil publique] as Presentation <<page>>
+  component [Auth.jsx\nAuthentification/Inscription] as Auth <<page>>
+  component [Home.jsx\nBibliothèque principale] as Home <<page>>
+  component [Upload.jsx\nUpload de PDF] as Upload <<page>>
+}
+
+package "Pages Livres" {
+  component [ReadBookPage.jsx\nLecture d'un livre] as ReadBook <<page>>
+  component [ModerationPage.jsx\nModération d'un livre] as Moderation <<page>>
+}
+
+package "Composants Réutilisables" {
+  component [Header.jsx\nBarre de navigation] as Header <<component>>
+  component [ModeratorValidationTable.jsx\nTableau de validation] as ModTable <<component>>
+}
+
+package "Bibliothèques Externes" {
+  component [Material-UI\nComposants UI] as MUI <<lib>>
+  component [ReactMarkdown\nRendu Markdown] as Markdown <<lib>>
+  component [KaTeX\nFormules mathématiques] as Math <<lib>>
+}
+
+Main --> Router
+
+Router --> Presentation
+Router --> Auth
+Router --> Home
+Router --> Upload
+Router --> ReadBook
+Router --> Moderation
+
+Presentation --> Header
+Auth --> Header
+Home --> Header
+Upload --> Header
+ReadBook --> Header
+Moderation --> Header
+Moderation --> ModTable
+
+Home ..> ReadBook : Lien
+Home ..> Moderation : Lien
+
+Presentation --> MUI
+Auth --> MUI
+ReadBook --> MUI
+ReadBook --> Markdown
+ReadBook --> Math
+Moderation --> MUI
+ModTable --> MUI
+Upload --> Markdown
+Upload --> Math
+Header --> MUI
+
+@enduml
 ```
 
 ## Description de l'architecture
@@ -169,49 +175,57 @@ graph TB
 
 ## Diagramme de flux utilisateur
 
-```mermaid
-stateDiagram-v2
-    [*] --> Presentation
-    Presentation --> Auth : Connexion
-    Auth --> Home : Authentifié
-    Home --> ReadBook : Lire un livre
-    Home --> Moderation : Modérer
-    Home --> Upload : Via Header
-    ReadBook --> Home : Retour
-    Moderation --> Home : Retour
-    Upload --> Home : Retour
-    Home --> Auth : Déconnexion
-    Auth --> [*]
+```plantuml
+@startuml
+[*] --> Presentation
+
+Presentation --> Auth : Connexion
+Auth --> Home : Authentifié
+Home --> ReadBook : Lire un livre
+Home --> Moderation : Modérer
+Home --> Upload : Via Header
+ReadBook --> Home : Retour
+Moderation --> Home : Retour
+Upload --> Home : Retour
+Home --> Auth : Déconnexion
+Auth --> [*]
+
+@enduml
 ```
 
 ## Diagramme de composants
 
-```mermaid
-graph LR
-    subgraph "Composants UI Partagés"
-        H[Header]
-        MVT[ModeratorValidationTable]
-    end
-    
-    subgraph "Pages"
-        P[Presentation]
-        A[Auth]
-        Ho[Home]
-        U[Upload]
-        RB[ReadBookPage]
-        M[ModerationPage]
-    end
-    
-    H -.utilisé par.-> P
-    H -.utilisé par.-> A
-    H -.utilisé par.-> Ho
-    H -.utilisé par.-> U
-    H -.utilisé par.-> RB
-    H -.utilisé par.-> M
-    
-    MVT -.utilisé par.-> M
-    
-    style H fill:#ffeb3b
-    style MVT fill:#ffeb3b
+```plantuml
+@startuml
+
+skinparam component {
+  BackgroundColor<<shared>> #ffeb3b
+  BackgroundColor<<page>> White
+}
+
+package "Composants UI Partagés" {
+  component [Header] as H <<shared>>
+  component [ModeratorValidationTable] as MVT <<shared>>
+}
+
+package "Pages" {
+  component [Presentation] as P <<page>>
+  component [Auth] as A <<page>>
+  component [Home] as Ho <<page>>
+  component [Upload] as U <<page>>
+  component [ReadBookPage] as RB <<page>>
+  component [ModerationPage] as M <<page>>
+}
+
+H .down.> P : utilisé par
+H .down.> A : utilisé par
+H .down.> Ho : utilisé par
+H .down.> U : utilisé par
+H .down.> RB : utilisé par
+H .down.> M : utilisé par
+
+MVT .down.> M : utilisé par
+
+@enduml
 ```
 
