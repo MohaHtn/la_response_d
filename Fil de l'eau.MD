@@ -48,4 +48,7 @@ Discussion sur ce qu'on a dit plus haut !
 Refactorisation du code, en essayant d'avoir l'architecture la plus clean possible.
 
 # Session 8 : 10 Novembre 2025
-Discussion sur le modèle de données de Document, et User. 
+Discussion sur le modèle de données de Document, et User.
+
+# Session 9 : 17 Novembre 2025
+Présentation des modèles de conception aux autres !
