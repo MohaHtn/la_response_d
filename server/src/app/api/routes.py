@@ -83,7 +83,7 @@ async def register_user(user_credentials: UserCredentials):
     user_record = {
         "username": user_credentials.username,
         "email": user_credentials.email,
-        "account_type": "USER",
+        "account_type": "MEMBER",
         "encrypted_auth": encrypted_auth
     }
 

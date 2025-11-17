@@ -139,21 +139,53 @@ function Auth() {
     setLoading(true);
     try {
       // Appeler l'API (adapter le chemin si nécessaire)
-      const res = await sendUserData('/api/login', {username: username, password: loginPassword});
+      const res = await sendUserData('/api/login', { username: username, password: loginPassword });
       setMessageType('success');
       setMessage(res?.message || 'Connexion réussie');
-      // Si le backend renvoie un token, on le stocke localement pour les requêtes suivantes
+
+      // Stocker les informations de l'utilisateur
       if (res?.token) {
-        try { localStorage.setItem('authToken', res.token); } catch { /* localStorage peut être bloqué dans certains environnements */ }
+        try {
+          localStorage.setItem('authToken', res.token);
+        } catch { /* localStorage peut être bloqué */ }
       }
-      // Stocker un token fictif pour la démo (le backend actuel ne renvoie pas de token)
+
+      // Déterminer le type de compte renvoyé par l'API
+      // On normalise en USER / MEMBER / ADMIN
+      let userType = 'USER';
+      const rawType = res?.user?.account_type || res?.account_type || res?.userType;
+      if (rawType) {
+        const upper = String(rawType).toUpperCase();
+        if (upper === 'ADMIN') userType = 'ADMIN';
+        else if (upper === 'MEMBER' || upper === 'MODERATOR') userType = 'MEMBER';
+      }
+
       try {
-        localStorage.setItem('authToken', 'demo-token-' + Date.now());
+        localStorage.setItem('userType', userType);
+        localStorage.setItem('username', username);
+        if (!res?.token) {
+          // fallback simple si pas de token renvoyé
+          localStorage.setItem('authToken', 'demo-token-' + Date.now());
+        }
         // Notifier le changement d'authentification
         window.dispatchEvent(new Event('authChange'));
       } catch { /* localStorage peut être bloqué */ }
-      // Rediriger vers /home après une connexion réussie
-      setTimeout(() => navigate('/home'), 1000);
+
+      // Rediriger selon le type de compte
+      setTimeout(() => {
+        if (userType === 'USER') {
+          // utilisateur classique -> page d'accueil
+          navigate('/home');
+        } else if (userType === 'MEMBER') {
+          // membre/modérateur -> page de modération (vue d'ensemble)
+          navigate('/moderation/overview');
+        } else if (userType === 'ADMIN') {
+          // admin -> panneau d'administration
+          navigate('/admin');
+        } else {
+          navigate('/home');
+        }
+      }, 1000);
     } catch (err) {
       setMessageType('error');
       console.log(err);
