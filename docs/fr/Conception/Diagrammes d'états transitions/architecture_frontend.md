@@ -110,7 +110,7 @@ Voir le fichier : [flux_utilisateur.puml](flux_utilisateur.puml)
 
 ## Diagramme de composants
 
-Voir le fichier : [composants_reutilisables.puml](../Diagrammes%20de%20classes/composants_reutilisables.puml)
+Voir le fichier : [composants_reutilisables.puml](composants_reutilisables.puml)
 
-![Diagramme de composants réutilisables](../Diagrammes%20de%20classes/composants_reutilisables.puml)
+![Diagramme de composants réutilisables](composants_reutilisables.puml)
 
