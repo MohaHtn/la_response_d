@@ -74,7 +74,8 @@ const styles = {
   message: {
     marginTop: '20px',
     fontSize: '18px',
-
+    textAlign: 'left',
+    whiteSpace: 'pre-line',
   },
   fileInput: {
     display: 'none', // Cache l'input natif
@@ -195,6 +196,25 @@ const styles = {
   downloadButtonHover: {
     backgroundColor: '#218838',
   },
+  successMessageContainer: {
+    marginTop: '20px',
+    padding: '20px',
+    border: '1px solid #28a745',
+    borderRadius: '8px',
+    backgroundColor: '#d4edda',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  },
+  successMessageTitle: {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    marginBottom: '15px',
+    color: '#155724',
+  },
+  successMessageItem: {
+    marginBottom: '8px',
+    fontSize: '14px',
+    color: '#155724',
+  },
   metadataContainer: {
     marginTop: '30px',
     padding: '20px',
@@ -313,6 +333,7 @@ function Upload() {
   const [metadata, setMetadata] = useState(null);
   const [securityAnalysis, setSecurityAnalysis] = useState(null);
   const [contentAnalysis, setContentAnalysis] = useState(null);
+  const [documentInfo, setDocumentInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -439,13 +460,22 @@ function Upload() {
         setContentAnalysis(null);
         setIsLoading(true);
 
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Ajouter les métadonnées si disponibles
+        if (metadata?.title) {
+          formData.append('title', metadata.title);
+        }
+        if (metadata?.author) {
+          formData.append('author', metadata.author);
+        }
+
         fetch("http://localhost:8000/api/send-book", {
           method: "POST",
-          body: (() => {
-            const formData = new FormData();
-            formData.append('file', file);
-            return formData;
-          })(),
+          headers: {'Username': localStorage.getItem('username')},
+          body: formData,
         })
           .then(async (response) => {
             if (!response.ok) {
@@ -456,23 +486,64 @@ function Upload() {
             const result = await response.json();
 
             try {
-              // Extraction des différents éléments de la réponse
-              const imgs = extractImagesFromResult(result);
-              setImages(imgs);
+              if (result.success) {
+                const docInfo = result.document;
+                console.log('Document créé:', docInfo);
 
-              const markdown = extractAndMergeMarkdown(result);
-              setMergedMarkdown(markdown);
+                // Extraire le markdown (la clé correcte est "markdown", pas "ocr_result.text")
+                if (result.markdown) {
+                  setMergedMarkdown(result.markdown);
+                }
 
-              const meta = extractMetadata(result);
-              setMetadata(meta);
+                // Extraire les images de la structure OCR
+                const imgs = extractImagesFromResult(result);
+                if (imgs.length > 0) setImages(imgs);
 
-              const security = extractSecurityAnalysis(result);
-              setSecurityAnalysis(security);
+                // Extraire les métadonnées (déjà normalisées par le backend)
+                if (result.metadata) {
+                  setMetadata(result.metadata);
+                }
 
-              const content = extractContentAnalysis(result);
-              setContentAnalysis(content);
+                // Extraire l'analyse de sécurité
+                if (result.security_analysis) {
+                  setSecurityAnalysis(result.security_analysis);
+                }
 
-              setMessage(`Traitement terminé (${new Date().toLocaleTimeString()})`);
+                // Extraire l'analyse de contenu
+                if (result.content_analysis) {
+                  setContentAnalysis(result.content_analysis);
+                }
+
+                // Stocker les informations du document
+                const textLength = result.markdown ? result.markdown.length : 0;
+                setDocumentInfo({
+                  title: docInfo.title,
+                  author: docInfo.author,
+                  uploader: docInfo.uploader,
+                  status: docInfo.status,
+                  textLength: textLength,
+                  documentId: result.document_id
+                });
+
+                setMessage("✅ Document traité avec succès!");
+              } else {
+                const imgs = extractImagesFromResult(result);
+                setImages(imgs);
+
+                const markdown = extractAndMergeMarkdown(result);
+                setMergedMarkdown(markdown);
+
+                const meta = extractMetadata(result);
+                setMetadata(meta);
+
+                const security = extractSecurityAnalysis(result);
+                setSecurityAnalysis(security);
+
+                const content = extractContentAnalysis(result);
+                setContentAnalysis(content);
+
+                setMessage(`Traitement terminé (${new Date().toLocaleTimeString()})`);
+              }
             } catch (err) {
               console.error('Erreur lors de l\'extraction des données:', err);
               setMessage('Erreur lors du traitement de la réponse');
@@ -544,13 +615,37 @@ function Upload() {
             </div>
           )}
 
-          {message && !isLoading && <p style={styles.message}>{message}</p>}
+          {message && !isLoading && !documentInfo && <p style={styles.message}>{message}</p>}
 
-          {(securityAnalysis || contentAnalysis || metadata || mergedMarkdown) && !isLoading && (
+          {(securityAnalysis || contentAnalysis || metadata || mergedMarkdown || documentInfo) && !isLoading && (
             <div style={styles.gridContainer}>
               {/* Colonne de gauche : Analyses */}
               <div style={styles.leftColumn}>
                 <div style={styles.stickyAnalysisSection}>
+                  {documentInfo && (
+                    <div style={styles.successMessageContainer}>
+                      <div style={styles.successMessageTitle}>✅ Document traité avec succès!</div>
+                      <div style={styles.successMessageItem}>
+                        📄 <strong>Titre:</strong> {documentInfo.title}
+                      </div>
+                      <div style={styles.successMessageItem}>
+                        ✍️ <strong>Auteur:</strong> {documentInfo.author}
+                      </div>
+                      <div style={styles.successMessageItem}>
+                        👤 <strong>Uploadé par:</strong> {documentInfo.uploader}
+                      </div>
+                      <div style={styles.successMessageItem}>
+                        📊 <strong>Statut:</strong> {documentInfo.status}
+                      </div>
+                      <div style={styles.successMessageItem}>
+                        📝 <strong>Texte extrait:</strong> {documentInfo.textLength} caractères
+                      </div>
+                      <div style={styles.successMessageItem}>
+                        🆔 <strong>ID:</strong> {documentInfo.documentId}
+                      </div>
+                    </div>
+                  )}
+
                   {metadata && (
                     <div style={styles.metadataContainer}>
                       <div style={styles.metadataTitle}>📋 Métadonnées du document</div>

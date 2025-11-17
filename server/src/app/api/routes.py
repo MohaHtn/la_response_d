@@ -1,9 +1,13 @@
 """
 API routes for the application
 """
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Header
 from fastapi.responses import JSONResponse
-from .models import UserCredentials, LoginCredentials, Document, BookStatus
+from .models import (
+    UserCredentials, LoginCredentials, Document, BookStatus,
+    DocumentMetadata, DocumentUploader, DocumentModeration,
+    DocumentMarkdown, ApprovalProcess
+)
 from ..infra.ocr import process_pdf
 from ..infra.config import config
 from ..domain.services import AuthService
@@ -15,16 +19,24 @@ import jwt
 router = APIRouter(prefix="/api", tags=["api"])
 
 @router.post("/send-book")
-async def send_book(file: UploadFile = File(...)):
+async def send_book(
+        file: UploadFile = File(...),
+        title: Optional[str] = None,
+        author: Optional[str] = None,
+        username: Optional[str] = Header(None)
+):
     """
-    Upload and process a PDF file with OCR
+    Upload and process a PDF file with OCR, then create a document
 
     Args:
         file: The PDF file to process
+        title: Optional title of the document
+        author: Optional author of the document
 
     Returns:
-        JSON response with OCR results
+        JSON response with OCR results, document ID, and processing details
     """
+
     # Validate content type
     if file.content_type not in config.ALLOWED_CONTENT_TYPES:
         raise HTTPException(
@@ -42,17 +54,100 @@ async def send_book(file: UploadFile = File(...)):
 
     try:
         filename = file.filename or "uploaded.pdf"
-        ocr = process_pdf(filename, data)
+
+        # Process PDF - retourne déjà toutes les analyses (metadata, security, content, markdown)
+        ocr_result = process_pdf(filename, data)
+
+        # Sauvegarder le résultat complet
         with open(config.get_ocr_result_path(), "w", encoding="utf-8") as f:
-            f.write(str(ocr))
+            f.write(str(ocr_result))
+
+        # Extraire les données retournées par process_pdf
+        extracted_metadata = ocr_result.get("metadata", {})
+        security_analysis = ocr_result.get("security_analysis", {})
+        content_analysis = ocr_result.get("content_analysis", {})
+        markdown_content = ocr_result.get("markdown", "")
+
+        current_date = datetime.now().isoformat()
+
+        # Normaliser les métadonnées pour le modèle Pydantic
+        # L'auteur peut être une liste, on la convertit en string
+        metadata_author = extracted_metadata.get("author")
+        if isinstance(metadata_author, list):
+            metadata_author = ", ".join(metadata_author) if metadata_author else "Inconnu"
+        elif not metadata_author:
+            metadata_author = "Inconnu"
+
+        # La date de parution peut être None
+        parution_date = extracted_metadata.get("date") or extracted_metadata.get("parution_date") or ""
+
+        # Utiliser le titre et l'auteur détectés par l'IA, avec fallback sur les paramètres
+        doc_title = title or extracted_metadata.get("title") or filename
+        doc_author = author or metadata_author
+
+        # Create document with OCR data using proper nested structure
+        document = Document(
+            metadata=DocumentMetadata(
+                title=doc_title,
+                author=doc_author,
+                parution_date=parution_date,
+                is_appropriate=str(content_analysis.get("is_appropriate", True)),
+                is_harmful=not content_analysis.get("is_appropriate", True)
+            ),
+            uploader=DocumentUploader(
+                username=username or "anonymous",
+                upload_date=current_date
+            ),
+            moderation=DocumentModeration(
+                approval_process=ApprovalProcess(
+                    status=BookStatus.WAITING,
+                    date=current_date,
+                    details=""
+                ),
+                approved_by=[]
+            ),
+            markdown=DocumentMarkdown(
+                content=markdown_content
+            )
+        )
+
+        document_data = document.model_dump()
+        document_id = await document_repository.add_document(document_data)
+
+        # Prepare detailed response for frontend
+        # Normaliser les métadonnées pour le frontend
+        normalized_metadata = {
+            "title": doc_title,
+            "author": doc_author,
+            "date": parution_date,
+            "publisher": extracted_metadata.get("publisher", "Non spécifié"),
+            "description": extracted_metadata.get("description", f"Document uploadé par {username or 'anonymous'}")
+        }
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "Document traité et créé avec succès.",
+            "document_id": document_id,
+            "document": {
+                "title": doc_title,
+                "author": doc_author,
+                "uploader": username or "anonymous",
+                "upload_date": current_date,
+                "status": BookStatus.WAITING.value
+            },
+            "metadata": normalized_metadata,
+            "security_analysis": security_analysis,
+            "content_analysis": content_analysis,
+            "markdown": markdown_content,
+            "ocr": ocr_result.get("ocr", {}),
+            "processing_info": ocr_result.get("processing_info", {})
+        })
     except Exception as e:
         # Map general errors to 500
         raise HTTPException(
             status_code=500,
-            detail=f"Échec du traitement OCR : {e}"
+            detail=f"Échec du traitement OCR ou de la création du document : {e}"
         )
-
-    return JSONResponse(content=ocr)
 
 
 @router.post("/register")
