@@ -1,91 +1,219 @@
 @startuml ArchitectureFrontend_LaResponseD
 
 ' Configuration
-skinparam componentStyle rectangle
+skinparam classAttributeIconSize 0
 skinparam linetype ortho
-skinparam package {
-    BackgroundColor LightBlue
+skinparam class {
+    BackgroundColor LightYellow
     BorderColor Black
-}
-skinparam component {
-    BackgroundColor<<app>> LightCyan
-    BackgroundColor<<router>> LightSkyBlue
-    BackgroundColor<<page>> White
-    BackgroundColor<<component>> LightYellow
-    BackgroundColor<<lib>> LavenderBlush
-    BorderColor Black
+    ArrowColor Black
 }
 
 ' ==================== Application React ====================
 
 package "Application React" <<Rectangle>> {
-    component "main.jsx\nPoint d'entrée" as Main <<app>>
-    component "React Router\nGestion des routes" as Router <<router>>
+    class Main {
+        + title: str
+        + render(): ReactElement
+        + configureRouter(): void
+    }
+
+    class ReactRouter {
+        + router: BrowserRouter
+        + routes: Routes
+        + navigate(path: str): void
+        + useParams(): dict
+    }
 }
 
 ' ==================== Pages Principales ====================
 
 package "Pages Principales" <<Rectangle>> {
-    component "Presentation.jsx\nPage d'accueil publique" as Presentation <<page>>
-    component "Auth.jsx\nAuthentification/Inscription" as Auth <<page>>
-    component "Home.jsx\nBibliothèque principale" as Home <<page>>
-    component "Upload.jsx\nUpload de PDF" as Upload <<page>>
+    class Presentation {
+        + title: str
+        + displayFeatures(): void
+        + navigateToAuth(): void
+        + render(): ReactElement
+    }
+
+    class Auth {
+        + mode: str
+        + loginForm: LoginCredentials
+        + registerForm: RegisterCredentials
+        + handleLogin(credentials: LoginCredentials): void
+        + handleRegister(credentials: RegisterCredentials): void
+        + render(): ReactElement
+    }
+
+    class Home {
+        + books: list[Book]
+        + startedBooks: list[Book]
+        + fetchBooks(): void
+        + navigateToBook(id: str): void
+        + navigateToModeration(id: str): void
+        + render(): ReactElement
+    }
+
+    class Upload {
+        + selectedFile: File
+        + preview: str
+        + handleFileUpload(file: File): void
+        + validateFile(): bool
+        + sendToServer(): void
+        + render(): ReactElement
+    }
 }
 
 ' ==================== Pages Livres ====================
 
 package "Pages Livres" <<Rectangle>> {
-    component "ReadBookPage.jsx\nLecture d'un livre" as ReadBook <<page>>
-    component "ModerationPage.jsx\nModération d'un livre" as Moderation <<page>>
+    class ReadBookPage {
+        + bookId: str
+        + content: str
+        + fetchBookContent(): void
+        + renderMarkdown(): void
+        + render(): ReactElement
+    }
+
+    class ModerationPage {
+        + bookId: str
+        + metadata: BookMetadata
+        + moderators: list[Moderator]
+        + activeTab: int
+        + fetchModerationData(): void
+        + handleValidation(): void
+        + render(): ReactElement
+    }
 }
 
 ' ==================== Composants Réutilisables ====================
 
 package "Composants Réutilisables" <<Rectangle>> {
-    component "Header.jsx\nBarre de navigation" as Header <<component>>
-    component "ModeratorValidationTable.jsx\nTableau de validation" as ModTable <<component>>
+    class Header {
+        + currentPage: str
+        + navigateToHome(): void
+        + navigateToUpload(): void
+        + render(): ReactElement
+    }
+
+    class ModeratorValidationTable {
+        + moderators: list[Moderator]
+        + displayStatus(moderator: Moderator): void
+        + getStatusColor(status: str): str
+        + render(): ReactElement
+    }
 }
 
 ' ==================== Bibliothèques Externes ====================
 
 package "Bibliothèques Externes" <<Rectangle>> {
-    component "Material-UI\nComposants UI" as MUI <<lib>>
-    component "ReactMarkdown\nRendu Markdown" as Markdown <<lib>>
-    component "KaTeX\nFormules mathématiques" as Math <<lib>>
+    class MaterialUI <<External>> {
+        + appBar: AppBar
+        + typography: Typography
+        + paper: Paper
+        + table: Table
+        + button: Button
+    }
+
+    class ReactMarkdown <<External>> {
+        + renderMarkdown(content: str): void
+        + plugins: list[Plugin]
+    }
+
+    class KaTeX <<External>> {
+        + renderMath(formula: str): void
+        + css: str
+    }
+}
+
+' ==================== Modèles ====================
+
+package "Models" <<Rectangle>> {
+    class Book {
+        + id: str
+        + title: str
+        + author: str
+        + cover: str
+        + progress: int
+    }
+
+    class LoginCredentials {
+        + username: str
+        + password: str
+    }
+
+    class RegisterCredentials {
+        + username: str
+        + password: str
+        + email: str
+    }
+
+    class BookMetadata {
+        + title: str
+        + author: str
+        + submissionDate: str
+        + pages: int
+        + status: str
+    }
+
+    class Moderator {
+        + name: str
+        + status: str
+        + date: str
+        + comment: str
+    }
 }
 
 ' ==================== Relations ====================
 
-Main --> Router
+' Application contient le routeur
+Main *-- ReactRouter : contains
 
-Router --> Presentation
-Router --> Auth
-Router --> Home
-Router --> Upload
-Router --> ReadBook
-Router --> Moderation
+' Routeur gère les pages
+ReactRouter --> Presentation : routes to
+ReactRouter --> Auth : routes to
+ReactRouter --> Home : routes to
+ReactRouter --> Upload : routes to
+ReactRouter --> ReadBookPage : routes to
+ReactRouter --> ModerationPage : routes to
 
-Presentation --> Header
-Auth --> Header
-Home --> Header
-Upload --> Header
-ReadBook --> Header
-Moderation --> Header
-Moderation --> ModTable
+' Pages utilisent Header
+Presentation --> Header : uses
+Auth --> Header : uses
+Home --> Header : uses
+Upload --> Header : uses
+ReadBookPage --> Header : uses
+ModerationPage --> Header : uses
 
-Home ..> ReadBook : navigation
-Home ..> Moderation : navigation
+' Moderation utilise le tableau
+ModerationPage --> ModeratorValidationTable : uses
 
-Presentation --> MUI
-Auth --> MUI
-ReadBook --> MUI
-ReadBook --> Markdown
-ReadBook --> Math
-Moderation --> MUI
-ModTable --> MUI
-Upload --> Markdown
-Upload --> Math
-Header --> MUI
+' Navigation entre pages
+Home ..> ReadBookPage : navigates to
+Home ..> ModerationPage : navigates to
+
+' Utilisation des modèles
+Auth ..> LoginCredentials : uses
+Auth ..> RegisterCredentials : uses
+Home ..> Book : displays
+ModerationPage ..> BookMetadata : uses
+ModerationPage ..> Moderator : manages
+ModeratorValidationTable ..> Moderator : displays
+
+' Utilisation des bibliothèques
+Presentation --> MaterialUI : uses
+Auth --> MaterialUI : uses
+Home --> MaterialUI : uses
+Upload --> MaterialUI : uses
+ReadBookPage --> MaterialUI : uses
+ModerationPage --> MaterialUI : uses
+Header --> MaterialUI : uses
+ModeratorValidationTable --> MaterialUI : uses
+
+ReadBookPage --> ReactMarkdown : uses
+Upload --> ReactMarkdown : uses
+ReadBookPage --> KaTeX : uses
+Upload --> KaTeX : uses
 
 @enduml
 

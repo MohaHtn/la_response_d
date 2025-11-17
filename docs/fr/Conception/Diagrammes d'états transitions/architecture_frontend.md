@@ -7,72 +7,194 @@ Ce document présente l'architecture frontend du projet "La Response D", une app
 ## Diagramme de l'architecture
 
 ```mermaid
-graph TB
-    subgraph "Application React"
-        Main[main.jsx<br/>Point d'entrée]
-        Router[React Router<br/>Gestion des routes]
-    end
+classDiagram
+    %% ==================== Application React ====================
     
-    subgraph "Pages Principales"
-        Presentation[Presentation.jsx<br/>Page d'accueil publique]
-        Auth[Auth.jsx<br/>Authentification/Inscription]
-        Home[Home.jsx<br/>Bibliothèque principale]
-        Upload[Upload.jsx<br/>Upload de PDF]
-    end
+    class Main {
+        +string title
+        +ReactElement render()
+        +void configureRouter()
+    }
     
-    subgraph "Pages Livres"
-        ReadBook[ReadBookPage.jsx<br/>Lecture d'un livre]
-        Moderation[ModerationPage.jsx<br/>Modération d'un livre]
-    end
+    class ReactRouter {
+        +BrowserRouter router
+        +Routes routes
+        +navigate(path: string)
+        +useParams()
+    }
     
-    subgraph "Composants Réutilisables"
-        Header[Header.jsx<br/>Barre de navigation]
-        ModTable[ModeratorValidationTable.jsx<br/>Tableau de validation]
-    end
+    %% ==================== Pages Principales ====================
     
-    subgraph "Bibliothèques Externes"
-        MUI[Material-UI<br/>Composants UI]
-        Markdown[ReactMarkdown<br/>Rendu Markdown]
-        Math[KaTeX<br/>Formules mathématiques]
-    end
+    class Presentation {
+        +string title
+        +void displayFeatures()
+        +void navigateToAuth()
+        +render() ReactElement
+    }
     
-    Main --> Router
-    Router --> Presentation
-    Router --> Auth
-    Router --> Home
-    Router --> Upload
-    Router --> ReadBook
-    Router --> Moderation
+    class Auth {
+        +string mode
+        +LoginCredentials loginForm
+        +RegisterCredentials registerForm
+        +handleLogin(credentials)
+        +handleRegister(credentials)
+        +render() ReactElement
+    }
     
-    Presentation --> Header
-    Auth --> Header
-    Home --> Header
-    Upload --> Header
-    ReadBook --> Header
-    Moderation --> Header
-    Moderation --> ModTable
+    class Home {
+        +list~Book~ books
+        +list~Book~ startedBooks
+        +void fetchBooks()
+        +void navigateToBook(id)
+        +void navigateToModeration(id)
+        +render() ReactElement
+    }
     
-    Home -.Navigation.-> ReadBook
-    Home -.Navigation.-> Moderation
+    class Upload {
+        +File selectedFile
+        +string preview
+        +void handleFileUpload(file)
+        +void validateFile()
+        +void sendToServer()
+        +render() ReactElement
+    }
     
-    Presentation --> MUI
-    Auth --> MUI
-    ReadBook --> MUI
-    ReadBook --> Markdown
-    ReadBook --> Math
-    Moderation --> MUI
-    ModTable --> MUI
-    Upload --> Markdown
-    Upload --> Math
-    Header --> MUI
+    class ReadBookPage {
+        +string bookId
+        +string content
+        +void fetchBookContent()
+        +void renderMarkdown()
+        +render() ReactElement
+    }
     
-    style Main fill:#e3f2fd
-    style Router fill:#bbdefb
-    style Header fill:#fff9c4
-    style ModTable fill:#fff9c4
-    style MUI fill:#f3e5f5
-    style Markdown fill:#f3e5f5
-    style Math fill:#f3e5f5
+    class ModerationPage {
+        +string bookId
+        +BookMetadata metadata
+        +list~Moderator~ moderators
+        +int activeTab
+        +void fetchModerationData()
+        +void handleValidation()
+        +render() ReactElement
+    }
+    
+    %% ==================== Composants Réutilisables ====================
+    
+    class Header {
+        +string currentPage
+        +void navigateToHome()
+        +void navigateToUpload()
+        +render() ReactElement
+    }
+    
+    class ModeratorValidationTable {
+        +list~Moderator~ moderators
+        +void displayStatus(moderator)
+        +string getStatusColor(status)
+        +render() ReactElement
+    }
+    
+    %% ==================== Bibliothèques Externes ====================
+    
+    class MaterialUI {
+        <<External>>
+        +AppBar appBar
+        +Typography typography
+        +Paper paper
+        +Table table
+        +Button button
+    }
+    
+    class ReactMarkdown {
+        <<External>>
+        +void renderMarkdown(content)
+        +list~Plugin~ plugins
+    }
+    
+    class KaTeX {
+        <<External>>
+        +void renderMath(formula)
+        +string css
+    }
+    
+    %% ==================== Modèles ====================
+    
+    class Book {
+        +string id
+        +string title
+        +string author
+        +string cover
+        +int progress
+    }
+    
+    class LoginCredentials {
+        +string username
+        +string password
+    }
+    
+    class RegisterCredentials {
+        +string username
+        +string password
+        +string email
+    }
+    
+    class BookMetadata {
+        +string title
+        +string author
+        +string submissionDate
+        +int pages
+        +string status
+    }
+    
+    class Moderator {
+        +string name
+        +string status
+        +string date
+        +string comment
+    }
+    
+    %% ==================== Relations ====================
+    
+    Main *-- ReactRouter : contains
+    
+    ReactRouter --> Presentation : routes to
+    ReactRouter --> Auth : routes to
+    ReactRouter --> Home : routes to
+    ReactRouter --> Upload : routes to
+    ReactRouter --> ReadBookPage : routes to
+    ReactRouter --> ModerationPage : routes to
+    
+    Presentation --> Header : uses
+    Auth --> Header : uses
+    Home --> Header : uses
+    Upload --> Header : uses
+    ReadBookPage --> Header : uses
+    ModerationPage --> Header : uses
+    
+    ModerationPage --> ModeratorValidationTable : uses
+    
+    Home ..> ReadBookPage : navigates to
+    Home ..> ModerationPage : navigates to
+    
+    Auth ..> LoginCredentials : uses
+    Auth ..> RegisterCredentials : uses
+    Home ..> Book : displays
+    ModerationPage ..> BookMetadata : uses
+    ModerationPage ..> Moderator : manages
+    ModeratorValidationTable ..> Moderator : displays
+    
+    Presentation --> MaterialUI : uses
+    Auth --> MaterialUI : uses
+    Home --> MaterialUI : uses
+    Upload --> MaterialUI : uses
+    ReadBookPage --> MaterialUI : uses
+    ModerationPage --> MaterialUI : uses
+    Header --> MaterialUI : uses
+    ModeratorValidationTable --> MaterialUI : uses
+    
+    ReadBookPage --> ReactMarkdown : uses
+    Upload --> ReactMarkdown : uses
+    ReadBookPage --> KaTeX : uses
+    Upload --> KaTeX : uses
 ```
 
 ### Fichier PlantUML
