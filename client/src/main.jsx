@@ -6,8 +6,8 @@ import Presentation from './Presentation.jsx'
 import Home from './Home.jsx'
 import Auth from "./Auth.jsx"
 import ReadBookPage from './pages/ReadBookPage'
-import ModerationPage from './pages/ModerationPage'
 import Upload from "./Upload.jsx";
+import ModeratorPage from "./pages/ModeratorPage.jsx";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -19,7 +19,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/upload" element={<Upload />} />
         <Route path="/presentation" element={<Presentation />} />
         <Route path="/book/:bookId" element={<ReadBookPage />} />
-        <Route path="/moderation/:bookId" element={<ModerationPage />} />
+        <Route path="/moderation/:bookId" element={<ModeratorPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

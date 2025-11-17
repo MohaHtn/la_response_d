@@ -8,3 +8,4 @@ protobuf
 python-multipart
 
 pyjwt
+redis

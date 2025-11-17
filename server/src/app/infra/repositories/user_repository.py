@@ -1,47 +1,31 @@
 """
-User data management and storage
+User data management and storage with Redis
 """
-import json
-from typing import List, Dict, Optional
-from ..config import config
+from typing import Dict, Optional, List
+from ..database.redis_manager import redis_manager
 
 
 class UserRepository:
-    """Repository for user data operations"""
+    """Repository for user data operations using Redis"""
 
-    def __init__(self, data_file: str = None):
+    USER_KEY_PREFIX = "user:"
+    USERNAME_INDEX = "usernames"
+
+    def __init__(self):
+        """Initialize the user repository with Redis"""
+        self.redis_client = redis_manager.get_client()
+
+    def _get_user_key(self, username: str) -> str:
         """
-        Initialize the user repository
+        Generate Redis key for a user
 
         Args:
-            data_file: Path to the JSON file storing user data (uses config default if None)
-        """
-        self.data_file = data_file or config.get_users_file_path()
-
-    async def load_users(self) -> List[Dict]:
-        """
-        Load users from the JSON file
+            username: The username
 
         Returns:
-            List of user records
+            Redis key string
         """
-        try:
-            with open(self.data_file, 'r') as file:
-                return json.load(file)
-        except FileNotFoundError:
-            return []
-        except json.JSONDecodeError:
-            return []
-
-    async def save_users(self, users: List[Dict]) -> None:
-        """
-        Save users to the JSON file
-
-        Args:
-            users: List of user records to save
-        """
-        with open(self.data_file, 'w') as file:
-            json.dump(users, file, indent=2)
+        return f"{self.USER_KEY_PREFIX}{username.lower()}"
 
     async def user_exists(self, username: str) -> bool:
         """
@@ -53,8 +37,8 @@ class UserRepository:
         Returns:
             True if user exists, False otherwise
         """
-        users = await self.load_users()
-        return any(user["username"] == username for user in users)
+        key = self._get_user_key(username)
+        return bool(self.redis_client.exists(key))
 
     async def get_user_record(self, username: str) -> Optional[Dict]:
         """
@@ -66,11 +50,13 @@ class UserRepository:
         Returns:
             User record if found, None otherwise
         """
-        users = await self.load_users()
-        for user in users:
-            if user["username"] == username:
-                return user
-        return None
+        key = self._get_user_key(username)
+        user_data = self.redis_client.hgetall(key)
+
+        if not user_data:
+            return None
+
+        return user_data
 
     async def add_user(self, user_record: Dict) -> None:
         """
@@ -79,9 +65,68 @@ class UserRepository:
         Args:
             user_record: The user record to add
         """
-        users = await self.load_users()
-        users.append(user_record)
-        await self.save_users(users)
+        username = user_record["username"]
+        key = self._get_user_key(username)
+
+        # Store user data as a hash
+        self.redis_client.hset(key, mapping=user_record)
+
+        # Add username to the index set
+        self.redis_client.sadd(self.USERNAME_INDEX, username.lower())
+
+    async def get_all_users(self) -> List[Dict]:
+        """
+        Get all user records
+
+        Returns:
+            List of all user records
+        """
+        usernames = self.redis_client.smembers(self.USERNAME_INDEX)
+        users = []
+
+        for username in usernames:
+            user_data = await self.get_user_record(username)
+            if user_data:
+                users.append(user_data)
+
+        return users
+
+    async def delete_user(self, username: str) -> bool:
+        """
+        Delete a user record
+
+        Args:
+            username: The username to delete
+
+        Returns:
+            True if user was deleted, False if user didn't exist
+        """
+        key = self._get_user_key(username)
+        result = self.redis_client.delete(key)
+
+        if result > 0:
+            self.redis_client.srem(self.USERNAME_INDEX, username.lower())
+            return True
+
+        return False
+
+    async def update_user(self, username: str, updates: Dict) -> bool:
+        """
+        Update user record fields
+
+        Args:
+            username: The username to update
+            updates: Dictionary of fields to update
+
+        Returns:
+            True if user was updated, False if user didn't exist
+        """
+        if not await self.user_exists(username):
+            return False
+
+        key = self._get_user_key(username)
+        self.redis_client.hset(key, mapping=updates)
+        return True
 
 
 # Global instance

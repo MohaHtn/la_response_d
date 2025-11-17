@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ModeratorValidationTable from '../components/ModeratorValidationTable';
 import Header from '../components/Header';
