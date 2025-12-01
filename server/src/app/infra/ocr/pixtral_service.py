@@ -298,7 +298,7 @@ def process_pdf(
         print("Contenu contenant :")
         for w in warnings:
             print(f"  - {w}")
-    print("="*30)
+    print("="*30+'\n')
 
     return result
 

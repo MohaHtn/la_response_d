@@ -10,3 +10,4 @@ python-multipart
 pyjwt
 redis
 Pillow
+pydantic

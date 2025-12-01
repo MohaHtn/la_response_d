@@ -142,6 +142,7 @@ async def send_book(
         with open(config.get_ocr_result_path(), "w", encoding="utf-8") as f:
             f.write(str(ocr_result))
 
+
         # Extraire les données retournées par process_pdf
         extracted_metadata = ocr_result.get("metadata", {})
         security_analysis = ocr_result.get("security_analysis", {})
@@ -177,11 +178,13 @@ async def send_book(
         is_compliant = True
         compliance_issues = []
 
-        # Vérifier l'analyse de sécurité
-        if security_analysis.get("has_security_prompts", True):
+        # Vérifier l'analyse de sécurité et de contenu séparément
+        if security_analysis.get("has_security_prompts", False):
             is_compliant = False
             compliance_issues.append("Injection de prompt détectée")
-        elif content_analysis.get("is_appropriate", True):
+
+        is_appropriate = content_analysis.get("is_appropriate", True)
+        if not is_appropriate:
             is_compliant = False
             compliance_issues.append("Contenu inapproprié détecté")
 

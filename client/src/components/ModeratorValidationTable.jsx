@@ -92,7 +92,20 @@ function ModeratorValidationTable({ bookId }) {
     const fetchModerationData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/documents/${bookId}`);
+        const url = `http://localhost:8000/api/admin/quarantine/${bookId}`;
+        console.log('Fetching from URL:', url);
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.warn('No auth token found in localStorage under key `authToken`');
+        }
+
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        };
+
+        const response = await fetch(url, { method: 'GET', headers });
 
         if (!response.ok) {
           throw new Error('Impossible de charger les données de modération');

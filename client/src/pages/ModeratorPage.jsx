@@ -87,64 +87,74 @@ function ModeratorPage() {
     useEffect(() => {
         // Charger les données du livre depuis l'API
         const fetchBookData = async () => {
-            console.log('Fetching book data for:', bookId);
-            try {
-                setLoading(true);
-                const url = `http://localhost:8000/api/documents/${bookId}`;
-                console.log('Fetching from URL:', url);
-                const response = await fetch(url);
-                console.log('Response status:', response.status);
+    console.log('Fetching book data for:', bookId);
+    try {
+        setLoading(true);
+        const url = `http://localhost:8000/api/admin/quarantine/${bookId}`;
+        console.log('Fetching from URL:', url);
 
-                if (!response.ok) {
-                    throw new Error(`Erreur ${response.status}: Impossible de charger les données du livre`);
-                }
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.warn('No auth token found in localStorage under key `authToken`');
+        }
 
-                const data = await response.json();
-                console.log('Received data:', data);
-
-                // Transformer les données de l'API pour correspondre à l'interface
-                const transformedData = {
-                    id: data.document_id || bookId,
-                    title: data.metadata?.title || 'Titre non défini',
-                    author: data.metadata?.author || 'Auteur non défini',
-                    submittedBy: data.uploader?.username || 'Utilisateur inconnu',
-                    submissionDate: data.uploader?.upload_date || new Date().toISOString(),
-                    status: data.moderation?.approval_process?.status || 'WAITING',
-                    description: data.metadata?.description || '',
-                    publisher: data.metadata?.publisher || '',
-                    date: data.metadata?.parution_date || '',
-                    totalPages: data.processing_info?.total_pages || 0,
-                    markdownContent: data.markdown?.content || '# Contenu non disponible\n\nLe contenu du document n\'a pas pu être chargé.',
-                };
-
-                console.log('Transformed data:', transformedData);
-                setBookData(transformedData);
-                setError(null);
-            } catch (err) {
-                console.error('Erreur lors du chargement du livre:', err);
-                setError(err.message);
-
-                // Données de secours pour continuer à afficher la page
-                const fallbackData = {
-                    id: bookId,
-                    title: 'Livre en modération',
-                    author: 'Auteur inconnu',
-                    submittedBy: 'Utilisateur',
-                    submissionDate: new Date().toISOString(),
-                    status: 'WAITING',
-                    description: 'Erreur lors du chargement des données...',
-                    publisher: '',
-                    date: '',
-                    totalPages: 0,
-                };
-                console.log('Using fallback data:', fallbackData);
-                setBookData(fallbackData);
-            } finally {
-                setLoading(false);
-                console.log('Loading finished');
-            }
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         };
 
+        const response = await fetch(url, { method: 'GET', headers });
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`Erreur ${response.status}: Impossible de charger les données du livre`);
+        }
+
+        const data = await response.json();
+        console.log('Received data:', data);
+
+        // Transformer les données de l'API pour correspondre à l'interface
+        const transformedData = {
+            id: data.document_id || bookId,
+            title: data.metadata?.title || 'Titre non défini',
+            author: data.metadata?.author || 'Auteur non défini',
+            submittedBy: data.uploader?.username || 'Utilisateur inconnu',
+            submissionDate: data.uploader?.upload_date || new Date().toISOString(),
+            status: data.moderation?.approval_process?.status || 'WAITING',
+            description: data.metadata?.description || '',
+            publisher: data.metadata?.publisher || '',
+            date: data.metadata?.parution_date || '',
+            totalPages: data.processing_info?.total_pages || 0,
+            markdownContent: data.markdown?.content || '# Contenu non disponible\n\nLe contenu du document n\'a pas pu être chargé.',
+        };
+
+        console.log('Transformed data:', transformedData);
+        setBookData(transformedData);
+        setError(null);
+    } catch (err) {
+        console.error('Erreur lors du chargement du livre:', err);
+        setError(err.message);
+
+        // Données de secours pour continuer à afficher la page
+        const fallbackData = {
+            id: bookId,
+            title: 'Livre en modération',
+            author: 'Auteur inconnu',
+            submittedBy: 'Utilisateur',
+            submissionDate: new Date().toISOString(),
+            status: 'WAITING',
+            description: 'Erreur lors du chargement des données...',
+            publisher: '',
+            date: '',
+            totalPages: 0,
+        };
+        console.log('Using fallback data:', fallbackData);
+        setBookData(fallbackData);
+    } finally {
+        setLoading(false);
+        console.log('Loading finished');
+    }
+};
         if (bookId) {
             fetchBookData();
         } else {
@@ -182,7 +192,7 @@ function ModeratorPage() {
                         Modération du livre
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Validez ou rejetez ce livre en tant que modérateur
+                        Validez ou rejetez ce livre en tant que modérateur.
                     </Typography>
                 </Box>
 
