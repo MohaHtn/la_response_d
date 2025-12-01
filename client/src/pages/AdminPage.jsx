@@ -26,64 +26,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 
-// Données mockées (à remplacer par des appels API)
-const MOCK_STATS = {
-  totalUsers: 42,
-  totalBooks: 156,
-  pendingModeration: 8,
-  approvedBooks: 148,
-};
-
-const MOCK_PENDING_BOOKS = [
-  {
-    id: 'book1',
-    title: 'Les Misérables',
-    author: 'Victor Hugo',
-    submittedBy: 'user123',
-    submissionDate: '2025-11-15',
-    status: 'en_cours',
-    approvals: 1,
-  },
-  {
-    id: 'book2',
-    title: 'Notre-Dame de Paris',
-    author: 'Victor Hugo',
-    submittedBy: 'user456',
-    submissionDate: '2025-11-14',
-    status: 'en_cours',
-    approvals: 2,
-  },
-  {
-    id: 'book3',
-    title: 'Le Comte de Monte-Cristo',
-    author: 'Alexandre Dumas',
-    submittedBy: 'user789',
-    submissionDate: '2025-11-13',
-    status: 'en_cours',
-    approvals: 0,
-  },
-];
-
-const MOCK_USERS = [
-  {
-    username: 'thomas',
-    email: 'thomas@example.com',
-    accountType: 'ADMIN',
-    registrationDate: '2025-01-10',
-  },
-  {
-    username: 'marie_user',
-    email: 'marie@example.com',
-    accountType: 'USER',
-    registrationDate: '2025-03-15',
-  },
-  {
-    username: 'jean_moderator',
-    email: 'jean@example.com',
-    accountType: 'MODERATOR',
-    registrationDate: '2025-02-20',
-  },
-];
+// helpers API
+import { fetchAdminStats, fetchPendingBooks, fetchUsers } from '../api/admin';
 
 const styles = {
   root: {
@@ -119,17 +63,39 @@ const styles = {
 function AdminPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
-  const [stats, setStats] = useState(MOCK_STATS);
-  const [pendingBooks, setPendingBooks] = useState(MOCK_PENDING_BOOKS);
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [stats, _setStats] = useState({ totalUsers: 0, totalBooks: 0, pendingModeration: 0, approvedBooks: 0 });
+  const [pendingBooks, _setPendingBooks] = useState([]);
+  const [users, _setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // TODO: Vérifier si l'utilisateur est admin
-    // Si non, rediriger vers /home
     const userType = localStorage.getItem('userType');
     if (userType === 'USER') {
       navigate('/home');
+      return;
     }
+
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [s, books, us] = await Promise.all([fetchAdminStats(), fetchPendingBooks(), fetchUsers()]);
+        if (!mounted) return;
+        _setStats(s);
+        _setPendingBooks(books);
+        _setUsers(us);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('admin page load error', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   const handleTabChange = (event, newValue) => {
@@ -266,12 +232,12 @@ function AdminPage() {
                           <TableCell>{book.author}</TableCell>
                           <TableCell>{book.submittedBy}</TableCell>
                           <TableCell>
-                            {new Date(book.submissionDate).toLocaleDateString('fr-FR')}
+                            {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString('fr-FR') : ''}
                           </TableCell>
                           <TableCell>
                             <Chip 
-                              label={`${book.approvals}/3`} 
-                              color={book.approvals === 3 ? 'success' : 'warning'}
+                              label={`${book.approvals ?? 0}/3`}
+                              color={(book.approvals ?? 0) === 3 ? 'success' : 'warning'}
                               size="small"
                             />
                           </TableCell>
@@ -330,7 +296,7 @@ function AdminPage() {
                           <TableCell>{user.email}</TableCell>
                           <TableCell>{getAccountTypeChip(user.accountType)}</TableCell>
                           <TableCell>
-                            {new Date(user.registrationDate).toLocaleDateString('fr-FR')}
+                            {user.registrationDate ? new Date(user.registrationDate).toLocaleDateString('fr-FR') : ''}
                           </TableCell>
                           <TableCell>
                             <Button size="small" variant="text">
@@ -352,4 +318,3 @@ function AdminPage() {
 }
 
 export default AdminPage;
-

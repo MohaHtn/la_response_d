@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -14,51 +13,11 @@ import {
   Chip,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
 
 const styles = {
-  container: {
-    padding: '24px',
-    margin: '24px 0',
-    backgroundColor: '#fff',
-  },
-  title: {
-    marginBottom: '20px',
-    color: '#1976d2',
-    fontWeight: 'bold',
-  },
-  statusPending: {
-    backgroundColor: '#fff3cd',
-    padding: '6px 12px',
-    borderRadius: '4px',
-    color: '#856404',
-    fontWeight: 'bold',
-  },
-  statusApproved: {
-    backgroundColor: '#d4edda',
-    padding: '6px 12px',
-    borderRadius: '4px',
-    color: '#155724',
-    fontWeight: 'bold',
-  },
-  statusRejected: {
-    backgroundColor: '#f8d7da',
-    padding: '6px 12px',
-    borderRadius: '4px',
-    color: '#721c24',
-    fontWeight: 'bold',
-  },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: '40px',
-  },
-  visualValidationContainer: {
+  validationContainer: {
     marginBottom: '32px',
-    padding: '24px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
   },
   validationLevel: {
     marginBottom: '24px',
@@ -105,10 +64,6 @@ const styles = {
     border: '2px solid #4caf50',
     backgroundColor: '#e8f5e9',
   },
-  adminBoxRejected: {
-    border: '2px solid #f44336',
-    backgroundColor: '#ffebee',
-  },
   adminBoxPending: {
     border: '2px solid #ff9800',
     backgroundColor: '#fff3e0',
@@ -122,295 +77,209 @@ const styles = {
     fontSize: '48px',
     color: '#4caf50',
   },
+  pendingIcon: {
+    fontSize: '48px',
+    color: '#ff9800',
+  },
 };
 
-// Données de test par défaut
-const DEFAULT_MOCK_DATA = [
-  {
-    id: 1,
-    moderatorName: "Jean Dupont",
-    role: "Modérateur Principal",
-    status: "approved",
-    date: "2025-11-10",
-    comment: "Contenu validé"
-  },
-  {
-    id: 2,
-    moderatorName: "Marie Martin",
-    role: "Vérificateur OCR",
-    status: "pending",
-    date: null,
-    comment: "En cours de vérification"
-  },
-  {
-    id: 3,
-    moderatorName: "Pierre Durand",
-    role: "Expert Copyright",
-    status: "pending",
-    date: null,
-    comment: "En attente"
-  }
-];
+function ModeratorValidationTable({ bookId }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [moderationData, setModerationData] = useState(null);
 
-const ModeratorValidationTable = ({
-  moderationData = null,
-  isLoading = false,
-  error = null,
-  showTitle = true,
-  showVisualValidation = true,
-}) => {
-  // Utiliser les données passées en props ou les données mockées par défaut
-  const data = moderationData || DEFAULT_MOCK_DATA;
+  useEffect(() => {
+    const fetchModerationData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8000/api/documents/${bookId}`);
 
-  // Calculer le nombre d'admins ayant validé
-  const getApprovedCount = () => {
-    return data.filter(mod => mod.status === 'approved').length;
-  };
+        if (!response.ok) {
+          throw new Error('Impossible de charger les données de modération');
+        }
 
-  const approvedCount = getApprovedCount();
+        const data = await response.json();
 
-  // Déterminer le niveau de validation actuel
-  const getCurrentValidationLevel = () => {
-    if (approvedCount === 0) return 1;
-    if (approvedCount === 1) return 2;
-    if (approvedCount === 2) return 3;
-    return 4; // Tous validés
-  };
+        // Extraire les données de modération
+        const moderation = {
+          status: data.moderation?.approval_process?.status || 'WAITING',
+          approvedBy: data.moderation?.approved_by || [],
+          date: data.moderation?.approval_process?.date || null,
+        };
 
-  const currentLevel = getCurrentValidationLevel();
+        setModerationData(moderation);
+        setError(null);
+      } catch (err) {
+        console.error('Erreur lors du chargement de la modération:', err);
+        setError(err.message);
+        // Données de secours
+        setModerationData({
+          status: 'WAITING',
+          approvedBy: [],
+          date: null,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Grouper les admins par niveau selon le schéma
-  const getAdminsForLevel = (level) => {
-    if (level === 1) {
-      // Niveau 1: Admin 1 seul
-      return [data[0]];
-    } else if (level === 2) {
-      // Niveau 2: Admin 1 et Admin 2
-      return [data[0], data[1]];
-    } else if (level === 3) {
-      // Niveau 3: Admin 1, Admin 2 et Admin 3
-      return data;
+    if (bookId) {
+      fetchModerationData();
     }
-    return [];
-  };
+  }, [bookId]);
 
-  const isLevelCompleted = (level) => {
-    if (level === 1) return approvedCount >= 1;
-    if (level === 2) return approvedCount >= 2;
-    if (level === 3) return approvedCount >= 3;
-    return false;
-  };
-
-  const isLevelActive = (level) => {
-    return currentLevel === level;
-  };
-
-  const renderAdminBox = (admin) => {
-    let boxStyle = { ...styles.adminBox };
-    let icon;
-    let statusText = 'En attente';
-
-    if (admin.status === 'approved') {
-      boxStyle = { ...boxStyle, ...styles.adminBoxApproved };
-      icon = <CheckCircleIcon sx={styles.checkIcon} />;
-      statusText = 'Validé';
-    } else if (admin.status === 'rejected') {
-      boxStyle = { ...boxStyle, ...styles.adminBoxRejected };
-      icon = <CancelIcon sx={{ fontSize: '48px', color: '#f44336' }} />;
-      statusText = 'Rejeté';
-    } else {
-      boxStyle = { ...boxStyle, ...styles.adminBoxPending };
-      icon = <PendingIcon sx={{ fontSize: '48px', color: '#ff9800' }} />;
-    }
-
+  if (loading) {
     return (
-      <Box key={admin.id || admin.moderatorId} sx={boxStyle}>
-        {icon}
-        <Typography sx={styles.adminName}>{admin.moderatorName}</Typography>
-        <Typography variant="caption" display="block" sx={{ color: '#666', mb: 1 }}>
-          {admin.role}
-        </Typography>
-        <Chip
-          label={statusText}
-          size="small"
-          color={admin.status === 'approved' ? 'success' : admin.status === 'rejected' ? 'error' : 'warning'}
-        />
+      <Box sx={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+        <CircularProgress />
+        <Typography sx={{ marginLeft: 2 }}>Chargement des validations...</Typography>
       </Box>
-    );
-  };
-
-  const renderValidationLevel = (level) => {
-    const admins = getAdminsForLevel(level);
-    const completed = isLevelCompleted(level);
-    const active = isLevelActive(level);
-
-    let levelStyle = { ...styles.validationLevel };
-    if (completed) {
-      levelStyle = { ...levelStyle, ...styles.validationLevelCompleted };
-    } else if (active) {
-      levelStyle = { ...levelStyle, ...styles.validationLevelActive };
-    }
-
-    let levelTitle = '';
-    let requiredValidations = 0;
-
-    if (level === 1) {
-      levelTitle = 'Niveau 1 : Validation par Admin 1';
-      requiredValidations = 1;
-    } else if (level === 2) {
-      levelTitle = 'Niveau 2 : Validation par 2 admins';
-      requiredValidations = 2;
-    } else if (level === 3) {
-      levelTitle = 'Niveau 3 : Validation complète (3/3)';
-      requiredValidations = 3;
-    }
-
-    return (
-      <Box sx={levelStyle}>
-        <Box sx={styles.levelHeader}>
-          <Typography sx={styles.levelTitle}>{levelTitle}</Typography>
-          {completed && (
-            <Chip
-              icon={<CheckCircleIcon />}
-              label="Niveau atteint"
-              color="success"
-              size="small"
-            />
-          )}
-          {active && !completed && (
-            <Chip
-              icon={<PendingIcon />}
-              label="En cours"
-              color="warning"
-              size="small"
-            />
-          )}
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {requiredValidations} validation{requiredValidations > 1 ? 's' : ''} requise{requiredValidations > 1 ? 's' : ''}
-        </Typography>
-        <Box sx={styles.adminBoxesContainer}>
-          {admins.map(admin => renderAdminBox(admin))}
-        </Box>
-      </Box>
-    );
-  };
-
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'approved':
-        return styles.statusApproved;
-      case 'rejected':
-        return styles.statusRejected;
-      default:
-        return styles.statusPending;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'Approuvé';
-      case 'rejected':
-        return 'Rejeté';
-      default:
-        return 'En attente';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Paper sx={styles.container}>
-        <Box sx={styles.loadingContainer}>
-          <CircularProgress />
-        </Box>
-      </Paper>
     );
   }
 
   if (error) {
     return (
-      <Paper sx={styles.container}>
-        <Alert severity="error">{error}</Alert>
-      </Paper>
+      <Alert severity="warning" sx={{ marginBottom: 2 }}>
+        Erreur: {error}
+      </Alert>
     );
   }
 
+  const approvalCount = moderationData?.approvedBy?.length || 0;
+  const needsApprovals = 3 - approvalCount;
+
+  // Créer les 3 slots de modérateurs
+  const moderatorSlots = [
+    moderationData?.approvedBy[0] || null,
+    moderationData?.approvedBy[1] || null,
+    moderationData?.approvedBy[2] || null,
+  ];
+
+  const getStatusColor = () => {
+    if (moderationData?.status === 'IN_QUARANTINE' || approvalCount === 3) return 'success';
+    if (moderationData?.status === 'WAITING' && approvalCount > 0) return 'warning';
+    return 'default';
+  };
+
+  const getStatusLabel = () => {
+    if (approvalCount === 3 || moderationData?.status === 'IN_QUARANTINE') {
+      return '✓ Validé par 3 modérateurs - Prêt pour publication';
+    }
+    if (approvalCount > 0) {
+      return `${approvalCount}/3 validations - ${needsApprovals} restante(s)`;
+    }
+    return 'En attente de validation';
+  };
+
   return (
-    <Box>
-      {/* Validation visuelle progressive */}
-      {showVisualValidation && (
-        <Box sx={styles.visualValidationContainer}>
-          <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2' }}>
-            Validation par la modération
+    <Box sx={styles.validationContainer}>
+      {/* En-tête avec statut global */}
+      <Box sx={{ marginBottom: 3 }}>
+        <Chip
+          label={getStatusLabel()}
+          color={getStatusColor()}
+          size="large"
+          sx={{ fontSize: '16px', padding: '20px 12px', fontWeight: 'bold' }}
+        />
+      </Box>
+
+      {/* Affichage visuel des 3 modérateurs */}
+      <Box
+        sx={{
+          ...styles.validationLevel,
+          ...(approvalCount === 3 ? styles.validationLevelCompleted : {}),
+          ...(approvalCount > 0 && approvalCount < 3 ? styles.validationLevelActive : {}),
+        }}
+      >
+        <Box sx={styles.levelHeader}>
+          <Typography variant="h6" sx={styles.levelTitle}>
+            Validation par les modérateurs ({approvalCount}/3)
           </Typography>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            Le livre doit être validé progressivement par les 3 administrateurs pour être publié.
-          </Alert>
-
-          {/* Niveau 1: Admin 1 */}
-          {renderValidationLevel(1)}
-
-          {/* Niveau 2: Admin 1 + 2 */}
-          {renderValidationLevel(2)}
-
-          {/* Niveau 3: Admin 1 + 2 + 3 */}
-          {renderValidationLevel(3)}
-
-          {/* Message de félicitations si tout est validé */}
-          {approvedCount === 3 && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                ✓ Validation complète !
-              </Typography>
-              <Typography variant="body2">
-                Le livre a été validé par les 3 administrateurs et peut maintenant être publié.
-              </Typography>
-            </Alert>
-          )}
         </Box>
-      )}
 
-      {/* Tableau détaillé classique */}
-      <Paper sx={styles.container}>
-        {showTitle && (
-          <Typography variant="h6" sx={styles.title}>
-            Détails de la modération
-          </Typography>
-        )}
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Modérateur</strong></TableCell>
-                <TableCell><strong>Rôle</strong></TableCell>
-                <TableCell><strong>Statut</strong></TableCell>
-                <TableCell><strong>Date</strong></TableCell>
-                <TableCell><strong>Commentaire</strong></TableCell>
+        <Box sx={styles.adminBoxesContainer}>
+          {moderatorSlots.map((moderator, index) => (
+            <Box
+              key={index}
+              sx={{
+                ...styles.adminBox,
+                ...(moderator ? styles.adminBoxApproved : styles.adminBoxPending),
+              }}
+            >
+              <Typography sx={styles.adminName}>
+                {moderator || `Modérateur ${index + 1}`}
+              </Typography>
+              {moderator ? (
+                <>
+                  <CheckCircleIcon sx={styles.checkIcon} />
+                  <Typography variant="body2" sx={{ marginTop: 1, color: '#4caf50' }}>
+                    ✓ Validé
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <PendingIcon sx={styles.pendingIcon} />
+                  <Typography variant="body2" sx={{ marginTop: 1, color: '#ff9800' }}>
+                    En attente
+                  </Typography>
+                </>
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+
+      {/* Tableau récapitulatif */}
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Modérateur</strong></TableCell>
+              <TableCell><strong>Statut</strong></TableCell>
+              <TableCell><strong>Date</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {moderatorSlots.map((moderator, index) => (
+              <TableRow key={index}>
+                <TableCell>{moderator || `Modérateur ${index + 1}`}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={moderator ? 'Validé' : 'En attente'}
+                    color={moderator ? 'success' : 'warning'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  {moderator && moderationData?.date
+                    ? new Date(moderationData.date).toLocaleDateString('fr-FR')
+                    : '-'}
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.map((row) => (
-                <TableRow key={row.id || row.moderatorId}>
-                  <TableCell>{row.moderatorName}</TableCell>
-                  <TableCell>{row.role}</TableCell>
-                  <TableCell>
-                    <span style={getStatusStyle(row.status)}>
-                      {getStatusText(row.status)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {row.date ? new Date(row.date).toLocaleDateString('fr-FR') : '-'}
-                  </TableCell>
-                  <TableCell>{row.comment || '-'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Message de statut final */}
+      {approvalCount === 3 && (
+        <Alert severity="success" sx={{ marginTop: 2 }}>
+          🎉 Ce livre a été validé par 3 modérateurs et est disponible pour tous les utilisateurs !
+        </Alert>
+      )}
+      {approvalCount > 0 && approvalCount < 3 && (
+        <Alert severity="info" sx={{ marginTop: 2 }}>
+          ℹ️ Ce livre a besoin de {needsApprovals} validation(s) supplémentaire(s) pour être publié.
+        </Alert>
+      )}
+      {approvalCount === 0 && (
+        <Alert severity="warning" sx={{ marginTop: 2 }}>
+          ⏳ Ce livre est en attente de sa première validation.
+        </Alert>
+      )}
     </Box>
   );
-};
+}
 
 export default ModeratorValidationTable;
+

@@ -387,7 +387,6 @@ function Home() {
     };
 
     fetchDocuments();
-    fetchMyDocuments();
   }, []);
 
   const startedBooks = started
