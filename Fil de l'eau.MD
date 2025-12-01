@@ -52,3 +52,7 @@ Discussion sur le modèle de données de Document, et User.
 
 # Session 9 : 17 Novembre 2025
 Présentation des modèles de conception aux autres !
+
+# Session 10 : 01 Décembre 2025
+Beaucoup de choses : intégration de la base "quarantaine", ajout 
+des pages de modération, refactoring du front/back.

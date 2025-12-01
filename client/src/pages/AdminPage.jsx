@@ -27,7 +27,6 @@ import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 
 // helpers API
-import { fetchAdminStats, fetchPendingBooks, fetchUsers } from '../api/admin';
 
 const styles = {
   root: {

@@ -9,6 +9,7 @@ import ReadBookPage from './pages/ReadBookPage'
 import Upload from "./Upload.jsx";
 import ModeratorPage from "./pages/ModeratorPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
+import QuarantinePage from "./pages/QuarantinePage.jsx";
 
 // Petite fonction utilitaire pour lire le type d'utilisateur
 function getUserType() {
@@ -65,6 +66,14 @@ createRoot(document.getElementById('root')).render(
           element={
             <AdminRoute>
               <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/quarantine"
+          element={
+            <AdminRoute>
+              <QuarantinePage />
             </AdminRoute>
           }
         />

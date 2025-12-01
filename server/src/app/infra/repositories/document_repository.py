@@ -16,6 +16,10 @@ class DocumentRepository:
     DOCUMENT_BY_UPLOADER_INDEX = "documents:uploader:"
     DOCUMENT_COUNTER = "document:counter"
 
+    # Quarantine indexes for non-compliant documents
+    QUARANTINE_KEY_PREFIX = "quarantine:"
+    QUARANTINE_INDEX = "quarantine_document_ids"
+
     def __init__(self):
         """Initialize the document repository with Redis"""
         self.redis_client = redis_manager.get_client()
@@ -292,6 +296,140 @@ class DocumentRepository:
                 results.append(doc)
 
         return results
+
+    # ==================== Quarantine Methods ====================
+
+    def _get_quarantine_key(self, document_id: str) -> str:
+        """
+        Generate Redis key for a quarantined document
+
+        Args:
+            document_id: The document ID
+
+        Returns:
+            Redis key string for quarantine
+        """
+        return f"{self.QUARANTINE_KEY_PREFIX}{document_id}"
+
+    async def add_document_to_quarantine(self, document_data: Dict) -> str:
+        """
+        Add a document to quarantine (for non-compliant documents)
+
+        Args:
+            document_data: The document data to add
+
+        Returns:
+            The generated document ID
+        """
+        # Generate a unique ID if not provided
+        document_id = document_data.get("document_id") or self._generate_document_id()
+        document_data["document_id"] = document_id
+        document_data["in_quarantine"] = True
+
+        key = self._get_quarantine_key(document_id)
+
+        # Store document data as JSON string in quarantine
+        self.redis_client.set(key, json.dumps(document_data))
+
+        # Add document ID to the quarantine index set
+        self.redis_client.sadd(self.QUARANTINE_INDEX, document_id)
+
+        return document_id
+
+    async def get_quarantined_document(self, document_id: str) -> Optional[Dict]:
+        """
+        Get a quarantined document by ID
+
+        Args:
+            document_id: The document ID to search for
+
+        Returns:
+            Document data if found, None otherwise
+        """
+        key = self._get_quarantine_key(document_id)
+        document_json = self.redis_client.get(key)
+
+        if not document_json:
+            return None
+
+        return json.loads(document_json)
+
+    async def get_all_quarantined_documents(self) -> List[Dict]:
+        """
+        Get all quarantined document records
+
+        Returns:
+            List of all quarantined document records
+        """
+        document_ids = self.redis_client.smembers(self.QUARANTINE_INDEX)
+        documents = []
+
+        for doc_id in document_ids:
+            document_data = await self.get_quarantined_document(doc_id)
+            if document_data:
+                documents.append(document_data)
+
+        return documents
+
+    async def move_from_quarantine_to_approved(self, document_id: str) -> bool:
+        """
+        Move a document from quarantine to approved documents
+
+        Args:
+            document_id: The document ID to approve
+
+        Returns:
+            True if document was moved successfully, False otherwise
+        """
+        # Get document from quarantine
+        document_data = await self.get_quarantined_document(document_id)
+        if not document_data:
+            return False
+
+        # Remove quarantine flag
+        document_data["in_quarantine"] = False
+
+        # Update status to OK
+        if "moderation" in document_data:
+            document_data["moderation"]["approval_process"]["status"] = "OK"
+            document_data["moderation"]["approval_process"]["date"] = datetime.now().isoformat()
+            document_data["moderation"]["approval_process"]["details"] = "Document approuvé après révision manuelle"
+
+        # Add to normal documents
+        await self.add_document(document_data)
+
+        # Remove from quarantine
+        quarantine_key = self._get_quarantine_key(document_id)
+        self.redis_client.delete(quarantine_key)
+        self.redis_client.srem(self.QUARANTINE_INDEX, document_id)
+
+        return True
+
+    async def delete_quarantined_document(self, document_id: str) -> bool:
+        """
+        Delete a document from quarantine
+
+        Args:
+            document_id: The document ID to delete
+
+        Returns:
+            True if document was deleted, False otherwise
+        """
+        # Check if document exists in quarantine
+        document_data = await self.get_quarantined_document(document_id)
+        if not document_data:
+            return False
+
+        # Delete from quarantine
+        quarantine_key = self._get_quarantine_key(document_id)
+        result = self.redis_client.delete(quarantine_key)
+
+        if result > 0:
+            # Remove from quarantine index
+            self.redis_client.srem(self.QUARANTINE_INDEX, document_id)
+            return True
+
+        return False
 
 
 # Global instance

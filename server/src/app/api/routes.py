@@ -19,6 +19,84 @@ import jwt
 
 router = APIRouter(prefix="/api", tags=["api"])
 
+
+# ==================== Helper Functions ====================
+
+async def verify_admin_token(authorization: Optional[str]) -> Dict:
+    """
+    Verify JWT token and check if user is admin
+
+    Args:
+        authorization: Authorization header with Bearer token
+
+    Returns:
+        User data from token
+
+    Raises:
+        HTTPException: If token is invalid or user is not admin
+    """
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="Token d'authentification manquant."
+        )
+
+    # Extract token from "Bearer <token>"
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=401,
+                detail="Schéma d'authentification invalide. Utilisez 'Bearer <token>'."
+            )
+    except ValueError:
+        raise HTTPException(
+            status_code=401,
+            detail="Format d'autorisation invalide."
+        )
+
+    # Verify token
+    try:
+        payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=["HS256"])
+        username = payload.get("username")
+
+        if not username:
+            raise HTTPException(
+                status_code=401,
+                detail="Token invalide."
+            )
+
+        # Get user record to check account type
+        user_record = await user_repository.get_user_record(username)
+
+        if not user_record:
+            raise HTTPException(
+                status_code=401,
+                detail="Utilisateur introuvable."
+            )
+
+        if user_record.get("account_type") != "ADMIN":
+            raise HTTPException(
+                status_code=403,
+                detail="Accès refusé. Droits d'administrateur requis."
+            )
+
+        return user_record
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token expiré."
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token invalide."
+        )
+
+
+# ==================== Upload Endpoint ====================
+
 @router.post("/send-book")
 async def send_book(
         file: UploadFile = File(...),
@@ -33,6 +111,7 @@ async def send_book(
         file: The PDF file to process
         title: Optional title of the document
         author: Optional author of the document
+        username: Username of the uploader, if known.
 
     Returns:
         JSON response with OCR results, document ID, and processing details
@@ -94,6 +173,18 @@ async def send_book(
             author=doc_author
         )
 
+        # Vérifier si le document est conforme (pas de problème de sécurité ou de contenu)
+        is_compliant = True
+        compliance_issues = []
+
+        # Vérifier l'analyse de sécurité
+        if security_analysis.get("has_security_prompts", True):
+            is_compliant = False
+            compliance_issues.append("Injection de prompt détectée")
+        elif content_analysis.get("is_appropriate", True):
+            is_compliant = False
+            compliance_issues.append("Contenu inapproprié détecté")
+
         # Create document with OCR data using a proper nested structure
         document = Document(
             metadata=DocumentMetadata(
@@ -111,7 +202,7 @@ async def send_book(
                 approval_process=ApprovalProcess(
                     status=BookStatus.WAITING,
                     date=current_date,
-                    details=""
+                    details="; ".join(compliance_issues) if not is_compliant else ""
                 ),
                 approved_by=[]
             ),
@@ -123,7 +214,19 @@ async def send_book(
         )
 
         document_data = document.model_dump()
-        document_id = await document_repository.add_document(document_data)
+
+        # Ajouter les analyses de sécurité et de contenu au document
+        document_data["security_analysis"] = security_analysis
+        document_data["content_analysis"] = content_analysis
+        document_data["compliance_issues"] = compliance_issues
+
+        # Si le document n'est pas conforme, le placer en quarantaine
+        if not is_compliant:
+            document_id = await document_repository.add_document_to_quarantine(document_data)
+            quarantine_status = "quarantined"
+        else:
+            document_id = await document_repository.add_document(document_data)
+            quarantine_status = "approved"
 
         # Prepare detailed response for frontend
         # Normaliser les métadonnées pour le frontend
@@ -137,14 +240,18 @@ async def send_book(
 
         return JSONResponse(content={
             "success": True,
-            "message": "Document traité et créé avec succès.",
+            "message": "Document traité avec succès." if is_compliant else "Document placé en quarantaine pour révision administrative.",
             "document_id": document_id,
+            "quarantine_status": quarantine_status,
+            "is_compliant": is_compliant,
+            "compliance_issues": compliance_issues,
             "document": {
                 "title": doc_title,
                 "author": doc_author,
                 "uploader": username or "anonymous",
                 "upload_date": current_date,
-                "status": BookStatus.WAITING.value
+                "status": BookStatus.WAITING.value,
+                "in_quarantine": not is_compliant
             },
             "preview": markdown_content[:200],
             "metadata": normalized_metadata,
@@ -492,6 +599,152 @@ async def search_documents(
         raise HTTPException(
             status_code=500,
             detail=f"Échec de la recherche de documents : {str(e)}"
+        )
+
+
+# ==================== Quarantine Endpoints (Admin Only) ====================
+
+@router.get("/admin/quarantine")
+async def get_quarantined_documents(authorization: Optional[str] = Header(None)):
+    """
+    Get all documents in quarantine (Admin only)
+
+    Args:
+        authorization: Authorization header with Bearer token
+
+    Returns:
+        JSON response with list of quarantined documents
+    """
+    # Verify admin token
+    await verify_admin_token(authorization)
+
+    try:
+        quarantined_docs = await document_repository.get_all_quarantined_documents()
+        return JSONResponse(content={
+            "count": len(quarantined_docs),
+            "documents": quarantined_docs
+        })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la récupération des documents en quarantaine : {str(e)}"
+        )
+
+
+@router.get("/admin/quarantine/{document_id}")
+async def get_quarantined_document(
+    document_id: str,
+    authorization: Optional[str] = Header(None)
+):
+    """
+    Get a specific quarantined document by ID (Admin only)
+
+    Args:
+        document_id: The ID of the document to retrieve
+        authorization: Authorization header with Bearer token
+
+    Returns:
+        JSON response with the quarantined document data
+    """
+    # Verify admin token
+    await verify_admin_token(authorization)
+
+    try:
+        document = await document_repository.get_quarantined_document(document_id)
+
+        if not document:
+            raise HTTPException(
+                status_code=404,
+                detail="Document en quarantaine introuvable."
+            )
+
+        return JSONResponse(content=document)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la récupération du document en quarantaine : {str(e)}"
+        )
+
+
+@router.post("/admin/quarantine/{document_id}/moderate")
+async def moderate_quarantined_document(
+    document_id: str,
+    action: str = Query(..., description="Action à effectuer : 'approve' ou 'reject'"),
+    authorization: Optional[str] = Header(None)
+):
+    """
+    Moderate a quarantined document (Admin only)
+    - approve: Move document from quarantine to approved documents
+    - reject: Delete document from quarantine
+
+    Args:
+        document_id: The ID of the document to moderate
+        action: Action to perform ('approve' or 'reject')
+        authorization: Authorization header with Bearer token
+
+    Returns:
+        JSON response with moderation result
+    """
+    # Verify admin token
+    user_record = await verify_admin_token(authorization)
+
+    if action not in ["approve", "reject"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Action invalide. Utilisez 'approve' ou 'reject'."
+        )
+
+    try:
+        # Check if document exists in quarantine
+        document = await document_repository.get_quarantined_document(document_id)
+        if not document:
+            raise HTTPException(
+                status_code=404,
+                detail="Document en quarantaine introuvable."
+            )
+
+        if action == "approve":
+            # Move from quarantine to approved documents
+            success = await document_repository.move_from_quarantine_to_approved(document_id)
+
+            if not success:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Échec du déplacement du document vers les documents approuvés."
+                )
+
+            return JSONResponse(content={
+                "message": "Document approuvé et déplacé vers les documents normaux.",
+                "document_id": document_id,
+                "action": "approved",
+                "moderated_by": user_record["username"]
+            })
+
+        elif action == "reject":
+            # Delete from quarantine
+            success = await document_repository.delete_quarantined_document(document_id)
+
+            if not success:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Échec de la suppression du document en quarantaine."
+                )
+
+            return JSONResponse(content={
+                "message": "Document rejeté et supprimé de la base de données.",
+                "document_id": document_id,
+                "action": "rejected",
+                "moderated_by": user_record["username"]
+            })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la modération du document : {str(e)}"
         )
 
 

@@ -52,6 +52,7 @@ const headerStyles = {
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userType, setUserType] = useState('USER');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,8 +61,11 @@ export default function Header() {
       try {
         const token = localStorage.getItem('authToken');
         setIsAuthenticated(!!token);
+        const t = localStorage.getItem('userType') || 'USER';
+        setUserType(t);
       } catch {
         setIsAuthenticated(false);
+        setUserType('USER');
       }
     };
 
@@ -78,7 +82,9 @@ export default function Header() {
   const handleLogout = () => {
     try {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('userType');
       setIsAuthenticated(false);
+      setUserType('USER');
       // Notifier le changement d'authentification
       window.dispatchEvent(new Event('authChange'));
       navigate('/');
@@ -98,6 +104,9 @@ export default function Header() {
             </Typography>
             {isAuthenticated && (
                 <Link to="/upload" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Envoyer un document</Link>
+            )}
+            {isAuthenticated && userType === 'ADMIN' && (
+                <Link to="/admin/quarantine" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
             )}
           </div>
 
