@@ -147,22 +147,6 @@ const styles = {
     fontSize: '13px',
     flex: '1',
   },
-  statusBadge: (status) => ({
-    display: 'inline-block',
-    padding: '4px 8px',
-    fontSize: '11px',
-    fontWeight: '600',
-    borderRadius: '4px',
-    marginTop: '4px',
-    backgroundColor:
-      status === 'accepted' ? '#e8f5e9' :
-      status === 'pending' ? '#fff3e0' :
-      status === 'rejected' ? '#ffebee' : '#f5f5f5',
-    color:
-      status === 'accepted' ? '#2e7d32' :
-      status === 'pending' ? '#ef6c00' :
-      status === 'rejected' ? '#c62828' : '#666',
-  }),
   buttonContainer: {
     display: 'flex',
     gap: '8px',
@@ -187,16 +171,8 @@ function Home() {
   const [started, setStarted] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userType, setUserType] = useState('USER');
-  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
-    // Récupérer le type d'utilisateur et son ID depuis localStorage
-    const storedUserType = localStorage.getItem('userType') || 'USER';
-    const storedUserId = localStorage.getItem('userId') || null;
-    setUserType(storedUserType);
-    setCurrentUserId(storedUserId);
-
     // Récupérer tous les documents depuis l'API
     const fetchDocuments = async () => {
       try {
@@ -214,29 +190,10 @@ function Home() {
           id: doc.document_id,
           title: doc.metadata?.title || 'Sans titre',
           author: doc.metadata?.author || 'Auteur inconnu',
-          status: doc.moderation?.status || 'pending',
-          assignedModerators: doc.moderation?.assigned_moderators || [],
-          validations: doc.moderation?.validations || {}
+          status: doc.moderation?.status || 'unknown'
         }));
 
-        // Filtrer les livres selon le type d'utilisateur
-        let filteredBooks = books;
-
-        if (storedUserType === 'ADMIN') {
-          // Les admins voient tous les livres
-          filteredBooks = books;
-        } else if (storedUserType === 'MEMBER' || storedUserType === 'MODERATOR') {
-          // Les modérateurs voient les livres acceptés + les livres qui leur sont assignés
-          filteredBooks = books.filter(book =>
-            book.status === 'accepted' ||
-            book.assignedModerators.includes(storedUserId)
-          );
-        } else {
-          // Les users voient uniquement les livres acceptés
-          filteredBooks = books.filter(book => book.status === 'accepted');
-        }
-
-        setLibrary(filteredBooks);
+        setLibrary(books);
 
         // TODO: Récupérer la progression depuis localStorage ou une API dédiée
         const savedProgress = JSON.parse(localStorage.getItem('readingProgress') || '[]');
@@ -287,33 +244,6 @@ function Home() {
             </div>
           )}
 
-          {!loading && (
-            <>
-              <div>
-            <div style={styles.sectionTitle}>En cours de lecture</div>
-            <div style={styles.startedContainer}>
-              {startedBooks.length === 0 ? (
-                <div style={{ color: '#666' }}>Vous n'avez pas encore commencé de livre.</div>
-              ) : (
-                startedBooks.map((b) => (
-                  <div key={b.bookId} style={styles.startedCard}>
-                    <div style={styles.coverPlaceholder} aria-hidden />
-                    <div style={styles.bookInfo}>
-                      <div style={styles.bookTitle}>{b.title}</div>
-                      <div style={styles.bookAuthor}>{b.author}</div>
-                      <div style={styles.progressBarOuter}>
-                        <div style={styles.progressBarInner(b.progress)} />
-                      </div>
-                      <Link to={`/book/${b.bookId}`} style={styles.continueButton}>
-                        Continuer
-                      </Link>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
           <div style={{ marginTop: '8px' }}>
             <div style={styles.sectionTitle}>Tous les livres</div>
             <div style={styles.libraryGrid}>
@@ -323,25 +253,19 @@ function Home() {
                   <div>
                     <div style={styles.libraryTitle}>{book.title}</div>
                     <div style={styles.libraryAuthor}>{book.author}</div>
-                    {(userType === 'ADMIN' || userType === 'MEMBER' || userType === 'MODERATOR') && (
-                      <div style={styles.statusBadge(book.status)}>
-                        {book.status === 'accepted' ? '✓ Accepté' :
-                         book.status === 'pending' ? '⏳ En attente' :
-                         book.status === 'rejected' ? '✗ Rejeté' : 'Inconnu'}
-                      </div>
+                    {book.preview && (
+                        <div style={styles.preview}>
+                          {book.preview}
+                        </div>
                     )}
                   </div>
                   <div style={styles.buttonContainer}>
                     <Link to={`/book/${book.id}`} style={styles.readButton}>
                       Lire
                     </Link>
-                    {(userType === 'ADMIN' ||
-                      ((userType === 'MEMBER' || userType === 'MODERATOR') &&
-                       book.assignedModerators.includes(currentUserId))) && (
-                      <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
-                        Modérer
-                      </Link>
-                    )}
+                    <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                      Modérer
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -351,8 +275,6 @@ function Home() {
           <div>
             <Link to="/" style={styles.backButton}>← Retour</Link>
           </div>
-            </>
-          )}
         </div>
       </div>
     </div>

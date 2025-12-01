@@ -135,6 +135,7 @@ async def send_book(
                 "upload_date": current_date,
                 "status": BookStatus.WAITING.value
             },
+            "preview": markdown_content[:200],
             "metadata": normalized_metadata,
             "security_analysis": security_analysis,
             "content_analysis": content_analysis,
