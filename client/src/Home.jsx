@@ -4,16 +4,16 @@ import Header from './components/Header';
 
 const styles = {
   container: {
-    // changed: full viewport size
-    width: '100vw',
+    width: '100%',
     minHeight: '100vh',
     padding: '32px',
     boxSizing: 'border-box',
     margin: 0,
-    // center content horizontally with an inner wrapper if needed
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
+    maxWidth: '100%',
+    overflowX: 'hidden',
   },
   title: {
     fontSize: '28px',
@@ -163,16 +163,40 @@ const styles = {
     cursor: 'pointer',
     textDecoration: 'none',
     display: 'inline-block',
+  },
+  preview: {
+    fontSize: '11px',
+    color: '#666',
+    lineHeight: '1.4',
+    marginTop: '8px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+  },
+  myDocumentsSection: {
+    marginTop: '32px',
+    marginBottom: '32px',
   }
 };
 
 function Home() {
   const [library, setLibrary] = useState([]);
   const [started, setStarted] = useState([]);
+  const [myDocuments, setMyDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [username, setUsername] = useState('');
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
+    // Récupérer le nom d'utilisateur et le rôle depuis localStorage
+    const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
+    setUsername(storedUsername || '');
+    setUserRole(storedRole || '');
+
     // Récupérer tous les documents depuis l'API
     const fetchDocuments = async () => {
       try {
@@ -190,7 +214,8 @@ function Home() {
           id: doc.document_id,
           title: doc.metadata?.title || 'Sans titre',
           author: doc.metadata?.author || 'Auteur inconnu',
-          status: doc.moderation?.status || 'unknown'
+          status: doc.moderation?.status || 'unknown',
+          preview: doc.preview || ''
         }));
 
         setLibrary(books);
@@ -208,7 +233,37 @@ function Home() {
       }
     };
 
+    // Récupérer les documents uploadés par l'utilisateur
+    const fetchMyDocuments = async () => {
+      if (!storedUsername) return;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/documents/uploader/${storedUsername}`);
+
+        if (!response.ok) {
+          console.error('Erreur lors de la récupération des documents uploadés');
+          return;
+        }
+
+        const data = await response.json();
+
+        const myBooks = data.documents.map(doc => ({
+          id: doc.document_id,
+          title: doc.metadata?.title || 'Sans titre',
+          author: doc.metadata?.author || 'Auteur inconnu',
+          status: doc.moderation?.status || 'unknown',
+          preview: doc.preview || '',
+          uploadedAt: doc.uploaded_at || null
+        }));
+
+        setMyDocuments(myBooks);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des documents uploadés:', err);
+      }
+    };
+
     fetchDocuments();
+    fetchMyDocuments();
   }, []);
 
   const startedBooks = started
@@ -216,9 +271,9 @@ function Home() {
     .filter(Boolean);
 
   return (
-    <div style={{minHeight: '100vh'}}>
+    <div style={{minHeight: '100vh', overflowX: 'hidden'}}>
       <Header />
-      <div style={{paddingTop: '64px'}}>
+      <div style={{paddingTop: '64px', overflowX: 'hidden'}}>
         <div style={styles.container}>
           <h1 style={styles.title}>Bibliothèque — Accueil</h1>
 
@@ -244,6 +299,44 @@ function Home() {
             </div>
           )}
 
+          {/* Section Mes Documents Uploadés */}
+          {username && myDocuments.length > 0 && (
+            <div style={styles.myDocumentsSection}>
+              <div style={styles.sectionTitle}>📤 Mes documents uploadés ({myDocuments.length})</div>
+              <div style={styles.libraryGrid}>
+                {myDocuments.map((book) => (
+                  <div key={book.id} style={styles.libraryCard}>
+                    <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                    <div>
+                      <div style={styles.libraryTitle}>{book.title}</div>
+                      <div style={styles.libraryAuthor}>{book.author}</div>
+                      {book.preview && (
+                        <div style={styles.preview}>
+                          {book.preview}
+                        </div>
+                      )}
+                      {book.uploadedAt && (
+                        <div style={{ fontSize: '10px', color: '#999', marginTop: '6px' }}>
+                          Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
+                        </div>
+                      )}
+                    </div>
+                    <div style={styles.buttonContainer}>
+                      <Link to={`/book/${book.id}`} style={styles.readButton}>
+                        Lire
+                      </Link>
+                      {userRole === 'ADMIN' && (
+                        <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                          Modérer
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: '8px' }}>
             <div style={styles.sectionTitle}>Tous les livres</div>
             <div style={styles.libraryGrid}>
@@ -263,9 +356,11 @@ function Home() {
                     <Link to={`/book/${book.id}`} style={styles.readButton}>
                       Lire
                     </Link>
-                    <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
-                      Modérer
-                    </Link>
+                    {userRole === 'ADMIN' && (
+                      <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                        Modérer
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}
