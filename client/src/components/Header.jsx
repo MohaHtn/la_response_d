@@ -97,7 +97,7 @@ export default function Header() {
               La réponse D | Bibliothéko
             </Typography>
             {isAuthenticated && (
-                <Link to="/upload" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Upload</Link>
+                <Link to="/upload" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Envoyer un document</Link>
             )}
           </div>
 
