@@ -537,8 +537,8 @@ function Upload() {
 
             try {
               if (result.success) {
+                const result_document = result
                 const docInfo = result.document;
-                console.log('Document créé:', docInfo);
 
                 // Extraire le markdown (la clé correcte est "markdown", pas "ocr_result.text")
                 if (result.markdown) {
@@ -569,13 +569,15 @@ function Upload() {
                 setDocumentInfo({
                   title: docInfo.title,
                   author: docInfo.author,
+                  message: result_document.message,
+                  is_compliant: result_document.is_compliant,
                   uploader: docInfo.uploader,
                   status: docInfo.status,
                   textLength: textLength,
                   documentId: result.document_id
                 });
 
-                setMessage("✅ Document traité avec succès!");
+                setMessage(docInfo.message);
               } else {
                 const imgs = extractImagesFromResult(result);
                 setImages(imgs);
@@ -679,6 +681,7 @@ function Upload() {
                   {documentInfo && (
                       <div style={{
                         ...styles.successMessageContainer,
+                        ...(documentInfo?.is_compliant === false ? { backgroundColor: '#fff3cd', border: '1px solid #ffc107' } : {}),
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '8px'
@@ -694,15 +697,14 @@ function Upload() {
                               width: 40,
                               height: 40,
                               borderRadius: 8,
-                              backgroundColor: '#e6ffed',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontSize: 24
-                            }}>✅</div>
+                            }}>{documentInfo?.is_compliant === false ? '❌' : '✅'}</div>
                             <div>
-                              <h1 style={styles.successMessageTitle}>Document traité</h1>
-                              <div style={{ fontSize: 11, color: '#155724', marginTop: '2px' }}>Traitement terminé avec succès.</div>
+                              <h1 style={{ ...styles.successMessageTitle, color: documentInfo?.is_compliant === false ? '#856404' : styles.successMessageTitle.color }}>Document traité</h1>
+                              <div style={{ fontSize: 11, color: documentInfo?.is_compliant === false ? '#856404' : styles.successMessageTitle.color, marginTop: '2px' }}>{documentInfo.message}</div>
                             </div>
                           </div>
 
