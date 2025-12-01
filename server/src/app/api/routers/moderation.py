@@ -1,8 +1,9 @@
 """
 Routes pour la modération (admin/modérateur)
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, HTTPException
 from typing import List
+from starlette.responses import JSONResponse
 from ..models import BookStatus
 from ..responses import APIResponse
 from ..dependencies import get_admin_user, get_moderator_user
@@ -229,6 +230,85 @@ async def reject_document(
 
     return APIResponse.success(
         message="Document rejeté",
-        data={"document_id": document_id}
+        data={
+            "document_id": document_id,
+            "rejected_by": moderator_user["username"]
+        }
     )
 
+
+@router.post("/quarantine/{document_id}/moderate")
+async def moderate_quarantined_document(
+    document_id: str,
+    action: str = Query(..., description="Action à effectuer : 'approve' ou 'reject'"),
+    admin_user: dict = Depends(get_admin_user)
+):
+    """
+    Moderate a quarantined document (Admin only)
+    - approve: Move document from quarantine to approved documents
+    - reject: Delete document from quarantine
+
+    Args:
+        document_id: The ID of the document to moderate
+        action: Action to perform ('approve' or 'reject')
+        admin_user: Admin user (injected)
+
+    Returns:
+        JSON response with moderation result
+    """
+    if action not in ["approve", "reject"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Action invalide. Utilisez 'approve' ou 'reject'."
+        )
+
+    try:
+        # Check if document exists in quarantine
+        document = await document_repository.get_quarantined_document(document_id)
+        if not document:
+            raise HTTPException(
+                status_code=404,
+                detail="Document en quarantaine introuvable."
+            )
+
+        if action == "approve":
+            # Move from quarantine to approved documents
+            success = await document_repository.move_from_quarantine_to_approved(document_id)
+
+            if not success:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Échec du déplacement du document vers les documents approuvés."
+                )
+
+            return JSONResponse(content={
+                "message": "Document approuvé et déplacé vers les documents normaux.",
+                "document_id": document_id,
+                "action": "approved",
+                "moderated_by": admin_user["username"]
+            })
+
+        elif action == "reject":
+            # Delete from quarantine
+            success = await document_repository.delete_quarantined_document(document_id)
+
+            if not success:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Échec de la suppression du document en quarantaine."
+                )
+
+            return JSONResponse(content={
+                "message": "Document rejeté et supprimé de la base de données.",
+                "document_id": document_id,
+                "action": "rejected",
+                "moderated_by": admin_user["username"]
+            })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la modération du document : {str(e)}"
+        )

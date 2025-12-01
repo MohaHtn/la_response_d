@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routers import auth_router, documents_router, moderation_router
 from .api.middleware import error_handler_middleware, logging_middleware
+from .api.routes import router as legacy_router
 
 app = FastAPI(
     title="Bibliothéko API",
@@ -23,10 +24,11 @@ app.add_middleware(
 app.middleware("http")(error_handler_middleware)
 app.middleware("http")(logging_middleware)
 
-# Inclusion des routers
-app.include_router(auth_router, prefix="/api")
-app.include_router(documents_router, prefix="/api")
-app.include_router(moderation_router, prefix="/api")
+# Inclusion des routers modulaires
+app.include_router(auth_router)
+app.include_router(documents_router)
+app.include_router(moderation_router)
+app.include_router(legacy_router)  # send-book endpoint
 
 
 # Health check endpoint

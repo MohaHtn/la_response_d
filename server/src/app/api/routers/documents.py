@@ -205,3 +205,154 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Header, Depends
 """
 Routes pour la gestion des documents
 
+"""
+
+@router.post("/documents")
+async def create_document(
+    document: Document,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a new document
+
+    Args:
+        document: The document data to create
+        current_user: Current user (injected)
+
+    Returns:
+        JSON response with the created document ID
+    """
+    try:
+        document_data = document.model_dump()
+        document_id = await document_repository.add_document(document_data)
+
+        return JSONResponse(content={
+            "message": "Document créé avec succès.",
+            "document_id": document_id
+        }, status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la création du document : {str(e)}"
+        )
+
+
+@router.get("/documents")
+async def get_all_documents(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all documents
+
+    Returns:
+        JSON response with list of all documents
+    """
+    try:
+        documents = await document_repository.get_all_documents()
+        return JSONResponse(content={
+            "count": len(documents),
+            "documents": documents
+        })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la récupération des documents : {str(e)}"
+        )
+
+
+@router.get("/documents/status/{status}")
+async def get_documents_by_status(
+    status: BookStatus,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get documents filtered by moderation status
+
+    Args:
+        status: The moderation status to filter by (WAITING, IN_APPROVAL, OK, NOK)
+        current_user: Current user (injected)
+
+    Returns:
+        JSON response with list of documents matching the status
+    """
+    try:
+        documents = await document_repository.get_documents_by_status(status.value)
+        return JSONResponse(content={
+            "status": status.value,
+            "count": len(documents),
+            "documents": documents
+        })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la récupération des documents par statut : {str(e)}"
+        )
+
+
+@router.get("/documents/uploader/{username}")
+async def get_documents_by_uploader(
+    username: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get documents uploaded by a specific user
+
+    Args:
+        username: The username of the uploader
+        current_user: Current user (injected)
+
+    Returns:
+        JSON response with list of documents uploaded by the user
+    """
+    try:
+        documents = await document_repository.get_documents_by_uploader(username)
+        return JSONResponse(content={
+            "uploader": username,
+            "count": len(documents),
+            "documents": documents
+        })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la récupération des documents par utilisateur : {str(e)}"
+        )
+
+
+@router.get("/documents/search")
+async def search_documents(
+    title: Optional[str] = Query(None, description="Titre à rechercher"),
+    author: Optional[str] = Query(None, description="Auteur à rechercher"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Search documents by title and/or author
+
+    Args:
+        title: Optional title to search for
+        author: Optional author to search for
+        current_user: Current user (injected)
+
+    Returns:
+        JSON response with list of matching documents
+    """
+    if not title and not author:
+        raise HTTPException(
+            status_code=400,
+            detail="Au moins un critère de recherche (titre ou auteur) doit être fourni."
+        )
+
+    try:
+        documents = await document_repository.search_documents(title=title, author=author)
+        return JSONResponse(content={
+            "search_criteria": {
+                "title": title,
+                "author": author
+            },
+            "count": len(documents),
+            "documents": documents
+        })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Échec de la recherche de documents : {str(e)}"
+        )
