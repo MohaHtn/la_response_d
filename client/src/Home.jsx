@@ -315,7 +315,8 @@ function Home() {
   useEffect(() => {
     // Récupérer le nom d'utilisateur et le rôle depuis localStorage
     const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('role');
+    const storedRole = localStorage.getItem('userType'); // Correction: utiliser 'userType' au lieu de 'role'
+    console.log('🔍 DEBUG Home - Username:', storedUsername, 'Role:', storedRole);
     setUsername(storedUsername || '');
     setUserRole(storedRole || '');
 
@@ -387,6 +388,7 @@ function Home() {
     };
 
     fetchDocuments();
+    fetchMyDocuments();
   }, []);
 
   const startedBooks = started
