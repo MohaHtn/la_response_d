@@ -34,4 +34,7 @@ puisconception des données de l'application et comment elles sont stockées ( d
 stockage des livres sur un repo git ? un repo par livre ou un repo par user ou il met les livres ? a voir 
 on a fait les différents diagrammes de conception (UML)
 
-
+1/12/25 
+refctor de moderation pour que ce soit plus beau et aussi fonctionnel avec les vrais données puis aussi le home mise en coomùun du code 
+verification du coté admin sur les partie de l'appli 
+to do faire en sorte qu'on ais des admins pour valider les livres 
