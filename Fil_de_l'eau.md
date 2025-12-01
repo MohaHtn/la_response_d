@@ -10,10 +10,9 @@ et des redactions de scenarios
 redaction scenarios et glossaire technique
 puis moi jai bossé sur le front de la page en faisant un front tres primaire 
 puis moha a bossé sur le fait de verifier que es livre ne soit pas des livres de cul etc
-puis jai supprime un commit du repo ( me demander la raison  si vous voulez )
+puis suppression d'un commit du repo
 
 
-[README.md](client/README.md)
 20/10/25
 
 repassage sur les senarios , reflexion sur le chifrrage des livres pas en domaine public et a moderer , resolution de conflit git : refait un repo local 
@@ -30,3 +29,9 @@ puis jai fait la page de presentatiion puis reconnecter les pages changer un peu
 puis la création du composant de moderation genre de tableau qui montre lequel de moderateur a validé tel ou tel livre 
 mise e forme des chemins ajout de la partie moderation au niveau des livres sans la gestion des comptes moderateurs ou pas pour l'instant
 puisconception des données de l'application et comment elles sont stockées ( document et user )
+
+17/11/25 
+stockage des livres sur un repo git ? un repo par livre ou un repo par user ou il met les livres ? a voir 
+on a fait les différents diagrammes de conception (UML)
+
+
