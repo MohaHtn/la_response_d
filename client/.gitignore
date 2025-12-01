@@ -1,24 +1,56 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Dépendances
+Thumbs.db
+# Système
 
-node_modules
-dist
-dist-ssr
-*.local
+.nyc_output/
+coverage/
+# Test
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
+.tmp/
+.temp/
+*.temp
+*.tmp
+# Temporaire
+
+.stylelintcache
+.eslintcache
+.parcel-cache/
+.cache/
+# Cache
+
 *.sw?
+*.sln
+*.njsproj
+*.ntvs*
+*.suo
+.DS_Store
+.idea
+!.vscode/extensions.json
+.vscode/*
+# Éditeur
+
+.env.production.local
+.env.test.local
+.env.development.local
+.env.local
+.env
+# Environnement
+
+lerna-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+npm-debug.log*
+*.log
+logs
+# Logs
+
+build/
+dist/
+# Production
+
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+node_modules/
+

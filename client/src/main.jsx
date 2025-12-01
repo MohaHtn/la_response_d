@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import Presentation from './Presentation.jsx'
 import Home from './Home.jsx'
@@ -10,38 +10,7 @@ import Upload from "./Upload.jsx";
 import ModeratorPage from "./pages/ModeratorPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import QuarantinePage from "./pages/QuarantinePage.jsx";
-
-// Petite fonction utilitaire pour lire le type d'utilisateur
-function getUserType() {
-  try {
-    return localStorage.getItem('userType') || 'USER';
-  } catch {
-    return 'USER';
-  }
-}
-
-// Route prot9g9e pour l9admin
-function AdminRoute({ children }) {
-  const userType = getUserType();
-  if (userType !== 'ADMIN') {
-    // Si ce n'est pas un admin, on renvoie vers la home
-    return <Navigate to="/home" replace />;
-  }
-  return children;
-}
-
-// Route protégée pour les modérateurs et admins
-function ModeratorRoute({ children }) {
-  const userType = getUserType();
-  console.log('ModeratorRoute - userType:', userType);
-
-  // Autoriser ADMIN et MODERATOR à accéder à la page de modération
-  if (userType !== 'MODERATOR' && userType !== 'ADMIN') {
-    console.log('Access denied - redirecting to /home');
-    return <Navigate to="/home" replace />;
-  }
-  return children;
-}
+import { AdminRoute, ModeratorRoute } from './components/ProtectedRoute.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

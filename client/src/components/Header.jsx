@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import {Link, useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from '../hooks/useAuth';
+import { logout } from '../services/auth.service';
 
 const headerStyles = {
   appBar: {
@@ -51,46 +53,12 @@ const headerStyles = {
 }
 
 export default function Header() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState('USER');
+  const { isAuthenticated, userType } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Vérifier si un token valide existe dans localStorage
-    const checkAuth = () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        setIsAuthenticated(!!token);
-        const t = localStorage.getItem('userType') || 'USER';
-        setUserType(t);
-      } catch {
-        setIsAuthenticated(false);
-        setUserType('USER');
-      }
-    };
-
-    checkAuth();
-
-    // Écouter l'événement personnalisé pour les changements d'authentification
-    window.addEventListener('authChange', checkAuth);
-
-    return () => {
-      window.removeEventListener('authChange', checkAuth);
-    };
-  }, []);
-
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userType');
-      setIsAuthenticated(false);
-      setUserType('USER');
-      // Notifier le changement d'authentification
-      window.dispatchEvent(new Event('authChange'));
-      navigate('/');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-    }
+    logout();
+    navigate('/');
   };
 
   return (
