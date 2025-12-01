@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -45,12 +45,19 @@ const styles = {
     padding: '0 20px',
     boxSizing: 'border-box',
     overflow: 'hidden',
+    height: 'calc(100vh - 64px)',
+    display: 'flex',
+    flexDirection: 'column',
   },
   container: {
     width: '100%',
     maxWidth: '1400px',
-    padding: '20px',
+    padding: '10px 20px',
     boxSizing: 'border-box',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   button: {
     display: 'block',
@@ -83,13 +90,13 @@ const styles = {
   dropZone: {
     border: '2px dashed #2196f3',
     borderRadius: '8px',
-    padding: '40px',
+    padding: '20px',
     textAlign: 'center',
     backgroundColor: '#f5f5f5',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    marginTop: '20px',
-    marginBottom: '20px',
+    marginTop: '10px',
+    marginBottom: '10px',
   },
   dropZoneActive: {
     backgroundColor: '#e3f2fd',
@@ -145,32 +152,44 @@ const styles = {
   },
   gridContainer: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(350px, 400px) 1fr',
-    gap: '20px',
+    gridTemplateColumns: 'minmax(320px, 380px) 1fr',
+    gap: '15px',
     alignItems: 'start',
     width: '100%',
     boxSizing: 'border-box',
+    flex: 1,
+    overflow: 'hidden',
   },
   leftColumn: {
-    position: 'sticky',
-    top: '84px',
-    maxHeight: 'calc(100vh - 104px)',
+    height: '100%',
+    maxHeight: '100%',
+    paddingRight: '15px',
     overflow: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
   },
   rightColumn: {
-    minHeight: '400px',
+    height: '100%',
+    maxHeight: '100%',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
   markdownContainer: {
     width: '100%',
     textAlign: 'left',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   markdownDocument: {
-    padding: '30px',
+    padding: '20px',
     border: '1px solid #ddd',
     borderRadius: '8px',
     backgroundColor: '#ffffff',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    maxHeight: '800px',
+    flex: 1,
     overflow: 'auto',
   },
   markdownContent: {
@@ -197,40 +216,42 @@ const styles = {
     backgroundColor: '#218838',
   },
   successMessageContainer: {
-    marginTop: '20px',
-    padding: '20px',
+    marginTop: '8px',
+    marginBottom: '8px',
+    padding: '10px',
     border: '1px solid #28a745',
-    borderRadius: '8px',
+    borderRadius: '6px',
     backgroundColor: '#d4edda',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
   },
   successMessageTitle: {
-    fontSize: '18px',
+    fontSize: '20px',
     fontWeight: 'bold',
-    marginBottom: '15px',
+    marginBottom: '0',
     color: '#155724',
   },
   successMessageItem: {
-    marginBottom: '8px',
-    fontSize: '14px',
+    fontSize: '12px',
     color: '#155724',
   },
   metadataContainer: {
-    marginTop: '30px',
-    padding: '20px',
+    marginRight: '0',
+    marginTop: '0',
+    marginBottom: '10px',
+    padding: '15px',
     border: '1px solid #e0e0e0',
     borderRadius: '8px',
     backgroundColor: '#f9f9f9',
   },
   metadataTitle: {
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: 'bold',
-    marginBottom: '15px',
+    marginBottom: '10px',
     color: '#333',
   },
   metadataItem: {
-    marginBottom: '8px',
-    fontSize: '14px',
+    marginBottom: '6px',
+    fontSize: '13px',
   },
   metadataLabel: {
     fontWeight: 'bold',
@@ -241,37 +262,22 @@ const styles = {
     marginLeft: '10px',
   },
   analysisContainer: {
-    marginTop: '20px',
-    padding: '15px',
+    marginRight: '0',
+    marginTop: '0',
+    marginBottom: '10px',
+    padding: '12px',
     borderRadius: '6px',
-    fontSize: '14px',
+    fontSize: '13px',
   },
-  securityAnalysis: {
-    backgroundColor: '#e8f5e8',
-    border: '1px solid #4caf50',
-  },
-  securityAnalysisWarning: {
-    backgroundColor: '#fff3cd',
-    border: '1px solid #ffc107',
-  },
-  securityAnalysisError: {
-    backgroundColor: '#f8d7da',
-    border: '1px solid #dc3545',
-  },
-  contentAnalysis: {
-    backgroundColor: '#e3f2fd',
-    border: '1px solid #2196f3',
-  },
-  contentAnalysisWarning: {
-    backgroundColor: '#fff3cd',
-    border: '1px solid #ffc107',
-  },
+  // Styles analytiques seront calculés dynamiquement pour réduire la redondance
   analysisTitle: {
     fontWeight: 'bold',
-    marginBottom: '8px',
+    marginBottom: '6px',
+    fontSize: '14px',
   },
   analysisDetail: {
-    marginBottom: '5px',
+    marginBottom: '4px',
+    fontSize: '12px',
   },
   riskBadge: {
     display: 'inline-block',
@@ -336,6 +342,8 @@ function Upload() {
   const [documentInfo, setDocumentInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  const [showPreviews, setShowPreviews] = useState(false);
   const fileInputRef = useRef(null);
 
   // Fonction pour déclencher l'ouverture du gestionnaire de fichiers
@@ -343,6 +351,48 @@ function Upload() {
     if (!isLoading) {
       fileInputRef.current.click();
     }
+  };
+
+  // Écouteur de redimensionnement pour la réactivité
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Style d'encadré d'analyse (fusion de classes redondantes)
+  const getAnalysisBoxStyle = (type, level) => {
+    // type: 'security' | 'content'
+    // level: security -> 'low' | 'medium' | 'high'; content -> severity idem
+    let backgroundColor = '#e3f2fd';
+    let borderColor = '#2196f3';
+
+    if (type === 'security') {
+      if (level === 'high') {
+        backgroundColor = '#f8d7da';
+        borderColor = '#dc3545';
+      } else if (level === 'medium') {
+        backgroundColor = '#fff3cd';
+        borderColor = '#ffc107';
+      } else {
+        backgroundColor = '#e8f5e8';
+        borderColor = '#4caf50';
+      }
+    } else {
+      // content
+      if (level === 'high') {
+        backgroundColor = '#fff3cd';
+        borderColor = '#ffc107';
+      } else if (level === 'medium') {
+        backgroundColor = '#e3f2fd';
+        borderColor = '#2196f3';
+      } else {
+        backgroundColor = '#e8f5e8';
+        borderColor = '#4caf50';
+      }
+    }
+
+    return { backgroundColor, border: `1px solid ${borderColor}` };
   };
 
   // Gestionnaires pour le drag & drop
@@ -563,10 +613,10 @@ function Upload() {
       <style>{spinAnimation}</style>
       <div style={styles.mainContent}>
         <div style={{...styles.container, margin: '0 auto'}}>
-            <h1 style={{ textAlign: 'left' }}>Envoyer un document</h1>
+            <h1 style={{ textAlign: 'left', fontSize: '24px', marginTop: '5px', marginBottom: '8px' }}>Envoyer un document</h1>
 
           {!mergedMarkdown && (
-            <p>Vous pouvez déposer un document en glissant-déposant le fichier dans l'espace ci-dessous, ou cliquer dessus
+            <p style={{ fontSize: '14px', marginTop: '5px', marginBottom: '8px' }}>Vous pouvez déposer un document en glissant-déposant le fichier dans l'espace ci-dessous, ou cliquer dessus
             pour sélectionner votre document.</p>
           )}
 
@@ -614,36 +664,90 @@ function Upload() {
               </div>
             </div>
           )}
-
           {message && !isLoading && !documentInfo && <p style={styles.message}>{message}</p>}
 
+
           {(securityAnalysis || contentAnalysis || metadata || mergedMarkdown || documentInfo) && !isLoading && (
-            <div style={styles.gridContainer}>
-              {/* Colonne de gauche : Analyses */}
+            <div
+              style={{
+                ...styles.gridContainer,
+                gridTemplateColumns: isMobile ? '1fr' : 'minmax(320px, 380px) 1fr'
+              }}
+            >
               <div style={styles.leftColumn}>
                 <div style={styles.stickyAnalysisSection}>
                   {documentInfo && (
-                    <div style={styles.successMessageContainer}>
-                      <div style={styles.successMessageTitle}>✅ Document traité avec succès!</div>
-                      <div style={styles.successMessageItem}>
-                        📄 <strong>Titre:</strong> {documentInfo.title}
+                      <div style={{
+                        ...styles.successMessageContainer,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 8,
+                              backgroundColor: '#e6ffed',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 24
+                            }}>✅</div>
+                            <div>
+                              <h1 style={styles.successMessageTitle}>Document traité</h1>
+                              <div style={{ fontSize: 11, color: '#155724', marginTop: '2px' }}>Traitement terminé avec succès.</div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            {mergedMarkdown && (
+                                <button
+                                    onClick={downloadMarkdown}
+                                    style={{ ...styles.downloadButton, padding: '6px 12px', fontSize: 13 }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
+                                    aria-label="Télécharger le markdown"
+                                >
+                                  📥 Télécharger .md
+                                </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', alignItems: 'start' }}>
+                          <div style={styles.successMessageItem}>
+                            <div style={{ fontWeight: 600 }}>📄 Titre</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.title || 'Non spécifié'}</div>
+                          </div>
+
+                          <div style={styles.successMessageItem}>
+                            <div style={{ fontWeight: 600 }}>✍️ Auteur</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.author || 'Non spécifié'}</div>
+                          </div>
+
+                          <div style={styles.successMessageItem}>
+                            <div style={{ fontWeight: 600 }}>👤 Uploadé par</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.uploader || 'Inconnu'}</div>
+                          </div>
+
+                          <div style={styles.successMessageItem}>
+                            <div style={{ fontWeight: 600 }}>📝 Taille du texte</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.textLength ?? 0} caractères</div>
+                          </div>
+
+                          <div style={{ gridColumn: '1 / -1', ...styles.successMessageItem }}>
+                            <div style={{ fontWeight: 600 }}>🆔 ID du document</div>
+                            <div style={{ marginTop: 3, wordBreak: 'break-all' }}>{documentInfo.documentId || '—'}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div style={styles.successMessageItem}>
-                        ✍️ <strong>Auteur:</strong> {documentInfo.author}
-                      </div>
-                      <div style={styles.successMessageItem}>
-                        👤 <strong>Uploadé par:</strong> {documentInfo.uploader}
-                      </div>
-                      <div style={styles.successMessageItem}>
-                        📊 <strong>Statut:</strong> {documentInfo.status}
-                      </div>
-                      <div style={styles.successMessageItem}>
-                        📝 <strong>Texte extrait:</strong> {documentInfo.textLength} caractères
-                      </div>
-                      <div style={styles.successMessageItem}>
-                        🆔 <strong>ID:</strong> {documentInfo.documentId}
-                      </div>
-                    </div>
                   )}
 
                   {metadata && (
@@ -677,9 +781,7 @@ function Upload() {
                   {securityAnalysis && (
                     <div style={{
                       ...styles.analysisContainer,
-                      ...(securityAnalysis.risk_level === 'high' ? styles.securityAnalysisError :
-                          securityAnalysis.risk_level === 'medium' ? styles.securityAnalysisWarning :
-                          styles.securityAnalysis)
+                      ...getAnalysisBoxStyle('security', securityAnalysis.risk_level)
                     }}>
                       <div style={styles.analysisTitle}>
                         🔒 Analyse de sécurité
@@ -716,8 +818,7 @@ function Upload() {
                   {contentAnalysis && (
                     <div style={{
                       ...styles.analysisContainer,
-                      ...(contentAnalysis.severity === 'high' ? styles.contentAnalysisWarning :
-                          styles.contentAnalysis)
+                      ...getAnalysisBoxStyle('content', contentAnalysis.severity)
                     }}>
                       <div style={styles.analysisTitle}>
                         📖 Analyse de contenu inapproprié
@@ -757,16 +858,8 @@ function Upload() {
               {mergedMarkdown && (
                 <div style={styles.rightColumn}>
                   <div style={styles.markdownContainer}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                      <h2>Aperçu du document en Markdown</h2>
-                      <button
-                        onClick={downloadMarkdown}
-                        style={styles.downloadButton}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
-                      >
-                        📥 Télécharger .md
-                      </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <h2 style={{ fontSize: '18px', margin: 0 }}>Aperçu du document en Markdown</h2>
                     </div>
                     <div style={styles.markdownDocument}>
                       <div style={styles.markdownContent}>
@@ -784,13 +877,38 @@ function Upload() {
           )}
 
           {images && images.length > 0 && !isLoading && (
-            <div>
-              <h2>Aperçus des pages OCR</h2>
-              {images.map((img) => (
-                <div key={img.id}>
-                  <img src={img.src} alt={img.id} style={styles.img} />
+            <div style={{ ...styles.metadataContainer, marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h2 style={{ margin: 0 }}>Aperçus des images trouvés</h2>
+                <button
+                  onClick={() => setShowPreviews((v) => !v)}
+                  style={{ ...styles.downloadButton, padding: '6px 12px', fontSize: 13 }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
+                  aria-expanded={showPreviews}
+                >
+                  {showPreviews ? 'Masquer' : 'Afficher'}
+                </button>
+              </div>
+              {showPreviews && (
+                <div style={{
+                  marginTop: 12,
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: 12,
+                  background: '#fff',
+                  maxHeight: 'calc(100vh - 240px)',
+                  overflow: 'auto'
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {images.map((img) => (
+                      <div key={img.id} style={{ marginBottom: 0 }}>
+                        <img src={img.src} alt={img.id} style={styles.img} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>

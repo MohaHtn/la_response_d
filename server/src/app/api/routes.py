@@ -85,7 +85,7 @@ async def send_book(
         doc_title = title or extracted_metadata.get("title") or filename
         doc_author = author or metadata_author
 
-        # Create document with OCR data using proper nested structure
+        # Create document with OCR data using a proper nested structure
         document = Document(
             metadata=DocumentMetadata(
                 title=doc_title,
