@@ -178,6 +178,119 @@ const styles = {
   myDocumentsSection: {
     marginTop: '32px',
     marginBottom: '32px',
+  },
+  viewToggleContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '16px',
+  },
+  viewToggleButtons: {
+    display: 'flex',
+    gap: '8px',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    padding: '4px',
+    backgroundColor: '#f9f9f9',
+  },
+  viewToggleButton: {
+    padding: '8px 16px',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s',
+    backgroundColor: 'transparent',
+    color: '#666',
+  },
+  viewToggleButtonActive: {
+    backgroundColor: '#2196f3',
+    color: 'white',
+    boxShadow: '0 2px 4px rgba(33,150,243,0.3)',
+  },
+  libraryList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  libraryListItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    padding: '12px',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+    transition: 'box-shadow 0.2s',
+    cursor: 'pointer',
+  },
+  libraryListItemHover: {
+    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+  },
+  listCover: {
+    width: '80px',
+    height: '112px',
+    backgroundColor: '#e8eefb',
+    borderRadius: '6px',
+    flexShrink: 0,
+    objectFit: 'cover',
+  },
+  listContent: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    minWidth: 0, // Important pour le text-overflow
+  },
+  listTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#0d47a1',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  listAuthor: {
+    fontSize: '14px',
+    color: '#666',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  listPreview: {
+    fontSize: '13px',
+    color: '#888',
+    lineHeight: '1.5',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+  },
+  listActions: {
+    display: 'flex',
+    gap: '8px',
+    flexShrink: 0,
+  },
+  listButton: {
+    padding: '8px 16px',
+    backgroundColor: '#388e3c',
+    color: 'white',
+    borderRadius: '6px',
+    textDecoration: 'none',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'background-color 0.2s',
+  },
+  listButtonModerate: {
+    backgroundColor: '#f57c00',
+  },
+  listStatusBadge: {
+    fontSize: '11px',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontWeight: '500',
   }
 };
 
@@ -189,6 +302,15 @@ function Home() {
   const [error, setError] = useState(null);
   const [username, setUsername] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [viewMode, setViewMode] = useState(() => {
+    // Initialiser depuis localStorage ou défaut 'grid'
+    return localStorage.getItem('libraryViewMode') || 'grid';
+  });
+
+  // Sauvegarder le mode de vue dans localStorage quand il change
+  useEffect(() => {
+    localStorage.setItem('libraryViewMode', viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     // Récupérer le nom d'utilisateur et le rôle depuis localStorage
@@ -215,7 +337,8 @@ function Home() {
           title: doc.metadata?.title || 'Sans titre',
           author: doc.metadata?.author || 'Auteur inconnu',
           status: doc.moderation?.status || 'unknown',
-          preview: doc.preview || ''
+          preview: doc.preview || '',
+          coverImage: doc.cover_image || null
         }));
 
         setLibrary(books);
@@ -253,7 +376,8 @@ function Home() {
           author: doc.metadata?.author || 'Auteur inconnu',
           status: doc.moderation?.status || 'unknown',
           preview: doc.preview || '',
-          uploadedAt: doc.uploaded_at || null
+          uploadedAt: doc.uploaded_at || null,
+          coverImage: doc.cover_image || null
         }));
 
         setMyDocuments(myBooks);
@@ -275,7 +399,31 @@ function Home() {
       <Header />
       <div style={{paddingTop: '64px', overflowX: 'hidden'}}>
         <div style={styles.container}>
-          <h1 style={styles.title}>Bibliothèque — Accueil</h1>
+          <div style={styles.viewToggleContainer}>
+            <h1 style={styles.title}>Bibliothèque — Accueil</h1>
+            <div style={styles.viewToggleButtons}>
+              <button
+                style={{
+                  ...styles.viewToggleButton,
+                  ...(viewMode === 'grid' ? styles.viewToggleButtonActive : {})
+                }}
+                onClick={() => setViewMode('grid')}
+                title="Vue en grille"
+              >
+                ⊞ Grille
+              </button>
+              <button
+                style={{
+                  ...styles.viewToggleButton,
+                  ...(viewMode === 'list' ? styles.viewToggleButtonActive : {})
+                }}
+                onClick={() => setViewMode('list')}
+                title="Vue en liste"
+              >
+                ☰ Liste
+              </button>
+            </div>
+          </div>
 
           {error && (
             <div style={{
@@ -303,21 +451,125 @@ function Home() {
           {username && myDocuments.length > 0 && (
             <div style={styles.myDocumentsSection}>
               <div style={styles.sectionTitle}>📤 Mes documents uploadés ({myDocuments.length})</div>
+
+              {viewMode === 'grid' ? (
+                <div style={styles.libraryGrid}>
+                  {myDocuments.map((book) => (
+                    <div key={book.id} style={styles.libraryCard}>
+                      {book.coverImage ? (
+                        <img
+                          src={book.coverImage}
+                          alt={`Couverture de ${book.title}`}
+                          style={styles.libraryCover}
+                        />
+                      ) : (
+                        <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                      )}
+                      <div>
+                        <div style={styles.libraryTitle}>{book.title}</div>
+                        <div style={styles.libraryAuthor}>{book.author}</div>
+                        {book.preview && (
+                          <div style={styles.preview}>
+                            {book.preview}
+                          </div>
+                        )}
+                        {book.uploadedAt && (
+                          <div style={{ fontSize: '10px', color: '#999', marginTop: '6px' }}>
+                            Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
+                          </div>
+                        )}
+                      </div>
+                      <div style={styles.buttonContainer}>
+                        <Link to={`/book/${book.id}`} style={styles.readButton}>
+                          Lire
+                        </Link>
+                        {userRole === 'ADMIN' && (
+                          <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                            Modérer
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={styles.libraryList}>
+                  {myDocuments.map((book) => (
+                    <div
+                      key={book.id}
+                      style={styles.libraryListItem}
+                      onMouseEnter={(e) => {
+                        Object.assign(e.currentTarget.style, styles.libraryListItemHover);
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = styles.libraryListItem.boxShadow;
+                      }}
+                    >
+                      {book.coverImage ? (
+                        <img
+                          src={book.coverImage}
+                          alt={`Couverture de ${book.title}`}
+                          style={styles.listCover}
+                        />
+                      ) : (
+                        <div style={styles.listCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                      )}
+                      <div style={styles.listContent}>
+                        <div style={styles.listTitle}>{book.title}</div>
+                        <div style={styles.listAuthor}>{book.author}</div>
+                        {book.preview && (
+                          <div style={styles.listPreview}>
+                            {book.preview}
+                          </div>
+                        )}
+                        {book.uploadedAt && (
+                          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                            📅 Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
+                          </div>
+                        )}
+                      </div>
+                      <div style={styles.listActions}>
+                        <Link to={`/book/${book.id}`} style={styles.listButton}>
+                          Lire
+                        </Link>
+                        {userRole === 'ADMIN' && (
+                          <Link
+                            to={`/moderation/${book.id}`}
+                            style={{...styles.listButton, ...styles.listButtonModerate}}
+                          >
+                            Modérer
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginTop: '8px' }}>
+            <div style={styles.sectionTitle}>Tous les livres</div>
+
+            {viewMode === 'grid' ? (
               <div style={styles.libraryGrid}>
-                {myDocuments.map((book) => (
+                {library.map((book) => (
                   <div key={book.id} style={styles.libraryCard}>
-                    <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                    {book.coverImage ? (
+                      <img
+                        src={book.coverImage}
+                        alt={`Couverture de ${book.title}`}
+                        style={styles.libraryCover}
+                      />
+                    ) : (
+                      <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                    )}
                     <div>
                       <div style={styles.libraryTitle}>{book.title}</div>
                       <div style={styles.libraryAuthor}>{book.author}</div>
                       {book.preview && (
                         <div style={styles.preview}>
                           {book.preview}
-                        </div>
-                      )}
-                      {book.uploadedAt && (
-                        <div style={{ fontSize: '10px', color: '#999', marginTop: '6px' }}>
-                          Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
                         </div>
                       )}
                     </div>
@@ -334,37 +586,54 @@ function Home() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          <div style={{ marginTop: '8px' }}>
-            <div style={styles.sectionTitle}>Tous les livres</div>
-            <div style={styles.libraryGrid}>
-              {library.map((book) => (
-                <div key={book.id} style={styles.libraryCard}>
-                  <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
-                  <div>
-                    <div style={styles.libraryTitle}>{book.title}</div>
-                    <div style={styles.libraryAuthor}>{book.author}</div>
-                    {book.preview && (
-                        <div style={styles.preview}>
+            ) : (
+              <div style={styles.libraryList}>
+                {library.map((book) => (
+                  <div
+                    key={book.id}
+                    style={styles.libraryListItem}
+                    onMouseEnter={(e) => {
+                      Object.assign(e.currentTarget.style, styles.libraryListItemHover);
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = styles.libraryListItem.boxShadow;
+                    }}
+                  >
+                    {book.coverImage ? (
+                      <img
+                        src={book.coverImage}
+                        alt={`Couverture de ${book.title}`}
+                        style={styles.listCover}
+                      />
+                    ) : (
+                      <div style={styles.listCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                    )}
+                    <div style={styles.listContent}>
+                      <div style={styles.listTitle}>{book.title}</div>
+                      <div style={styles.listAuthor}>{book.author}</div>
+                      {book.preview && (
+                        <div style={styles.listPreview}>
                           {book.preview}
                         </div>
-                    )}
-                  </div>
-                  <div style={styles.buttonContainer}>
-                    <Link to={`/book/${book.id}`} style={styles.readButton}>
-                      Lire
-                    </Link>
-                    {userRole === 'ADMIN' && (
-                      <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
-                        Modérer
+                      )}
+                    </div>
+                    <div style={styles.listActions}>
+                      <Link to={`/book/${book.id}`} style={styles.listButton}>
+                        Lire
                       </Link>
-                    )}
+                      {userRole === 'ADMIN' && (
+                        <Link
+                          to={`/moderation/${book.id}`}
+                          style={{...styles.listButton, ...styles.listButtonModerate}}
+                        >
+                          Modérer
+                        </Link>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

@@ -11,6 +11,7 @@ from .models import (
 from ..infra.ocr import process_pdf
 from ..infra.config import config
 from ..domain.services import AuthService
+from ..domain.image_generator import PreviewImageGenerator
 from ..infra.repositories import user_repository, document_repository
 from datetime import datetime, timedelta
 from typing import Optional, Dict
@@ -78,12 +79,20 @@ async def send_book(
         elif not metadata_author:
             metadata_author = "Inconnu"
 
-        # La date de parution peut être None
-        parution_date = extracted_metadata.get("date") or extracted_metadata.get("parution_date") or ""
+        # La date de parution peut être None ou un entier, la convertir en string
+        parution_date_raw = extracted_metadata.get("date") or extracted_metadata.get("parution_date")
+        parution_date = str(parution_date_raw) if parution_date_raw else ""
 
         # Utiliser le titre et l'auteur détectés par l'IA, avec fallback sur les paramètres
         doc_title = title or extracted_metadata.get("title") or filename
         doc_author = author or metadata_author
+
+        # Générer l'image de prévisualisation et le texte de preview
+        preview_text, cover_image = PreviewImageGenerator.generate_from_markdown(
+            markdown_content=markdown_content,
+            title=doc_title,
+            author=doc_author
+        )
 
         # Create document with OCR data using a proper nested structure
         document = Document(
@@ -108,7 +117,9 @@ async def send_book(
             ),
             markdown=DocumentMarkdown(
                 content=markdown_content
-            )
+            ),
+            preview=preview_text,
+            cover_image=cover_image
         )
 
         document_data = document.model_dump()

@@ -69,5 +69,9 @@ class Document(BaseModel):
 
     # Optional ID field for internal use
     document_id: Optional[str] = None
+    # Optional preview field (first 300 chars of markdown)
+    preview: Optional[str] = None
+    # Optional cover image field (base64 encoded preview image)
+    cover_image: Optional[str] = None
 
 

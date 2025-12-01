@@ -9,6 +9,23 @@ Application web de bibliothèque numérique permettant la numérisation, l'analy
 - **Frontend** : React 19 + Vite + Material-UI
 - **Backend** : FastAPI (Python) avec intégration Mistral AI
 - **Traitement** : OCR intelligent, analyse de sécurité et de contenu
+- **Stockage** : Redis pour les documents et métadonnées
+
+## ✨ Nouvelles Fonctionnalités
+
+### 🎨 Images de prévisualisation automatiques
+- Génération automatique de couvertures personnalisées lors de l'upload
+- Affichage du titre, auteur et extrait du contenu (300 caractères)
+- Style cohérent avec les couleurs de l'application
+- Stockage en base64 dans Redis (aucun fichier externe)
+
+### 📊 Modes d'affichage multiples
+- **Vue Grille** : Cartes avec grandes couvertures (idéal pour parcourir)
+- **Vue Liste** : Affichage ligne par ligne compact (idéal pour rechercher)
+- Boutons de bascule intuitifs (⊞ Grille / ☰ Liste)
+- Sauvegarde automatique de la préférence utilisateur
+
+📖 **Guide détaillé** : [Guide utilisateur](docs/fr/GUIDE_UTILISATEUR_NOUVELLES_FONCTIONNALITES.md)
 
 ## Prérequis
 
