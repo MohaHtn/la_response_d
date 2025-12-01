@@ -151,13 +151,16 @@ function Auth() {
       }
 
       // Déterminer le type de compte renvoyé par l'API
-      // On normalise en USER / MEMBER / ADMIN
+      // On normalise en USER / MODERATOR / ADMIN
       let userType = 'USER';
       const rawType = res?.user?.account_type || res?.account_type || res?.userType;
       if (rawType) {
         const upper = String(rawType).toUpperCase();
-        if (upper === 'ADMIN') userType = 'ADMIN';
-        else if (upper === 'MEMBER' || upper === 'MODERATOR') userType = 'MEMBER';
+        if (upper === 'ADMIN') {
+          userType = 'ADMIN';
+        } else if (upper === 'MEMBER' || upper === 'MODERATOR') {
+          userType = 'MODERATOR';
+        }
       }
 
       try {
@@ -176,9 +179,9 @@ function Auth() {
         if (userType === 'USER') {
           // utilisateur classique -> page d'accueil
           navigate('/home');
-        } else if (userType === 'MEMBER') {
-          // membre/modérateur -> page de modération (vue d'ensemble)
-          navigate('/moderation/overview');
+        } else if (userType === 'MODERATOR') {
+          // membre/modérateur -> page d'accueil (ils verront leurs livres assignés)
+          navigate('/home');
         } else if (userType === 'ADMIN') {
           // admin -> panneau d'administration
           navigate('/admin');

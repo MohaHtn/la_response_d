@@ -29,11 +29,14 @@ function AdminRoute({ children }) {
   return children;
 }
 
-// Route prot9g9e pour les mod9rateurs et admins
+// Route protégée pour les modérateurs et admins
 function ModeratorRoute({ children }) {
   const userType = getUserType();
-  if (userType !== 'MEMBER' && userType !== 'ADMIN' && userType !== 'MODERATOR') {
-    // L'utilisateur de base n'a pas acc8s
+  console.log('ModeratorRoute - userType:', userType);
+
+  // Autoriser ADMIN et MODERATOR à accéder à la page de modération
+  if (userType !== 'MODERATOR' && userType !== 'ADMIN') {
+    console.log('Access denied - redirecting to /home');
     return <Navigate to="/home" replace />;
   }
   return children;

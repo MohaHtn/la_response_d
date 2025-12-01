@@ -155,13 +155,15 @@ const styles = {
     borderRadius: '4px',
     marginTop: '4px',
     backgroundColor:
-      status === 'accepted' ? '#e8f5e9' :
-      status === 'pending' ? '#fff3e0' :
-      status === 'rejected' ? '#ffebee' : '#f5f5f5',
+      status === 'ACCEPTED' ? '#e8f5e9' :
+      status === 'IN_QUARANTINE' ? '#e3f2fd' :
+      status === 'WAITING' ? '#fff3e0' :
+      status === 'REJECTED' ? '#ffebee' : '#f5f5f5',
     color:
-      status === 'accepted' ? '#2e7d32' :
-      status === 'pending' ? '#ef6c00' :
-      status === 'rejected' ? '#c62828' : '#666',
+      status === 'ACCEPTED' ? '#2e7d32' :
+      status === 'IN_QUARANTINE' ? '#1565c0' :
+      status === 'WAITING' ? '#ef6c00' :
+      status === 'REJECTED' ? '#c62828' : '#666',
   }),
   buttonContainer: {
     display: 'flex',
@@ -188,14 +190,14 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userType, setUserType] = useState('USER');
-  const [currentUserId, setCurrentUserId] = useState(null);
+  const [_currentUserId, _setCurrentUserId] = useState(null);
 
   useEffect(() => {
     // Récupérer le type d'utilisateur et son ID depuis localStorage
     const storedUserType = localStorage.getItem('userType') || 'USER';
     const storedUserId = localStorage.getItem('userId') || null;
     setUserType(storedUserType);
-    setCurrentUserId(storedUserId);
+    _setCurrentUserId(storedUserId);
 
     // Récupérer tous les documents depuis l'API
     const fetchDocuments = async () => {
@@ -323,11 +325,12 @@ function Home() {
                   <div>
                     <div style={styles.libraryTitle}>{book.title}</div>
                     <div style={styles.libraryAuthor}>{book.author}</div>
-                    {(userType === 'ADMIN' || userType === 'MEMBER' || userType === 'MODERATOR') && (
+                    {(userType === 'ADMIN' || userType === 'MODERATOR') && (
                       <div style={styles.statusBadge(book.status)}>
-                        {book.status === 'accepted' ? '✓ Accepté' :
-                         book.status === 'pending' ? '⏳ En attente' :
-                         book.status === 'rejected' ? '✗ Rejeté' : 'Inconnu'}
+                        {book.status === 'ACCEPTED' ? '✓ Publié' :
+                         book.status === 'IN_QUARANTINE' ? `✓ Validé (${book.approvalCount}/3)` :
+                         book.status === 'WAITING' ? `⏳ En attente (${book.approvalCount}/3)` :
+                         book.status === 'REJECTED' ? '✗ Rejeté' : 'Inconnu'}
                       </div>
                     )}
                   </div>
@@ -335,9 +338,7 @@ function Home() {
                     <Link to={`/book/${book.id}`} style={styles.readButton}>
                       Lire
                     </Link>
-                    {(userType === 'ADMIN' ||
-                      ((userType === 'MEMBER' || userType === 'MODERATOR') &&
-                       book.assignedModerators.includes(currentUserId))) && (
+                    {(userType === 'ADMIN' || userType === 'MODERATOR') && (
                       <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
                         Modérer
                       </Link>
