@@ -6,7 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Header from '../components/Header';
-import { API_CONFIG, STORAGE_KEYS } from '../constants';
+import { API_CONFIG, STORAGE_KEYS, MESSAGES } from '../constants';
 
 const styles = {
   root: {
@@ -53,11 +53,25 @@ function ReadBookPage() {
       try {
         setLoading(true);
 
-        const response = await fetch(`${API_URL}/documents/${bookId}`);
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        const response = await fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENT_DETAILS(bookId)}`,
+          {
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
 
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Livre non trouvé');
+          }
+          if (response.status === 401) {
+            throw new Error(MESSAGES.UNAUTHORIZED);
+          }
+          if (response.status === 403) {
+            throw new Error(MESSAGES.FORBIDDEN);
           }
           throw new Error(`Erreur lors du chargement du document: ${response.status}`);
         }

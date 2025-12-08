@@ -308,6 +308,21 @@ function Home() {
     return localStorage.getItem('libraryViewMode') || 'grid';
   });
 
+  // Helper pour factoriser la transformation des documents API en livres UI
+  const mapDocumentsToBooks = (documentsArray) => (
+    Array.isArray(documentsArray)
+      ? documentsArray.map(doc => ({
+          id: doc.document_id,
+          title: doc.metadata?.title || 'Sans titre',
+          author: doc.metadata?.author || 'Auteur inconnu',
+          status: doc.moderation?.status || 'unknown',
+          preview: doc.preview || '',
+          uploadedAt: doc.uploaded_at || null,
+          coverImage: doc.cover_image || null
+        }))
+      : []
+  );
+
   // Sauvegarder le mode de vue dans localStorage quand il change
   useEffect(() => {
     localStorage.setItem('libraryViewMode', viewMode);
@@ -333,15 +348,8 @@ function Home() {
 
         const data = await response.json();
 
-        // Transformer les documents pour correspondre au format attendu
-        const books = data.documents.map(doc => ({
-          id: doc.document_id,
-          title: doc.metadata?.title || 'Sans titre',
-          author: doc.metadata?.author || 'Auteur inconnu',
-          status: doc.moderation?.status || 'unknown',
-          preview: doc.preview || '',
-          coverImage: doc.cover_image || null
-        }));
+        const documentsArray = data.data || [];
+        const books = mapDocumentsToBooks(documentsArray);
 
         setLibrary(books);
 
@@ -371,16 +379,8 @@ function Home() {
         }
 
         const data = await response.json();
-        console.log(data);
-        const myBooks = Array.isArray(documentsArray) ? documentsArray.map(doc => ({
-          id: doc.document_id,
-          title: doc.metadata?.title || 'Sans titre',
-          author: doc.metadata?.author || 'Auteur inconnu',
-          status: doc.moderation?.status || 'unknown',
-          preview: doc.preview || '',
-          uploadedAt: doc.uploaded_at || null,
-          coverImage: doc.cover_image || null
-        })) : [];
+        const documentsArray = data.data || [];
+        const myBooks = mapDocumentsToBooks(documentsArray);
 
         setMyDocuments(myBooks);
       } catch (err) {
