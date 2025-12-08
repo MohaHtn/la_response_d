@@ -41,4 +41,4 @@ to do faire en sorte qu'on ais des admins pour valider les livres
 
 
 8/12/25 
-refacto du scirpt de creation admin pour quz ca renvoie des hash , coté navigation un peu avec des boutons 
+refacto du scirpt de creation admin pour quz ca renvoie des hash , coté navigation un peu avec des boutons refacto d'adminpage 

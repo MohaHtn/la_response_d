@@ -178,6 +178,10 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // États pour le tri
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'title', 'author'
+  const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
+
   useEffect(() => {
     const userType = localStorage.getItem(STORAGE_KEYS.USER_TYPE);
     if (userType === USER_TYPES.USER) {
@@ -251,6 +255,54 @@ function AdminPage() {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  // Fonction pour trier les livres
+  const sortBooks = (books, criteria, order) => {
+    const sorted = [...books].sort((a, b) => {
+      let comparison = 0;
+
+      switch (criteria) {
+        case 'date':
+          const dateA = new Date(a.submissionDate || 0);
+          const dateB = new Date(b.submissionDate || 0);
+          comparison = dateB - dateA; // Plus récent en premier par défaut
+          break;
+        case 'title':
+          comparison = (a.title || '').localeCompare(b.title || '', 'fr');
+          break;
+        case 'author':
+          comparison = (a.author || '').localeCompare(b.author || '', 'fr');
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return order === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  };
+
+  // Fonction pour changer le critère de tri
+  const handleSort = (criteria) => {
+    if (sortBy === criteria) {
+      // Si on clique sur le même critère, on inverse l'ordre
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nouveau critère, on commence par ordre descendant (sauf pour titre/auteur)
+      setSortBy(criteria);
+      setSortOrder(criteria === 'date' ? 'desc' : 'asc');
+    }
+  };
+
+  // Obtenir les livres triés
+  const getSortedPendingBooks = () => {
+    return sortBooks(pendingBooks, sortBy, sortOrder);
+  };
+
+  const getSortedAllBooks = () => {
+    return sortBooks(allBooks, sortBy, sortOrder);
   };
 
   const handleModerateBook = (bookId) => {
@@ -378,6 +430,33 @@ function AdminPage() {
                     <Alert severity="info" sx={{ mb: 2 }}>
                       Ces livres sont en attente de validation par les modérateurs
                     </Alert>
+
+                    {/* Boutons de tri */}
+                    <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+                      <Typography variant="body2" sx={{ mr: 1 }}>Trier par:</Typography>
+                      <Button
+                        size="small"
+                        variant={sortBy === 'date' ? 'contained' : 'outlined'}
+                        onClick={() => handleSort('date')}
+                      >
+                        Date {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      </Button>
+                      <Button
+                        size="small"
+                        variant={sortBy === 'title' ? 'contained' : 'outlined'}
+                        onClick={() => handleSort('title')}
+                      >
+                        Titre {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      </Button>
+                      <Button
+                        size="small"
+                        variant={sortBy === 'author' ? 'contained' : 'outlined'}
+                        onClick={() => handleSort('author')}
+                      >
+                        Auteur {sortBy === 'author' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      </Button>
+                    </Box>
+
                     <TableContainer>
                       <Table>
                         <TableHead>
@@ -391,7 +470,7 @@ function AdminPage() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {pendingBooks.map((book) => (
+                          {getSortedPendingBooks().map((book) => (
                             <TableRow key={book.id}>
                               <TableCell>{book.title}</TableCell>
                               <TableCell>{book.author}</TableCell>
