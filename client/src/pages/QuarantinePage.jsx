@@ -8,12 +8,15 @@ const styles = {
     width: '100%',
     minHeight: '100vh',
     padding: '32px',
+    // espace supérieur pour le Header fixé (évite que les boutons soient masqués)
+    paddingTop: '92px',
     boxSizing: 'border-box',
   },
   title: {
     fontSize: '24px',
     fontWeight: '700',
-    marginTop: '64px',
+    // réduit l'espace vertical ici car le container gère déjà le padding top
+    marginTop: '16px',
     marginBottom: '16px',
     color: '#0d47a1',
   },
@@ -145,7 +148,9 @@ export default function QuarantinePage() {
         const msg = payload?.detail || payload?.message || 'Erreur serveur';
         throw new Error(msg);
       }
-      setDocs(Array.isArray(payload.documents) ? payload.documents : []);
+      // L'API renvoie { success: true, data: [...] }
+      const documents = payload.data || payload.documents || [];
+      setDocs(Array.isArray(documents) ? documents : []);
     } catch (e) {
       setError(e?.message || 'Erreur inconnue');
     } finally {
@@ -186,7 +191,25 @@ export default function QuarantinePage() {
       <Header />
       <div style={styles.container}>
         {/* Bouton retour */}
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => navigate('/home')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span>←</span> retour a la bibliothèque
+          </button>
+
           <button
             onClick={() => navigate('/admin')}
             style={{
@@ -202,7 +225,7 @@ export default function QuarantinePage() {
               gap: '8px'
             }}
           >
-            <span>←</span> Retour à l'administration
+            <span>←</span> Retour au panneau admin
           </button>
         </div>
 

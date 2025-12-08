@@ -13,6 +13,7 @@ export const useAuth = () => {
   useEffect(() => {
     const updateAuth = () => {
       const { token, userType: type, username: user } = getAuthData();
+      console.log('🔍 useAuth - getAuthData result:', { token: !!token, userType: type, username: user });
       setIsAuthenticated(!!token);
       setUserType(type);
       setUsername(user);
