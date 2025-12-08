@@ -870,6 +870,23 @@ function Upload() {
                           children={mergedMarkdown}
                           remarkPlugins={[remarkMath]}
                           rehypePlugins={[rehypeKatex]}
+                          components={{
+                            img: ({ src, alt, ...props }) => {
+                              let finalSrc = src || '';
+                              if (finalSrc && !finalSrc.startsWith('http') && !finalSrc.startsWith('data:image')) {
+                                finalSrc = `data:image/png;base64,${finalSrc}`;
+                              }
+                              return (
+                                // eslint-disable-next-line jsx-a11y/alt-text
+                                <img
+                                  src={finalSrc}
+                                  alt={alt || ''}
+                                  style={{ maxWidth: '100%', height: 'auto' }}
+                                  {...props}
+                                />
+                              );
+                            }
+                          }}
                         />
                       </div>
                     </div>

@@ -75,12 +75,11 @@ export const login = async (username, password) => {
   const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, { username, password }, { skipAuth: true });
 
   const token = response?.token || `demo-token-${Date.now()}`;
-  const rawType = response?.user?.account_type || response?.account_type || response?.userType;
-  const userType = normalizeUserType(rawType);
+  const rawType = response?.data?.user?.account_type
 
-  setAuthData(token, userType, username);
+  setAuthData(token, rawType, username);
 
-  return { ...response, userType };
+  return { ...response, rawType };
 };
 
 /**

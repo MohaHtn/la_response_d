@@ -68,6 +68,7 @@ function Auth() {
       setMessageType(ALERT_TYPES.SUCCESS);
       setMessage(response?.message || MESSAGES.LOGIN_SUCCESS);
 
+
       // Rediriger selon le type de compte
       setTimeout(() => {
         navigate(getRedirectPath(response.userType));

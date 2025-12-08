@@ -63,16 +63,6 @@ export default function Header() {
     navigate('/');
   };
 
-  const handleTestCors = async () => {
-    logCorsDebugInfo();
-    const success = await testCorsConnection();
-    if (success) {
-      alert('✅ CORS fonctionne correctement! Vérifiez la console pour les détails.');
-    } else {
-      alert('❌ Erreur CORS détectée! Vérifiez la console et le guide CORS_TROUBLESHOOTING.md');
-    }
-  };
-
   const isDev = import.meta.env.DEV;
 
   return (
@@ -89,9 +79,6 @@ export default function Header() {
             )}
             {isAuthenticated && userType === USER_TYPES.ADMIN && (
                 <Link to={ROUTES.QUARANTINE_PAGE} style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
-            )}
-            {isDev && (
-                <button onClick={handleTestCors} style={{...headerStyles.navButton, backgroundColor: '#ff9800', color: '#fff', border: 'none', fontSize: '12px'}}>Test CORS</button>
             )}
           </div>
 

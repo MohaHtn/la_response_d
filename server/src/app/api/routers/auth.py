@@ -102,7 +102,7 @@ async def login_user(login_credentials: LoginCredentials):
     # Créer le token JWT
     token_data = {
         "username": user_record["username"],
-        "account_type": user_record.get("account_type", "USER"),
+        "account_type": user_record["account_type"],
         "exp": datetime.now(timezone.utc) + timedelta(hours=config.JWT_EXPIRATION_HOURS)
     }
 
@@ -115,7 +115,7 @@ async def login_user(login_credentials: LoginCredentials):
             "user": {
                 "username": user_record["username"],
                 "email": user_record.get("email"),
-                "account_type": user_record.get("account_type", "USER")
+                "account_type": user_record["account_type"]
             }
         }
     )

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Paper, CircularProgress, Alert, Button } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Header from '../components/Header';
 import { API_CONFIG, STORAGE_KEYS, MESSAGES } from '../constants';
+
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const styles = {
   root: {
@@ -166,9 +168,34 @@ function ReadBookPage() {
           )}
           <Box sx={styles.content}>
             <ReactMarkdown
-              children={book?.content || ''}
-              remarkPlugins={[remarkMath]}
-              rehypePlugins={[rehypeKatex]}
+                children={book?.content || ''}
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                skipHtml={false}
+                components={{
+                  img: ({ node, src, alt, ...rest }) => {
+                    // Utiliser src en priorité (passé par ReactMarkdown)
+                    // Sinon vérifier node.properties.src comme fallback
+                    let finalSrc = src;
+
+                    if (!finalSrc && node?.properties) {
+                      finalSrc = node.properties.src;
+                    }
+
+                    if (!finalSrc) {
+                      return <span>[Image manquante: {alt}]</span>;
+                    }
+
+                    return (
+                        <img
+                            src={finalSrc}
+                            alt={alt || ''}
+                            style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
+                            {...rest}
+                        />
+                    );
+                  }
+                }}
             />
           </Box>
         </Paper>
