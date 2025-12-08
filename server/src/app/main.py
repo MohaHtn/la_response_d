@@ -28,6 +28,7 @@ app.middleware("http")(logging_middleware)
 app.include_router(auth_router)
 app.include_router(documents_router)
 app.include_router(moderation_router)
+
 app.include_router(legacy_router)  # send-book endpoint
 
 

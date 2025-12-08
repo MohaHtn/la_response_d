@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import ModeratorValidationTable from '../components/ModeratorValidationTable';
 import Header from '../components/Header';
@@ -13,6 +13,7 @@ import {
     CircularProgress,
     Alert,
     Divider,
+    Button,
 } from '@mui/material';
 
 const styles = {
@@ -78,6 +79,7 @@ const styles = {
 
 function ModeratorPage() {
     const { bookId } = useParams();
+    const navigate = useNavigate();
     const [bookData, setBookData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -186,6 +188,17 @@ function ModeratorPage() {
         <Box sx={styles.root}>
             <Header />
             <Container maxWidth="xl">
+                {/* Bouton retour */}
+                <Box sx={{ marginBottom: 2 }}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => navigate('/home')}
+                        startIcon={<span>←</span>}
+                    >
+                        Retour à la bibliothèque
+                    </Button>
+                </Box>
+
                 {/* En-tête de la page */}
                 <Box sx={styles.section}>
                     <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>

@@ -184,6 +184,27 @@ export default function QuarantinePage() {
     <div style={{minHeight: '100vh'}}>
       <Header />
       <div style={styles.container}>
+        {/* Bouton retour */}
+        <div style={{ marginBottom: '16px' }}>
+          <button
+            onClick={() => navigate('/admin')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span>←</span> Retour à l'administration
+          </button>
+        </div>
+
         <div style={styles.toolbar}>
           <h1 style={styles.title}>📚 Livres en quarantaine</h1>
           <button onClick={fetchDocs} style={styles.refreshBtn}>Rafraîchir</button>

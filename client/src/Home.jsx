@@ -391,12 +391,8 @@ function Home() {
     fetchMyDocuments();
   }, []);
 
-  const startedBooks = started
-    .map((s) => ({ ...s, ...library.find((b) => b.id === s.bookId) }))
-    .filter(Boolean);
-
   return (
-    <div style={{minHeight: '100vh', overflowX: 'hidden'}}>
+    <div>
       <Header />
       <div style={{paddingTop: '64px', overflowX: 'hidden'}}>
         <div style={styles.container}>
@@ -635,10 +631,6 @@ function Home() {
                 ))}
               </div>
             )}
-          </div>
-
-          <div>
-            <Link to="/" style={styles.backButton}>← Retour</Link>
           </div>
         </div>
       </div>

@@ -65,20 +65,69 @@ export default function Header() {
     <AppBar style={headerStyles.appBar}>
       <Toolbar>
         <div style={headerStyles.toolbarContent}>
-          {/* Groupe gauche : titre + Upload (Upload après le titre) */}
+          {/* Groupe gauche : titre + Navigation */}
           <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
-            <Typography variant="h6" component="div" style={headerStyles.title}>
-              La réponse D | Bibliothéko
-            </Typography>
+            <Link to={isAuthenticated ? "/home" : "/"} style={{textDecoration: 'none', color: 'white'}}>
+              <Typography variant="h6" component="div" style={headerStyles.title}>
+                La réponse D | Bibliothéko
+              </Typography>
+            </Link>
+
             {isAuthenticated && (
-                <Link to="/upload" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Envoyer un document</Link>
-            )}
-            {isAuthenticated && userType === 'ADMIN' && (
-                <Link to="/admin/quarantine" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
+              <>
+                <Link
+                  to="/home"
+                  style={{
+                    ...headerStyles.navButton,
+                    backgroundColor: 'transparent',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255,255,255,0.6)'
+                  }}
+                >
+                  📚 Bibliothèque
+                </Link>
+                <Link
+                  to="/upload"
+                  style={{
+                    ...headerStyles.navButton,
+                    backgroundColor: 'transparent',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255,255,255,0.6)'
+                  }}
+                >
+                  📤 Upload
+                </Link>
+                {userType === 'ADMIN' && (
+                  <>
+                    <Link
+                      to="/admin"
+                      style={{
+                        ...headerStyles.navButton,
+                        backgroundColor: 'transparent',
+                        color: '#ffffff',
+                        border: '1px solid rgba(255,255,255,0.6)'
+                      }}
+                    >
+                      👨‍💼 Admin
+                    </Link>
+                    <Link
+                      to="/admin/quarantine"
+                      style={{
+                        ...headerStyles.navButton,
+                        backgroundColor: 'transparent',
+                        color: '#ffffff',
+                        border: '1px solid rgba(255,255,255,0.6)'
+                      }}
+                    >
+                      🔒 Quarantaine
+                    </Link>
+                  </>
+                )}
+              </>
             )}
           </div>
 
-          {/* Groupe droit : Se connecter */}
+          {/* Groupe droit : Authentification */}
           <div>
             {isAuthenticated ? (
               <button onClick={handleLogout} style={headerStyles.logoutButton}>

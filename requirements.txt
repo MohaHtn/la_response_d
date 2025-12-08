@@ -8,6 +8,6 @@ protobuf
 python-multipart
 
 pyjwt
-redis
+redis>=7.1.0
 Pillow
 pydantic
