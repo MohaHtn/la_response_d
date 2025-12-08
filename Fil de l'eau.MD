@@ -56,3 +56,9 @@ Présentation des modèles de conception aux autres !
 # Session 10 : 01 Décembre 2025
 Beaucoup de choses : intégration de la base "quarantaine", ajout 
 des pages de modération, refactoring du front/back.
+
+# Session 11 : 07 Décembre 2025
+Création d'une page de "mise en place des 3 admins", finalisation
+des pages pour les admins, réalisation des tests unitaires.
+
+

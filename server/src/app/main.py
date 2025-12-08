@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.routers import auth_router, documents_router, moderation_router
+from .api.routers import auth_router, documents_router, moderation_router, setup_router
 from .api.middleware import error_handler_middleware, logging_middleware
 from .api.routes import router as legacy_router
 
@@ -14,10 +14,23 @@ app = FastAPI(
 # Configuration CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # À restreindre en production
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://localhost:5173",  # Vite dev server
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://localhost:8080",  # Au cas où vous utiliseriez un autre port
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "Username",  # Pour votre endpoint send-book
+    ],
 )
 
 # Middleware personnalisés
@@ -28,6 +41,7 @@ app.middleware("http")(logging_middleware)
 app.include_router(auth_router)
 app.include_router(documents_router)
 app.include_router(moderation_router)
+app.include_router(setup_router)
 app.include_router(legacy_router)  # send-book endpoint
 
 
@@ -36,6 +50,22 @@ app.include_router(legacy_router)  # send-book endpoint
 async def health():
     """Endpoint de santé de l'API"""
     return {"status": "ok", "version": "2.0.0"}
+
+
+@app.get("/test-cors")
+async def test_cors():
+    """Endpoint pour tester la configuration CORS"""
+    return {
+        "message": "CORS fonctionne correctement",
+        "timestamp": "2024-12-08T12:00:00Z",
+        "headers": "Check developer tools for CORS headers"
+    }
+
+
+@app.options("/test-cors")
+async def test_cors_preflight():
+    """Gestion des requêtes OPTIONS pour CORS"""
+    return {"message": "CORS preflight OK"}
 
 
 @app.get("/")

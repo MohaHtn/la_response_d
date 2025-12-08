@@ -6,6 +6,7 @@ import { RegisterForm } from './components/RegisterForm';
 import { Alert } from './components/Alert';
 import { login, register, getRedirectPath } from './services/auth.service';
 import { colors, spacing } from './styles/commonStyles';
+import { ROUTES, MESSAGES, ALERT_TYPES } from './constants';
 
 const styles = {
   container: {
@@ -64,16 +65,16 @@ function Auth() {
 
     try {
       const response = await login(username, password);
-      setMessageType('success');
-      setMessage(response?.message || 'Connexion réussie');
+      setMessageType(ALERT_TYPES.SUCCESS);
+      setMessage(response?.message || MESSAGES.LOGIN_SUCCESS);
 
       // Rediriger selon le type de compte
       setTimeout(() => {
         navigate(getRedirectPath(response.userType));
       }, 1000);
     } catch (err) {
-      setMessageType('error');
-      setMessage(err.message || 'Erreur lors de la connexion');
+      setMessageType(ALERT_TYPES.ERROR);
+      setMessage(err.message || MESSAGES.LOGIN_ERROR);
     } finally {
       setLoading(false);
     }
@@ -85,15 +86,15 @@ function Auth() {
 
     try {
       const response = await register(username, email, password);
-      setMessageType('success');
-      setMessage(response?.message || 'Inscription réussie');
+      setMessageType(ALERT_TYPES.SUCCESS);
+      setMessage(response?.message || MESSAGES.REGISTER_SUCCESS);
       // Basculer vers l'onglet de connexion
       setTimeout(() => {
         setTab('login');
       }, 1500);
     } catch (err) {
-      setMessageType('error');
-      setMessage(err.message || 'Erreur lors de l\'inscription');
+      setMessageType(ALERT_TYPES.ERROR);
+      setMessage(err.message || MESSAGES.REGISTER_ERROR);
     } finally {
       setLoading(false);
     }
@@ -135,7 +136,7 @@ function Auth() {
           )}
 
           <div style={{ marginTop: '28px' }}>
-            <Link to="/" style={styles.backButton}>← Retour à l'accueil</Link>
+            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>← Retour à l'accueil</Link>
           </div>
         </div>
       </div>

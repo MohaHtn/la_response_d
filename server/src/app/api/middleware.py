@@ -18,7 +18,7 @@ async def error_handler_middleware(request: Request, call_next: Callable):
         response = await call_next(request)
         return response
     except HTTPException as e:
-        return JSONResponse(
+        response = JSONResponse(
             status_code=e.status_code,
             content={
                 "success": False,
@@ -26,9 +26,15 @@ async def error_handler_middleware(request: Request, call_next: Callable):
                 "status_code": e.status_code
             }
         )
+        # Préserver les headers CORS en cas d'erreur
+        origin = request.headers.get("origin")
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
     except Exception as e:
         logger.error(f"Erreur non gérée: {str(e)}", exc_info=True)
-        return JSONResponse(
+        response = JSONResponse(
             status_code=500,
             content={
                 "success": False,
@@ -36,6 +42,12 @@ async def error_handler_middleware(request: Request, call_next: Callable):
                 "detail": str(e) if logger.level == logging.DEBUG else None
             }
         )
+        # Préserver les headers CORS en cas d'erreur
+        origin = request.headers.get("origin")
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
 
 
 async def logging_middleware(request: Request, call_next: Callable):

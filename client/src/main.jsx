@@ -10,17 +10,19 @@ import Upload from "./Upload.jsx";
 import ModeratorPage from "./pages/ModeratorPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import QuarantinePage from "./pages/QuarantinePage.jsx";
+import SetupPage from "./pages/SetupPage.jsx";
 import { AdminRoute, ModeratorRoute } from './components/ProtectedRoute.jsx';
+import { ROUTES } from './constants';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Presentation />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/presentation" element={<Presentation />} />
+        <Route path={ROUTES.PRESENTATION} element={<Presentation />} />
+        <Route path={ROUTES.AUTH} element={<Auth />} />
+        <Route path={ROUTES.HOME} element={<Home />} />
+        <Route path={ROUTES.SETUP} element={<SetupPage />} />
+        <Route path={ROUTES.UPLOAD} element={<Upload />} />
         <Route path="/book/:bookId" element={<ReadBookPage />} />
         <Route
           path="/moderation/:bookId"
@@ -31,7 +33,7 @@ createRoot(document.getElementById('root')).render(
           }
         />
         <Route
-          path="/admin"
+          path={ROUTES.ADMIN}
           element={
             <AdminRoute>
               <AdminPage />
@@ -39,7 +41,7 @@ createRoot(document.getElementById('root')).render(
           }
         />
         <Route
-          path="/admin/quarantine"
+          path={ROUTES.ADMIN_QUARANTINE}
           element={
             <AdminRoute>
               <QuarantinePage />

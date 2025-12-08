@@ -7,7 +7,7 @@ from ...domain.services import AuthService
 from ...infra.repositories import user_repository
 from ...infra.config import config
 from ..responses import APIResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
 
 router = APIRouter(prefix="/auth", tags=["authentication"])

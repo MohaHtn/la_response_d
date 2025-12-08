@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from './components/Header';
+import { API_CONFIG, STORAGE_KEYS, ROUTES, MESSAGES, USER_TYPES } from "./constants/index.js";
 
 const styles = {
   container: {
@@ -314,8 +315,8 @@ function Home() {
 
   useEffect(() => {
     // Récupérer le nom d'utilisateur et le rôle depuis localStorage
-    const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('userType'); // Correction: utiliser 'userType' au lieu de 'role'
+    const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
+    const storedRole = localStorage.getItem(STORAGE_KEYS.USER_TYPE);
     console.log('🔍 DEBUG Home - Username:', storedUsername, 'Role:', storedRole);
     setUsername(storedUsername || '');
     setUserRole(storedRole || '');
@@ -324,7 +325,7 @@ function Home() {
     const fetchDocuments = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8000/api/documents');
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}`);
 
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des documents');
@@ -362,7 +363,7 @@ function Home() {
       if (!storedUsername) return;
 
       try {
-        const response = await fetch(`http://localhost:8000/api/documents/uploader/${storedUsername}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}?uploader=${storedUsername}`);
 
         if (!response.ok) {
           console.error('Erreur lors de la récupération des documents uploadés');
@@ -370,8 +371,8 @@ function Home() {
         }
 
         const data = await response.json();
-
-        const myBooks = data.documents.map(doc => ({
+        console.log(data);
+        const myBooks = Array.isArray(documentsArray) ? documentsArray.map(doc => ({
           id: doc.document_id,
           title: doc.metadata?.title || 'Sans titre',
           author: doc.metadata?.author || 'Auteur inconnu',
@@ -379,7 +380,7 @@ function Home() {
           preview: doc.preview || '',
           uploadedAt: doc.uploaded_at || null,
           coverImage: doc.cover_image || null
-        }));
+        })) : [];
 
         setMyDocuments(myBooks);
       } catch (err) {
@@ -481,11 +482,11 @@ function Home() {
                         )}
                       </div>
                       <div style={styles.buttonContainer}>
-                        <Link to={`/book/${book.id}`} style={styles.readButton}>
+                        <Link to={ROUTES.BOOK(book.id)} style={styles.readButton}>
                           Lire
                         </Link>
-                        {userRole === 'ADMIN' && (
-                          <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                        {userRole === USER_TYPES.ADMIN && (
+                          <Link to={ROUTES.MODERATION(book.id)} style={styles.moderateButton}>
                             Modérer
                           </Link>
                         )}
@@ -530,12 +531,12 @@ function Home() {
                         )}
                       </div>
                       <div style={styles.listActions}>
-                        <Link to={`/book/${book.id}`} style={styles.listButton}>
+                        <Link to={ROUTES.BOOK(book.id)} style={styles.listButton}>
                           Lire
                         </Link>
-                        {userRole === 'ADMIN' && (
+                        {userRole === USER_TYPES.ADMIN && (
                           <Link
-                            to={`/moderation/${book.id}`}
+                            to={ROUTES.MODERATION(book.id)}
                             style={{...styles.listButton, ...styles.listButtonModerate}}
                           >
                             Modérer
@@ -575,11 +576,11 @@ function Home() {
                       )}
                     </div>
                     <div style={styles.buttonContainer}>
-                      <Link to={`/book/${book.id}`} style={styles.readButton}>
+                      <Link to={ROUTES.BOOK(book.id)} style={styles.readButton}>
                         Lire
                       </Link>
-                      {userRole === 'ADMIN' && (
-                        <Link to={`/moderation/${book.id}`} style={styles.moderateButton}>
+                      {userRole === USER_TYPES.ADMIN && (
+                        <Link to={ROUTES.MODERATION(book.id)} style={styles.moderateButton}>
                           Modérer
                         </Link>
                       )}
@@ -619,12 +620,12 @@ function Home() {
                       )}
                     </div>
                     <div style={styles.listActions}>
-                      <Link to={`/book/${book.id}`} style={styles.listButton}>
+                      <Link to={ROUTES.BOOK(book.id)} style={styles.listButton}>
                         Lire
                       </Link>
-                      {userRole === 'ADMIN' && (
+                      {userRole === USER_TYPES.ADMIN && (
                         <Link
-                          to={`/moderation/${book.id}`}
+                          to={ROUTES.MODERATION(book.id)}
                           style={{...styles.listButton, ...styles.listButtonModerate}}
                         >
                           Modérer
@@ -638,7 +639,7 @@ function Home() {
           </div>
 
           <div>
-            <Link to="/" style={styles.backButton}>← Retour</Link>
+            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>← Retour</Link>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import ModeratorValidationTable from '../components/ModeratorValidationTable';
 import Header from '../components/Header';
+import { API_CONFIG, STORAGE_KEYS, MESSAGES } from '../constants';
 import {
     Box,
     Container,
@@ -90,10 +91,10 @@ function ModeratorPage() {
     console.log('Fetching book data for:', bookId);
     try {
         setLoading(true);
-        const url = `http://localhost:8000/api/admin/quarantine/${bookId}`;
+        const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_DOCUMENT(bookId)}`;
         console.log('Fetching from URL:', url);
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         if (!token) {
             console.warn('No auth token found in localStorage under key `authToken`');
         }

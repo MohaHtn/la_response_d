@@ -1,6 +1,7 @@
 """
 User data management and storage with Redis
 """
+import json
 from typing import Dict, Optional, List
 from ..database.redis_manager import redis_manager
 
@@ -51,12 +52,32 @@ class UserRepository:
             User record if found, None otherwise
         """
         key = self._get_user_key(username)
-        user_data = self.redis_client.hgetall(key)
-
-        if not user_data:
+        
+        try:
+            user_data = self.redis_client.hgetall(key)
+            if not user_data:
+                return None
+            return user_data
+        except Exception as e:
+            # Gérer le cas où la clé contient un autre type (ex: string au lieu de hash)
+            if "WRONGTYPE" in str(e):
+                # Essayer de récupérer comme string (ancien format)
+                try:
+                    string_data = self.redis_client.get(key)
+                    if string_data:
+                        # Convertir de JSON string vers dict
+                        user_data = json.loads(string_data)
+                        
+                        # Migrer vers le nouveau format hash
+                        self.redis_client.delete(key)  # Supprimer l'ancienne clé
+                        self.redis_client.hset(key, mapping=user_data)  # Recréer comme hash
+                        
+                        return user_data
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            
+            # Si aucune récupération possible, retourner None
             return None
-
-        return user_data
 
     async def add_user(self, user_record: Dict) -> None:
         """

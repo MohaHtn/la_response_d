@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography'
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '../hooks/useAuth';
 import { logout } from '../services/auth.service';
+import { ROUTES, USER_TYPES } from '../constants';
+import { testCorsConnection, logCorsDebugInfo } from '../utils/corsTest';
 
 const headerStyles = {
   appBar: {
@@ -61,6 +63,18 @@ export default function Header() {
     navigate('/');
   };
 
+  const handleTestCors = async () => {
+    logCorsDebugInfo();
+    const success = await testCorsConnection();
+    if (success) {
+      alert('✅ CORS fonctionne correctement! Vérifiez la console pour les détails.');
+    } else {
+      alert('❌ Erreur CORS détectée! Vérifiez la console et le guide CORS_TROUBLESHOOTING.md');
+    }
+  };
+
+  const isDev = import.meta.env.DEV;
+
   return (
     <AppBar style={headerStyles.appBar}>
       <Toolbar>
@@ -71,10 +85,13 @@ export default function Header() {
               La réponse D | Bibliothéko
             </Typography>
             {isAuthenticated && (
-                <Link to="/upload" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Envoyer un document</Link>
+                <Link to={ROUTES.UPLOAD} style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Envoyer un document</Link>
             )}
-            {isAuthenticated && userType === 'ADMIN' && (
-                <Link to="/admin/quarantine" style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
+            {isAuthenticated && userType === USER_TYPES.ADMIN && (
+                <Link to={ROUTES.QUARANTINE_PAGE} style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
+            )}
+            {isDev && (
+                <button onClick={handleTestCors} style={{...headerStyles.navButton, backgroundColor: '#ff9800', color: '#fff', border: 'none', fontSize: '12px'}}>Test CORS</button>
             )}
           </div>
 
@@ -85,7 +102,7 @@ export default function Header() {
                 Se déconnecter
               </button>
             ) : (
-              <Link to="/auth" style={headerStyles.navButton}>Se connecter</Link>
+              <Link to={ROUTES.AUTH} style={headerStyles.navButton}>Se connecter</Link>
             )}
           </div>
         </div>

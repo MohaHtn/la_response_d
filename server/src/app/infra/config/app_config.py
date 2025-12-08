@@ -27,6 +27,8 @@ class Config:
     API_PREFIX = "/api"
     API_TITLE = "La Réponse D"
 
+    JWT_EXPIRATION_HOURS = 1
+
     @classmethod
     def get_key_file_path(cls) -> str:
         """Get the path to the encryption key file"""

@@ -4,6 +4,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Header from './components/Header';
+import { API_CONFIG, STORAGE_KEYS, MESSAGES, FILE_CONSTRAINTS } from "./constants/index.js";
 
 const styles = {
   root: {
@@ -522,9 +523,9 @@ function Upload() {
           formData.append('author', metadata.author);
         }
 
-        fetch("http://localhost:8000/api/send-book", {
+        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEND_BOOK}`, {
           method: "POST",
-          headers: {'Username': localStorage.getItem('username')},
+          headers: {'Username': localStorage.getItem(STORAGE_KEYS.USERNAME)},
           body: formData,
         })
           .then(async (response) => {

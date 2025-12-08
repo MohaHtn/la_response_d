@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
+import { API_CONFIG, STORAGE_KEYS } from '../constants';
 
 const styles = {
   validationContainer: {
@@ -92,10 +93,10 @@ function ModeratorValidationTable({ bookId }) {
     const fetchModerationData = async () => {
       try {
         setLoading(true);
-        const url = `http://localhost:8000/api/admin/quarantine/${bookId}`;
+        const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_DOCUMENT(bookId)}`;
         console.log('Fetching from URL:', url);
 
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         if (!token) {
             console.warn('No auth token found in localStorage under key `authToken`');
         }

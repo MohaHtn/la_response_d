@@ -185,8 +185,7 @@ async def get_document(
 
 @router.get("/")
 async def list_documents(
-    current_user: dict = Depends(get_current_user),
-    status: Optional[str] = None
+        status: Optional[str] = None
 ):
     """
     Lister les documents

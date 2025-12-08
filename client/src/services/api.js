@@ -26,6 +26,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     const headers = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...options.headers,
     };
 
@@ -33,17 +34,36 @@ export const apiRequest = async (endpoint, options = {}) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const requestOptions = {
+      mode: 'cors',
+      credentials: 'include',
       ...options,
       headers,
-    });
+    };
+
+    // Ajouter un timeout
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout de la requête')), API_CONFIG.TIMEOUT || 30000)
+    );
+
+    const fetchPromise = fetch(`${API_BASE_URL}${endpoint}`, requestOptions);
+
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (!response.ok) {
+      // Gestion spéciale pour les erreurs CORS
+      if (response.status === 0) {
+        throw new Error('Erreur CORS: Impossible de contacter le serveur. Vérifiez que le serveur backend est démarré.');
+      }
       await handleApiError(response);
     }
 
     return await response.json();
   } catch (error) {
+    // Amélioration des messages d'erreur
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error('Erreur réseau: Impossible de contacter le serveur. Vérifiez votre connexion et que le serveur backend est démarré.');
+    }
     throw new Error(error?.message || 'Erreur réseau');
   }
 };

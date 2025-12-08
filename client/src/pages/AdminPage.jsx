@@ -25,6 +25,7 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES, USER_TYPES, STORAGE_KEYS } from '../constants';
 
 // helpers API
 
@@ -68,9 +69,9 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const userType = localStorage.getItem('userType');
-    if (userType === 'USER') {
-      navigate('/home');
+    const userType = localStorage.getItem(STORAGE_KEYS.USER_TYPE);
+    if (userType === USER_TYPES.USER) {
+      navigate(ROUTES.HOME);
       return;
     }
 
@@ -102,20 +103,20 @@ function AdminPage() {
   };
 
   const handleModerateBook = (bookId) => {
-    navigate(`/moderation/${bookId}`);
+    navigate(ROUTES.MODERATION(bookId));
   };
 
   const handleViewBook = (bookId) => {
-    navigate(`/book/${bookId}`);
+    navigate(ROUTES.BOOK(bookId));
   };
 
   const getAccountTypeChip = (type) => {
     const configs = {
-      ADMIN: { color: 'error', label: 'Administrateur' },
-      MODERATOR: { color: 'warning', label: 'Modérateur' },
-      USER: { color: 'success', label: 'Utilisateur' },
+      [USER_TYPES.ADMIN]: { color: 'error', label: 'Administrateur' },
+      [USER_TYPES.MODERATOR]: { color: 'warning', label: 'Modérateur' },
+      [USER_TYPES.USER]: { color: 'success', label: 'Utilisateur' },
     };
-    const config = configs[type] || configs.USER;
+    const config = configs[type] || configs[USER_TYPES.USER];
     return <Chip label={config.label} color={config.color} size="small" />;
   };
 

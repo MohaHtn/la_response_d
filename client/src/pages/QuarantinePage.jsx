@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import { API_CONFIG, STORAGE_KEYS, MODERATION_ACTIONS, ROUTES } from '../constants';
 
 const styles = {
   container: {
@@ -116,7 +117,7 @@ const styles = {
 
 function getToken() {
   try {
-    return localStorage.getItem('authToken') || '';
+    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) || '';
   } catch {
     return '';
   }
@@ -134,7 +135,7 @@ export default function QuarantinePage() {
     setError('');
     try {
       const token = getToken();
-      const res = await fetch('http://localhost:8000/api/admin/quarantine', {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -160,7 +161,7 @@ export default function QuarantinePage() {
     try {
       setBusyId(document_id + ':' + action);
       const token = getToken();
-      const res = await fetch(`http://localhost:8000/api/admin/quarantine/${document_id}/moderate?action=${action}` , {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_MODERATE(document_id)}?action=${action}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -229,12 +230,12 @@ export default function QuarantinePage() {
                       <button
                         style={styles.btnApprove}
                         disabled={!id}
-                        onClick={() => navigate(`/moderation/${encodeURIComponent(id)}`)}
+                        onClick={() => navigate(ROUTES.MODERATION(encodeURIComponent(id)))}
                       >✅ Approuver</button>
                       <button
                         style={styles.btnReject}
                         disabled={!id || busyId === id+':reject'}
-                        onClick={() => moderate(id, 'reject')}
+                        onClick={() => moderate(id, MODERATION_ACTIONS.REJECT)}
                       >🗑️ Rejeter</button>
                     </div>
                   </div>

@@ -6,6 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Header from '../components/Header';
+import { API_CONFIG, STORAGE_KEYS } from '../constants';
 
 const styles = {
   root: {
@@ -39,7 +40,6 @@ const styles = {
   },
 };
 
-const API_URL = 'http://localhost:8000/api';
 
 function ReadBookPage() {
   const { bookId } = useParams();
