@@ -57,7 +57,17 @@ class UserRepository:
             user_data = self.redis_client.hgetall(key)
             if not user_data:
                 return None
-            return user_data
+
+            # S'assurer que toutes les valeurs sont des strings (decode_responses=True devrait le faire)
+            # Mais on vérifie quand même au cas où
+            decoded_data = {}
+            for field, value in user_data.items():
+                if isinstance(value, bytes):
+                    decoded_data[field] = value.decode('utf-8')
+                else:
+                    decoded_data[field] = value
+
+            return decoded_data
         except Exception as e:
             # Gérer le cas où la clé contient un autre type (ex: string au lieu de hash)
             if "WRONGTYPE" in str(e):

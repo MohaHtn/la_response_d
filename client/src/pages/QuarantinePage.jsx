@@ -145,7 +145,9 @@ export default function QuarantinePage() {
         const msg = payload?.detail || payload?.message || 'Erreur serveur';
         throw new Error(msg);
       }
-      setDocs(Array.isArray(payload.documents) ? payload.documents : []);
+      // L'API renvoie { success: true, data: [...] }
+      const documents = payload.data || payload.documents || [];
+      setDocs(Array.isArray(documents) ? documents : []);
     } catch (e) {
       setError(e?.message || 'Erreur inconnue');
     } finally {

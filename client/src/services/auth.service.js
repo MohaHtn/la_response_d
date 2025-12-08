@@ -74,9 +74,14 @@ export const clearAuthData = () => {
 export const login = async (username, password) => {
   const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, { username, password }, { skipAuth: true });
 
-  const token = response?.token || `demo-token-${Date.now()}`;
-  const rawType = response?.user?.account_type || response?.account_type || response?.userType;
+  console.log('🔍 Login response:', response);
+
+  // L'API retourne { success: true, data: { token, user: { account_type } } }
+  const token = response?.data?.token || response?.token || `demo-token-${Date.now()}`;
+  const rawType = response?.data?.user?.account_type || response?.user?.account_type || response?.account_type || response?.userType;
   const userType = normalizeUserType(rawType);
+
+  console.log('🔍 Raw account_type:', rawType, '-> Normalized:', userType);
 
   setAuthData(token, userType, username);
 

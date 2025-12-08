@@ -38,3 +38,7 @@ on a fait les différents diagrammes de conception (UML)
 refctor de moderation pour que ce soit plus beau et aussi fonctionnel avec les vrais données puis aussi le home mise en coomùun du code 
 verification du coté admin sur les partie de l'appli 
 to do faire en sorte qu'on ais des admins pour valider les livres 
+
+
+8/12/25 
+refacto du scirpt de creation admin pour quz ca renvoie des hash , coté navigation un peu avec des boutons 

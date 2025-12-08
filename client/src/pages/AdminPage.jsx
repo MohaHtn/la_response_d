@@ -25,9 +25,7 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES, USER_TYPES, STORAGE_KEYS } from '../constants';
-
-// helpers API
+import { ROUTES, USER_TYPES, STORAGE_KEYS, API_CONFIG } from '../constants';
 
 const styles = {
   root: {
@@ -60,13 +58,125 @@ const styles = {
   },
 };
 
+// ==================== Fonctions API ====================
+
+/**
+ * Get authorization headers
+ */
+function getAuthHeaders() {
+  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : ''
+  };
+}
+
+/**
+ * Fetch all books/documents
+ */
+async function fetchAllBooks() {
+  try {
+    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data ?? [];
+  } catch (e) {
+    console.warn('fetchAllBooks failed', e);
+    return [];
+  }
+}
+
+/**
+ * Fetch pending moderation books
+ */
+async function fetchPendingBooks() {
+  try {
+    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_PENDING}`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data ?? [];
+  } catch (e) {
+    console.warn('fetchPendingBooks failed', e);
+    return [];
+  }
+}
+
+/**
+ * Fetch quarantine books (admin only)
+ */
+async function fetchQuarantineBooks() {
+  try {
+    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE}`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data ?? [];
+  } catch (e) {
+    console.warn('fetchQuarantineBooks failed', e);
+    return [];
+  }
+}
+
+/**
+ * Fetch all users (admin only)
+ * Note: L'endpoint backend n'existe pas encore, retourne un tableau vide
+ */
+async function fetchUsers() {
+  try {
+    // TODO: Créer l'endpoint backend /api/users/
+    console.warn('fetchUsers: endpoint non implémenté côté backend');
+    return [];
+  } catch (e) {
+    console.warn('fetchUsers failed', e);
+    return [];
+  }
+}
+
+/**
+ * Fetch admin statistics
+ */
+async function fetchAdminStats() {
+  try {
+    // Récupérer tous les documents et utilisateurs pour calculer les stats
+    const [allDocs, pendingDocs, quarantineDocs, users] = await Promise.all([
+      fetchAllBooks(),
+      fetchPendingBooks(),
+      fetchQuarantineBooks(),
+      fetchUsers()
+    ]);
+
+    const approvedBooks = allDocs.filter(doc =>
+      doc.moderation?.approval_process?.status === 'OK'
+    ).length;
+
+    return {
+      totalUsers: users.length,
+      totalBooks: allDocs.length + quarantineDocs.length,
+      pendingModeration: pendingDocs.length,
+      approvedBooks: approvedBooks
+    };
+  } catch (e) {
+    console.warn('fetchAdminStats failed', e);
+    return { totalUsers: 0, totalBooks: 0, pendingModeration: 0, approvedBooks: 0 };
+  }
+}
+
+// ==================== Composant AdminPage ====================
+
 function AdminPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
-  const [stats, _setStats] = useState({ totalUsers: 0, totalBooks: 0, pendingModeration: 0, approvedBooks: 0 });
-  const [pendingBooks, _setPendingBooks] = useState([]);
-  const [users, _setUsers] = useState([]);
+  const [stats, setStats] = useState({ totalUsers: 0, totalBooks: 0, pendingModeration: 0, approvedBooks: 0 });
+  const [pendingBooks, setPendingBooks] = useState([]);
+  const [allBooks, setAllBooks] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const userType = localStorage.getItem(STORAGE_KEYS.USER_TYPE);
@@ -78,15 +188,56 @@ function AdminPage() {
     let mounted = true;
     const load = async () => {
       setLoading(true);
+      setError('');
       try {
-        const [s, books, us] = await Promise.all([fetchAdminStats(), fetchPendingBooks(), fetchUsers()]);
+        // Charger toutes les données en parallèle
+        const [statsData, pendingBooksData, usersData, allBooksData] = await Promise.all([
+          fetchAdminStats(),
+          fetchPendingBooks(),
+          fetchUsers(),
+          fetchAllBooks()
+        ]);
+
         if (!mounted) return;
-        _setStats(s);
-        _setPendingBooks(books);
-        _setUsers(us);
+
+        // Transformer les livres en attente
+        const transformedPendingBooks = pendingBooksData.map(book => ({
+          id: book.document_id || book.id || '',
+          title: book.metadata?.title || 'Sans titre',
+          author: book.metadata?.author || 'Auteur inconnu',
+          submittedBy: book.uploader?.username || 'Inconnu',
+          submissionDate: book.uploader?.upload_date || new Date().toISOString(),
+          approvals: book.moderation?.approved_by?.length || 0,
+          status: book.moderation?.approval_process?.status || 'WAITING',
+        }));
+
+        // Transformer tous les livres
+        const transformedAllBooks = allBooksData.map(book => ({
+          id: book.document_id || book.id || '',
+          title: book.metadata?.title || 'Sans titre',
+          author: book.metadata?.author || 'Auteur inconnu',
+          submittedBy: book.uploader?.username || 'Inconnu',
+          submissionDate: book.uploader?.upload_date || new Date().toISOString(),
+          approvals: book.moderation?.approved_by?.length || 0,
+          status: book.moderation?.approval_process?.status || 'WAITING',
+          totalPages: book.processing_info?.total_pages || 0,
+        }));
+
+        // Transformer les utilisateurs
+        const transformedUsers = usersData.map(user => ({
+          username: user.username || user.email || 'Inconnu',
+          email: user.email || '',
+          accountType: user.account_type || user.type || USER_TYPES.USER,
+          registrationDate: user.created_at || user.registration_date || new Date().toISOString(),
+        }));
+
+        setStats(statsData);
+        setPendingBooks(transformedPendingBooks);
+        setAllBooks(transformedAllBooks);
+        setUsers(transformedUsers);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('admin page load error', e);
+        console.error('Erreur lors du chargement des données admin:', e);
+        setError('Erreur lors du chargement des données. Veuillez réessayer.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -200,117 +351,197 @@ function AdminPage() {
 
         {/* Onglets */}
         <Paper sx={styles.section}>
-          <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab label="Livres en attente" />
-            <Tab label="Tous les livres" />
-            <Tab label="Utilisateurs" />
-          </Tabs>
+          {error && (
+            <Alert severity="error" sx={{ m: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-          <Box sx={styles.tabContent}>
-            {/* Onglet 1: Livres en attente de modération */}
-            {activeTab === 0 && (
-              <Box>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Ces livres sont en attente de validation par les modérateurs
-                </Alert>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell><strong>Titre</strong></TableCell>
-                        <TableCell><strong>Auteur</strong></TableCell>
-                        <TableCell><strong>Soumis par</strong></TableCell>
-                        <TableCell><strong>Date</strong></TableCell>
-                        <TableCell><strong>Validations</strong></TableCell>
-                        <TableCell><strong>Actions</strong></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {pendingBooks.map((book) => (
-                        <TableRow key={book.id}>
-                          <TableCell>{book.title}</TableCell>
-                          <TableCell>{book.author}</TableCell>
-                          <TableCell>{book.submittedBy}</TableCell>
-                          <TableCell>
-                            {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString('fr-FR') : ''}
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={`${book.approvals ?? 0}/3`}
-                              color={(book.approvals ?? 0) === 3 ? 'success' : 'warning'}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() => handleModerateBook(book.id)}
-                              sx={{ mr: 1 }}
-                            >
-                              Modérer
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="text"
-                              onClick={() => handleViewBook(book.id)}
-                            >
-                              Voir
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
-            )}
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <Typography>Chargement des données...</Typography>
+            </Box>
+          )}
 
-            {/* Onglet 2: Tous les livres */}
-            {activeTab === 1 && (
-              <Box>
-                <Typography variant="body1" color="text.secondary">
-                  Liste complète des livres à implémenter...
-                </Typography>
-              </Box>
-            )}
+          {!loading && (
+            <>
+              <Tabs value={activeTab} onChange={handleTabChange}>
+                <Tab label="Livres en attente" />
+                <Tab label="Tous les livres" />
+                <Tab label="Utilisateurs" />
+              </Tabs>
 
-            {/* Onglet 3: Utilisateurs */}
-            {activeTab === 2 && (
-              <Box>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell><strong>Nom d'utilisateur</strong></TableCell>
-                        <TableCell><strong>Email</strong></TableCell>
-                        <TableCell><strong>Type de compte</strong></TableCell>
-                        <TableCell><strong>Date d'inscription</strong></TableCell>
-                        <TableCell><strong>Actions</strong></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.username}>
-                          <TableCell>{user.username}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{getAccountTypeChip(user.accountType)}</TableCell>
-                          <TableCell>
-                            {user.registrationDate ? new Date(user.registrationDate).toLocaleDateString('fr-FR') : ''}
-                          </TableCell>
-                          <TableCell>
-                            <Button size="small" variant="text">
-                              Gérer
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+              <Box sx={styles.tabContent}>
+                {/* Onglet 1: Livres en attente de modération */}
+                {activeTab === 0 && (
+                  <Box>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      Ces livres sont en attente de validation par les modérateurs
+                    </Alert>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><strong>Titre</strong></TableCell>
+                            <TableCell><strong>Auteur</strong></TableCell>
+                            <TableCell><strong>Soumis par</strong></TableCell>
+                            <TableCell><strong>Date</strong></TableCell>
+                            <TableCell><strong>Validations</strong></TableCell>
+                            <TableCell><strong>Actions</strong></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {pendingBooks.map((book) => (
+                            <TableRow key={book.id}>
+                              <TableCell>{book.title}</TableCell>
+                              <TableCell>{book.author}</TableCell>
+                              <TableCell>{book.submittedBy}</TableCell>
+                              <TableCell>
+                                {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString('fr-FR') : ''}
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={`${book.approvals ?? 0}/3`}
+                                  color={(book.approvals ?? 0) === 3 ? 'success' : 'warning'}
+                                  size="small"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() => handleModerateBook(book.id)}
+                                  sx={{ mr: 1 }}
+                                >
+                                  Modérer
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  onClick={() => handleViewBook(book.id)}
+                                >
+                                  Voir
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                )}
+
+                {/* Onglet 2: Tous les livres */}
+                {activeTab === 1 && (
+                  <Box>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      Liste complète de tous les livres de la bibliothèque
+                    </Alert>
+                    {allBooks.length === 0 ? (
+                      <Typography variant="body1" color="text.secondary">
+                        Aucun livre disponible
+                      </Typography>
+                    ) : (
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell><strong>Titre</strong></TableCell>
+                              <TableCell><strong>Auteur</strong></TableCell>
+                              <TableCell><strong>Soumis par</strong></TableCell>
+                              <TableCell><strong>Date</strong></TableCell>
+                              <TableCell><strong>Statut</strong></TableCell>
+                              <TableCell><strong>Validations</strong></TableCell>
+                              <TableCell><strong>Actions</strong></TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {allBooks.map((book) => (
+                              <TableRow key={book.id}>
+                                <TableCell>{book.title}</TableCell>
+                                <TableCell>{book.author}</TableCell>
+                                <TableCell>{book.submittedBy}</TableCell>
+                                <TableCell>
+                                  {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString('fr-FR') : ''}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={book.status === 'OK' ? 'Approuvé' : book.status === 'WAITING' ? 'En attente' : book.status}
+                                    color={book.status === 'OK' ? 'success' : book.status === 'WAITING' ? 'warning' : 'default'}
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={`${book.approvals ?? 0}/3`}
+                                    color={(book.approvals ?? 0) === 3 ? 'success' : 'warning'}
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => handleModerateBook(book.id)}
+                                    sx={{ mr: 1 }}
+                                  >
+                                    Modérer
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="text"
+                                    onClick={() => handleViewBook(book.id)}
+                                  >
+                                    Voir
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </Box>
+                )}
+
+                {/* Onglet 3: Utilisateurs */}
+                {activeTab === 2 && (
+                  <Box>
+                    <TableContainer>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><strong>Nom d'utilisateur</strong></TableCell>
+                            <TableCell><strong>Email</strong></TableCell>
+                            <TableCell><strong>Type de compte</strong></TableCell>
+                            <TableCell><strong>Date d'inscription</strong></TableCell>
+                            <TableCell><strong>Actions</strong></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {users.map((user) => (
+                            <TableRow key={user.username}>
+                              <TableCell>{user.username}</TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell>{getAccountTypeChip(user.accountType)}</TableCell>
+                              <TableCell>
+                                {user.registrationDate ? new Date(user.registrationDate).toLocaleDateString('fr-FR') : ''}
+                              </TableCell>
+                              <TableCell>
+                                <Button size="small" variant="text">
+                                  Gérer
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
+            </>
+          )}
         </Paper>
       </Container>
     </Box>
@@ -318,3 +549,4 @@ function AdminPage() {
 }
 
 export default AdminPage;
+

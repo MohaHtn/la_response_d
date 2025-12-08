@@ -88,7 +88,10 @@ export default function Header() {
                 <Link to={ROUTES.UPLOAD} style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Envoyer un document</Link>
             )}
             {isAuthenticated && userType === USER_TYPES.ADMIN && (
-                <Link to={ROUTES.QUARANTINE_PAGE} style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
+                <Link to={ROUTES.ADMIN_QUARANTINE} style={{...headerStyles.navButton, backgroundColor: 'transparent', color: '#ffffff', border: '1px solid rgba(255,255,255,0.6)'}}>Quarantaine</Link>
+            )}
+            {isAuthenticated && (userType === USER_TYPES.ADMIN || userType === 'ADMIN') && (
+                <Link to={ROUTES.ADMIN} style={{...headerStyles.navButton, backgroundColor: '#ff5722', color: '#ffffff', border: '1px solid rgba(255,255,255,0.8)', fontWeight: 'bold'}}>🔧 Admin</Link>
             )}
             {isDev && (
                 <button onClick={handleTestCors} style={{...headerStyles.navButton, backgroundColor: '#ff9800', color: '#fff', border: 'none', fontSize: '12px'}}>Test CORS</button>
@@ -110,4 +113,3 @@ export default function Header() {
     </AppBar>
   )
 }
-
