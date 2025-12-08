@@ -160,7 +160,6 @@ async def upload_document(
 @router.get("/{document_id}")
 async def get_document(
     document_id: str,
-    current_user: dict = Depends(get_current_user)
 ):
     """
     Récupérer un document par son ID

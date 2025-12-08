@@ -48,6 +48,21 @@ function ReadBookPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper pour aligner la structure d'un document (détails) avec celle utilisée dans Home.jsx
+  const mapDocumentToBook = (doc) => ({
+    id: doc?.document_id,
+    title: doc?.metadata?.title || 'Sans titre',
+    author: doc?.metadata?.author || 'Auteur inconnu',
+    status: doc?.moderation?.status || doc?.moderation?.approval_process?.status || 'unknown',
+    preview: doc?.preview || '',
+    uploadedAt: doc?.uploaded_at || doc?.uploader?.upload_date || null,
+    coverImage: doc?.cover_image || null,
+    // Champs spécifiques à la page de lecture
+    content: doc?.markdown?.content || 'Aucun contenu disponible',
+    uploader: doc?.uploader?.username || null,
+    uploadDate: doc?.uploader?.upload_date || doc?.uploaded_at || null,
+  });
+
   useEffect(() => {
     const fetchBook = async () => {
       try {
@@ -76,19 +91,12 @@ function ReadBookPage() {
           throw new Error(`Erreur lors du chargement du document: ${response.status}`);
         }
 
-        const data = await response.json();
+        const result = await response.json();
 
-        // Transformer les données de l'API au format attendu par le composant
-        const bookData = {
-          title: data.metadata?.title || 'Sans titre',
-          author: data.metadata?.author || 'Auteur inconnu',
-          content: data.markdown?.content || 'Aucun contenu disponible',
-          uploadDate: data.uploader?.upload_date,
-          uploader: data.uploader?.username,
-          status: data.moderation?.approval_process?.status
-        };
+        // Appliquer le même mapping que dans Home.jsx (adapté au détail d'un document)
+        const mapped = mapDocumentToBook(result.data);
 
-        setBook(bookData);
+        setBook(mapped);
         setError(null);
       } catch (err) {
         setError(err.message);
