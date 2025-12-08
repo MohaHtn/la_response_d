@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, Paper, CircularProgress, Alert } from '@mui/material';
+import { Box, Container, Typography, Paper, CircularProgress, Alert, Button } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -120,6 +120,15 @@ function ReadBookPage() {
     <Box sx={styles.root}>
       <Header />
       <Container>
+        <Box sx={{ mt: 2, mb: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/home')}
+            startIcon={<span>←</span>}
+          >
+            Retour à la bibliothèque
+          </Button>
+        </Box>
         <Paper sx={styles.paper}>
           <Typography variant="h4" component="h1" sx={styles.title}>
             {book?.title}
@@ -127,6 +136,12 @@ function ReadBookPage() {
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             par {book?.author}
           </Typography>
+          {book?.uploader && (
+            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+              Uploadé par {book.uploader}
+              {book.uploadDate && ` le ${new Date(book.uploadDate).toLocaleDateString('fr-FR')}`}
+            </Typography>
+          )}
           <Box sx={styles.content}>
             <ReactMarkdown
               children={book?.content || ''}
