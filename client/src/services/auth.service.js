@@ -74,7 +74,7 @@ export const clearAuthData = () => {
 export const login = async (username, password) => {
   const response = await api.post(API_CONFIG.ENDPOINTS.LOGIN, { username, password }, { skipAuth: true });
 
-  const token = response?.token || `demo-token-${Date.now()}`;
+  const token = response?.data?.token
   const rawType = response?.data?.user?.account_type
 
   setAuthData(token, rawType, username);

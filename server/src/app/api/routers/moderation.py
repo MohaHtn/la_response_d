@@ -25,7 +25,7 @@ async def get_quarantine_documents(
     Returns:
         Liste des documents en quarantaine
     """
-    documents = await document_repository.get_quarantine_documents()
+    documents = await document_repository.get_all_quarantined_documents()
 
     return APIResponse.success(
         data=documents,

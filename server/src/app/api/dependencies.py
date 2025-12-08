@@ -27,6 +27,8 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict:
             detail="Token d'authentification manquant"
         )
 
+    print(authorization)
+
     try:
         scheme, token = authorization.split()
         if scheme.lower() != "bearer":
