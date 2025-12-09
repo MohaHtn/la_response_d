@@ -834,6 +834,7 @@ function Upload() {
                                     style={{
                                       maxWidth: '100%',
                                       height: 'auto',
+                                      display: 'block',
                                       maxHeight: '500px',
                                       objectFit: 'contain',
                                       border: '1px solid #ddd',

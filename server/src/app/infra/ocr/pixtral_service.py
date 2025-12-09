@@ -160,8 +160,6 @@ def process_pdf(
         content: bytes,
         include_image_base64: bool = True,
         return_markdown: bool = True,
-        embed_data_uris: bool = True,
-        image_output_dir: str = "ocr_images",
 ) -> Dict[str, Any]:
     """
     Traite un PDF via l'OCR Mistral avec analyse de contenu.
@@ -171,9 +169,6 @@ def process_pdf(
         content: Octets du fichier PDF.
         include_image_base64: Inclure (ou non) les aperçus pages en base64.
         return_markdown: Si True, concatène le markdown des pages et l'ajoute au retour.
-        embed_data_uris: Si True, insère directement les images en data URI dans le markdown.
-                         Sinon, sauvegarde les images sur disque et référence leur chemin.
-        image_output_dir: Dossier de sortie pour les images si embed_data_uris == False.
 
     Returns:
         Dict contenant la réponse OCR, les métadonnées, l'analyse de sécurité et le markdown fusionné.
@@ -206,48 +201,66 @@ def process_pdf(
     full_text = ""
     markdown_parts = []
 
-    if not embed_data_uris and not os.path.isdir(image_output_dir):
-        os.makedirs(image_output_dir, exist_ok=True)
-
     for page in pages:
         # Corps markdown de la page (déjà segmenté)
-        page_md = page.get("markdown", "")
+        page_md = page.get("markdown", "") or ""
         full_text += page_md + "\n"
         images = page.get("images", []) or []
 
-        # Ajouter les références images sous le texte de la page
-        image_md_lines = []
+        # Injecter les images directement à leur position dans le markdown lorsque possible
+        updated_md = page_md
+
+        def ensure_data_uri(uri_or_b64: str) -> str:
+            if not uri_or_b64:
+                return ""
+            if uri_or_b64.startswith("data:image/"):
+                return uri_or_b64
+            # Ajoute un header par défaut si seulement le base64 est fourni
+            return f"data:image/png;base64,{uri_or_b64}"
+
+        # 1) Remplacement ciblé si des emplacements sont identifiables
         for img in images:
-            img_id = img.get("id") or "image"
-            data_uri = img.get("image_base64")
+            img_id = (img.get("id") or "image").strip()
+            data_uri = ensure_data_uri(img.get("image_base64") or "")
+            if not data_uri:
+                continue
 
-            if embed_data_uris and data_uri:
-                image_md_lines.append(f"![{img_id}]({data_uri})")
-            else:
-                if data_uri and data_uri.startswith("data:image/"):
-                    header, b64data = data_uri.split(",", 1)
-                    ext = header.split("/")[1].split(";")[0]
-                else:
-                    # Valeur par défaut
-                    b64data = ""
-                    ext = "png"
-                out_name = f"{img_id}"
-                if "." not in out_name:
-                    out_name = f"{out_name}.{ext}"
-                out_path = os.path.join(image_output_dir, out_name)
-                if b64data:
-                    try:
-                        with open(out_path, "wb") as out_f:
-                            out_f.write(base64.b64decode(b64data))
-                    except Exception:
-                        pass
-                rel_path = f"{image_output_dir}/{out_name}"
-                image_md_lines.append(f"![{img_id}]({rel_path})")
+            md_tag = f"![{img_id}]({data_uri})"
 
-        block = page_md
-        if image_md_lines:
-            block = block.rstrip() + "\n\n" + "\n".join(image_md_lines)
-        markdown_parts.append(block.strip())
+            replaced = False
+
+            # a) Remplacer une image markdown existante avec le même alt (id)
+            #    Exemple existant: ![image-1](some/path.png)
+            import re as _re
+            pattern_same_alt = _re.compile(rf"!\[{_re.escape(img_id)}\]\(([^)]*)\)")
+            if pattern_same_alt.search(updated_md):
+                updated_md = pattern_same_alt.sub(md_tag, updated_md)
+                replaced = True
+
+            # b) Remplacer des placeholders courants
+            if not replaced:
+                placeholders = [
+                    f"[image:{img_id}]",
+                    f"[IMAGE:{img_id}]",
+                    f"{{image:{img_id}}}",
+                    f"{{{{image:{img_id}}}}}",
+                    f"<image:{img_id}>",
+                    f"[[image:{img_id}]]",
+                    f"![{img_id}]()",
+                    f"![{img_id}]",
+                ]
+                for ph in placeholders:
+                    if ph in updated_md:
+                        updated_md = updated_md.replace(ph, md_tag)
+                        replaced = True
+                        break
+
+            # c) Si rien à remplacer, on accumule pour ajout en fin de page
+            if not replaced:
+                # Marqueur temporaire pour insertion ordonnée
+                updated_md = updated_md.rstrip() + "\n\n" + md_tag + "\n"
+
+        markdown_parts.append(updated_md.strip())
 
     # Fusion du markdown de toutes les pages
     final_markdown = "\n\n---\n\n".join(markdown_parts) + "\n"
