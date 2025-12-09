@@ -37,7 +37,7 @@ async def upload_document(
     # Valider le type de contenu
     if file.content_type not in config.ALLOWED_CONTENT_TYPES:
         return APIResponse.error(
-            message="Type de fichier non supporté. Veuillez envoyer un PDF",
+            message="Type de fichier non supporté. Veuillez envoyer un PDF.",
             status_code=400
         )
 
@@ -53,7 +53,7 @@ async def upload_document(
         filename = file.filename or "uploaded.pdf"
 
         # Traiter le PDF avec OCR
-        ocr_result = process_pdf(filename, data)
+        ocr_result = process_pdf(filename, data, image_output_dir=config.IMAGE_OUTPUT_DIR)
 
         # Extraire les données
         extracted_metadata = ocr_result.get("metadata", {})
@@ -71,7 +71,7 @@ async def upload_document(
             metadata_author = "Inconnu"
 
         parution_date_raw = extracted_metadata.get("date") or extracted_metadata.get("parution_date")
-        parution_date = str(parution_date_raw) if parution_date_raw else ""
+        parution_date = str(parution_date_raw) if parution_date_raw else "Date non disponible"
 
         doc_title = title or extracted_metadata.get("title") or filename
         doc_author = author or metadata_author
@@ -130,24 +130,15 @@ async def upload_document(
         # Sauvegarder le document
         if not is_compliant:
             document_id = await document_repository.add_document_to_quarantine(document_data)
-            status_message = "Document placé en quarantaine pour révision administrative"
+            status_message = "Document placé en quarantaine pour révision administrative."
         else:
             document_id = await document_repository.add_document(document_data)
-            status_message = "Document traité avec succès"
+            status_message = "Document traité avec succès. Aucune anomalie détectée par IA."
 
         return APIResponse.created(
             message=status_message,
             resource_id=document_id,
-            data={
-                "document_id": document_id,
-                "title": doc_title,
-                "author": doc_author,
-                "status": "quarantined" if not is_compliant else "approved",
-                "is_compliant": is_compliant,
-                "compliance_issues": compliance_issues,
-                "preview": preview_text,
-                "metadata": extracted_metadata
-            }
+            data=document_data
         )
 
     except Exception as e:
@@ -190,16 +181,47 @@ async def list_documents(
     Lister les documents
 
     Args:
-        current_user: Utilisateur courant (injecté)
         status: Filtrer par statut (optionnel)
 
     Returns:
         Liste des documents
     """
-    documents = await document_repository.get_all_documents()
+    documents = await document_repository.get_all_documents() or []
 
     if status:
         documents = [doc for doc in documents if doc.get("moderation", {}).get("approval_process", {}).get("status") == status]
 
-    return APIResponse.success(data=documents)
+    if not documents:
+        return APIResponse.success(data=[], count=0, message="Aucun document trouvé")
+
+    return APIResponse.success(data=documents, count=len(documents))
+
+
+@router.get("/uploader/{username}")
+async def get_documents_by_uploader(
+    username: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Récupérer les documents d'un utilisateur spécifique
+
+    Args:
+        username: Nom d'utilisateur
+        current_user: Utilisateur courant (injecté)
+
+    Returns:
+        Liste des documents de l'utilisateur
+    """
+    documents = await document_repository.get_documents_by_uploader(username)
+
+    if not documents:
+        return APIResponse.error(
+            message=f"Aucun document trouvé pour l'utilisateur '{username}'",
+            status_code=404
+        )
+
+    return APIResponse.success(
+        data=documents,
+        count=len(documents)
+    )
 

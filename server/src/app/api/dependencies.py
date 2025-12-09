@@ -24,10 +24,8 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict:
     if not authorization:
         raise HTTPException(
             status_code=401,
-            detail="Token d'authentification manquant"
+            detail="Token d'authentification manquant dans la requête."
         )
-
-    print(authorization)
 
     try:
         scheme, token = authorization.split()
@@ -47,19 +45,19 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict:
         username = payload.get("username")
 
         if not username:
-            raise HTTPException(status_code=401, detail="Token invalide")
+            raise HTTPException(status_code=401, detail="Token invalide.")
 
         user_record = await user_repository.get_user_record(username)
 
         if not user_record:
-            raise HTTPException(status_code=401, detail="Utilisateur introuvable")
+            raise HTTPException(status_code=401, detail="Utilisateur introuvable.")
 
         return user_record
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expiré")
+        raise HTTPException(status_code=401, detail="Token expiré. Veuillez vous reconnecter.")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Token invalide")
+        raise HTTPException(status_code=401, detail="Token invalide.")
 
 
 async def get_admin_user(

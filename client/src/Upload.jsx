@@ -511,7 +511,6 @@ function Upload() {
         setContentAnalysis(null);
         setIsLoading(true);
 
-
         const formData = new FormData();
         formData.append('file', file);
 
@@ -523,9 +522,9 @@ function Upload() {
           formData.append('author', metadata.author);
         }
 
-        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEND_BOOK}`, {
+        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_UPLOAD}`, {
           method: "POST",
-          headers: {'Username': localStorage.getItem(STORAGE_KEYS.USERNAME)},
+          headers: {'Username': localStorage.getItem(STORAGE_KEYS.USERNAME), "authorization" : `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}`},
           body: formData,
         })
           .then(async (response) => {
@@ -535,66 +534,51 @@ function Upload() {
               return;
             }
             const result = await response.json();
+            const result_document = result.data
 
             try {
               if (result.success) {
-                const result_document = result
-                const docInfo = result.document;
 
-                // Extraire le markdown (la clé correcte est "markdown", pas "ocr_result.text")
-                if (result.markdown) {
-                  setMergedMarkdown(result.markdown);
+                // Extraire le markdown
+                if (result_document.markdown.content) {
+                  setMergedMarkdown(result_document.markdown.content);
                 }
 
                 // Extraire les images de la structure OCR
-                const imgs = extractImagesFromResult(result);
+                const imgs = extractImagesFromResult(result_document.markdown.content);
                 if (imgs.length > 0) setImages(imgs);
 
                 // Extraire les métadonnées (déjà normalisées par le backend)
-                if (result.metadata) {
-                  setMetadata(result.metadata);
+                if (result_document.normalized_metadata) {
+                  setMetadata(result_document.normalized_metadata);
                 }
 
                 // Extraire l'analyse de sécurité
-                if (result.security_analysis) {
-                  setSecurityAnalysis(result.security_analysis);
+                if (result_document.security_analysis) {
+                  setSecurityAnalysis(result_document.security_analysis);
                 }
 
                 // Extraire l'analyse de contenu
-                if (result.content_analysis) {
-                  setContentAnalysis(result.content_analysis);
+                if (result_document.content_analysis) {
+                  setContentAnalysis(result_document.content_analysis);
                 }
 
                 // Stocker les informations du document
-                const textLength = result.markdown ? result.markdown.length : 0;
+                const textLength = result_document.markdown_content ? result_document.markdown_content.length : 0;
+
                 setDocumentInfo({
-                  title: docInfo.title,
-                  author: docInfo.author,
-                  message: result_document.message,
+                  title: result_document.title,
+                  author: result_document.author,
+                  message: result.message,
                   is_compliant: result_document.is_compliant,
-                  uploader: docInfo.uploader,
-                  status: docInfo.status,
+                  uploader: result_document.username,
+                  status: result_document.status,
                   textLength: textLength,
-                  documentId: result.document_id
+                  documentId: result_document.document_id
                 });
 
-                setMessage(docInfo.message);
+                setMessage(result.message);
               } else {
-                const imgs = extractImagesFromResult(result);
-                setImages(imgs);
-
-                const markdown = extractAndMergeMarkdown(result);
-                setMergedMarkdown(markdown);
-
-                const meta = extractMetadata(result);
-                setMetadata(meta);
-
-                const security = extractSecurityAnalysis(result);
-                setSecurityAnalysis(security);
-
-                const content = extractContentAnalysis(result);
-                setContentAnalysis(content);
-
                 setMessage(`Traitement terminé (${new Date().toLocaleTimeString()})`);
               }
             } catch (err) {

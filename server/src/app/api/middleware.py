@@ -14,6 +14,11 @@ async def error_handler_middleware(request: Request, call_next: Callable):
     """
     Middleware pour gérer les erreurs de manière cohérente
     """
+    # Laisser passer les requêtes OPTIONS (CORS preflight)
+    if request.method == "OPTIONS":
+        response = await call_next(request)
+        return response
+
     try:
         response = await call_next(request)
         return response
@@ -54,6 +59,11 @@ async def logging_middleware(request: Request, call_next: Callable):
     """
     Middleware pour logger les requêtes
     """
+    # Laisser passer les requêtes OPTIONS (CORS preflight) sans logging détaillé
+    if request.method == "OPTIONS":
+        response = await call_next(request)
+        return response
+
     start_time = time.time()
 
     logger.info(f"Début requête: {request.method} {request.url.path}")

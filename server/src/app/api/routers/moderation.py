@@ -48,7 +48,7 @@ async def get_quarantine_document(
     Returns:
         Document en quarantaine
     """
-    document = await document_repository.get_quarantine_document(document_id)
+    document = await document_repository.get_quarantined_document(document_id)
 
     if not document:
         return APIResponse.error(

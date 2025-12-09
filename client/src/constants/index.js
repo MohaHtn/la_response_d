@@ -137,9 +137,6 @@ export const API_CONFIG = {
     // Setup (Configuration initiale)
     SETUP_STATUS: '/setup/status',
     SETUP_ADMINS: '/setup/admins',
-
-    // Legacy endpoints
-    SEND_BOOK: '/api/send-book',
   },
 };
 

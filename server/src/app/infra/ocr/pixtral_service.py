@@ -7,31 +7,22 @@ import base64
 from typing import Dict, Any
 from mistralai import Mistral
 
+from .. import Config
+from ..config import config
+
 MODEL = "pixtral-large-latest"
 OCR_MODEL = "mistral-ocr-latest"
 
 
-def _load_api_key() -> str:
-    """Loads the Pixtral/Mistral API key from apikey.json.
-
-    Searches relative to this file's directory to be robust to working directory.
-    """
-    # Look for apikey.json in the api directory
-    api_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'api')
-    path = os.path.join(api_dir, "apikey.json")
-
-    if not os.path.exists(path):
-        # Fallback to old location
-        path = os.path.join(os.path.dirname(__file__), "apikey.json")
-
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)["apikeys"]["pixtral"]
-
-
 def get_client() -> Mistral:
     """Create and return a Mistral client using the configured API key."""
-    api_key = _load_api_key()
-    return Mistral(api_key=api_key)
+    if not config.PIXTRAL_API_KEY:
+        raise ValueError(
+            "PIXTRAL_API_KEY n'est pas configurée. "
+            "Veuillez définir la variable d'environnement PIXTRAL_API_KEY "
+            "ou créer un fichier .env dans le dossier server/"
+        )
+    return Mistral(api_key=config.PIXTRAL_API_KEY)
 
 
 def _extract_metadata(client: Mistral, text_content: str) -> Dict[str, Any]:
@@ -301,51 +292,6 @@ def process_pdf(
     print("="*30+'\n')
 
     return result
-
-
-__all__ = ["process_pdf", "get_client", "MODEL", "OCR_MODEL"]
-"""
-Configuration module for application settings
-"""
-from pathlib import Path
-
-
-class Config:
-    """Configuration settings for the application"""
-
-    # File paths
-    BASE_DIR = Path(__file__).parent.parent.parent
-    KEY_FILE = BASE_DIR / "key.key"
-    USERS_FILE = BASE_DIR / "users.json"
-    OCR_RESULT_FILE = BASE_DIR / "ocr_result.txt"
-
-    # Security settings
-    PBKDF2_ITERATIONS = 100000
-    HASH_ALGORITHM = 'sha256'
-    SALT_LENGTH = 16
-
-    # File upload settings
-    MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024  # 200 MB
-    ALLOWED_CONTENT_TYPES = ["application/pdf", "application/octet-stream"]
-
-    # API settings
-    API_PREFIX = "/api"
-    API_TITLE = "la_response_d API"
-
-    @classmethod
-    def get_key_file_path(cls) -> str:
-        """Get the path to the encryption key file"""
-        return str(cls.KEY_FILE)
-
-    @classmethod
-    def get_users_file_path(cls) -> str:
-        """Get the path to the users database file"""
-        return str(cls.USERS_FILE)
-
-    @classmethod
-    def get_ocr_result_path(cls) -> str:
-        """Get the path to the OCR result file"""
-        return str(cls.OCR_RESULT_FILE)
 
 
 # Create a global config instance

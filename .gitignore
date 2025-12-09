@@ -6,8 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
-# Custom Ones
+# Custom Ones - Fichiers sensibles
 server/src/apikey.json
+server/.env
+server/src/app/api/apikey.json
 src/ocr_response_classic.json
 src/ocr_response.json
 src/ocr_response_classic.txt
@@ -16,6 +18,11 @@ src/test2.py
 .idea
 
 *.xml
+
+# Fichiers de clés et secrets
+*.key
+key.key
+users.json
 
 # Distribution / packaging
 .Python
