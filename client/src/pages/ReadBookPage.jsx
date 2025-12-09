@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Paper, CircularProgress, Alert, Button } from '@mui/material';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
 import 'katex/dist/katex.min.css';
 import Header from '../components/Header';
 import { API_CONFIG, STORAGE_KEYS, MESSAGES } from '../constants';
@@ -168,33 +168,27 @@ function ReadBookPage() {
           )}
           <Box sx={styles.content}>
             <ReactMarkdown
-                children={book?.content || ''}
+                children={book?.content || 'Aucun contenu disponible'}
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
-                skipHtml={false}
+                urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
                 components={{
-                  img: ({ node, src, alt, ...rest }) => {
-                    // Utiliser src en priorité (passé par ReactMarkdown)
-                    // Sinon vérifier node.properties.src comme fallback
-                    let finalSrc = src;
-
-                    if (!finalSrc && node?.properties) {
-                      finalSrc = node.properties.src;
-                    }
-
-                    if (!finalSrc) {
-                      return <span>[Image manquante: {alt}]</span>;
-                    }
-
-                    return (
-                        <img
-                            src={finalSrc}
-                            alt={alt || ''}
-                            style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
-                            {...rest}
-                        />
-                    );
-                  }
+                  img: ({node, ...props}) => (
+                      <img
+                          {...props}
+                          style={{
+                            maxWidth: '100%',
+                            height: 'auto',
+                            display: 'block',
+                            maxHeight: '500px',
+                            objectFit: 'contain',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            margin: '10px 0'
+                          }}
+                          alt={props.alt || 'Image'}
+                      />
+                  )
                 }}
             />
           </Box>
