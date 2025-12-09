@@ -332,9 +332,6 @@ function Home() {
     // Récupérer le nom d'utilisateur et le rôle depuis localStorage
     const storedUsername = localStorage.getItem(STORAGE_KEYS.USERNAME);
     const storedRole = localStorage.getItem(STORAGE_KEYS.USER_TYPE);
-    console.log('🔍 DEBUG Home - Username:', storedUsername, 'Role:', storedRole);
-    console.log('🔍 DEBUG Home - USER_TYPES.ADMIN:', USER_TYPES.ADMIN);
-    console.log('🔍 DEBUG Home - Comparaison:', storedRole === USER_TYPES.ADMIN, storedRole === 'ADMIN');
     setUsername(storedUsername || '');
     setUserRole(storedRole || '');
 

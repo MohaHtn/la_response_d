@@ -53,7 +53,8 @@ async def upload_document(
         filename = file.filename or "uploaded.pdf"
 
         # Traiter le PDF avec OCR
-        ocr_result = process_pdf(filename, data, image_output_dir=config.IMAGE_OUTPUT_DIR)
+        # Note: process_pdf n'accepte pas le paramètre image_output_dir
+        ocr_result = process_pdf(filename, data)
 
         # Extraire les données
         extracted_metadata = ocr_result.get("metadata", {})
@@ -102,8 +103,9 @@ async def upload_document(
                 title=doc_title,
                 author=doc_author,
                 parution_date=parution_date,
-                is_appropriate=str(is_appropriate),
-                is_harmful=not is_appropriate
+                is_appropriate=is_appropriate,
+                is_harmful=not is_appropriate,
+                is_compliant=is_compliant
             ),
             uploader=DocumentUploader(
                 username=current_user["username"],

@@ -32,8 +32,9 @@ class DocumentMetadata(BaseModel):
     title: str
     author: str
     parution_date: str
-    is_appropriate: str
+    is_appropriate: bool
     is_harmful: bool
+    is_compliant: bool
 
 
 class DocumentUploader(BaseModel):

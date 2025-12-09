@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
@@ -124,13 +124,7 @@ const styles = {
     color: '#2196f3',
     marginBottom: '15px',
   },
-  img: {
-    maxWidth: '90%',
-    height: 'auto',
-    marginTop: '10px',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-  },
+  // Note: inline images in the Markdown preview are styled directly via the ReactMarkdown component
   loader: {
     border: '4px solid #f3f3f3',
     borderTop: '4px solid #007bff',
@@ -335,7 +329,7 @@ const spinAnimation = `
 function Upload() {
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [images, setImages] = useState([]);
+  // Images are now displayed inline within the Markdown preview; no separate images state is required.
   const [mergedMarkdown, setMergedMarkdown] = useState("");
   const [metadata, setMetadata] = useState(null);
   const [securityAnalysis, setSecurityAnalysis] = useState(null);
@@ -344,7 +338,7 @@ function Upload() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
-  const [showPreviews, setShowPreviews] = useState(false);
+  // No separate previews toggle needed since images render inline in Markdown.
   const fileInputRef = useRef(null);
 
   // Fonction pour déclencher l'ouverture du gestionnaire de fichiers
@@ -451,27 +445,7 @@ function Upload() {
     URL.revokeObjectURL(url);
   };
 
-  // Extrait et normalise les images base64 (data URI) de la réponse OCR
-  const extractImagesFromResult = (result) => {
-    const out = [];
-    if (!result || !result.ocr || !result.ocr.pages) return out;
-
-    const pages = result.ocr.pages;
-    pages.forEach((page, pageIdx) => {
-      const imgs = page.images || [];
-      imgs.forEach((img, imgIdx) => {
-        let data = img.image_base64;
-        if (!data) return;
-        // Si ce n'est pas déjà une data URI, on préfixe
-        if (!data.startsWith('data:image')) {
-          data = `data:image/png;base64,${data}`;
-        }
-        const id = img.id || `p${pageIdx + 1}-img${imgIdx + 1}`;
-        out.push({ id, src: data });
-      });
-    });
-    return out;
-  };
+  // Les images sont désormais rendues directement dans l'aperçu Markdown.
 
   // Extrait le markdown fusionné directement depuis la réponse
   const extractAndMergeMarkdown = (result) => {
@@ -504,7 +478,7 @@ function Upload() {
       if (file.type === 'application/pdf') {
         setSelectedFile(file);
         setMessage(`Fichier sélectionné : ${file.name}`);
-        setImages([]);
+        // Réinitialisation non nécessaire pour les images, elles sont rendues en Markdown
         setMergedMarkdown("");
         setMetadata(null);
         setSecurityAnalysis(null);
@@ -544,9 +518,7 @@ function Upload() {
                   setMergedMarkdown(result_document.markdown.content);
                 }
 
-                // Extraire les images de la structure OCR
-                const imgs = extractImagesFromResult(result_document.markdown.content);
-                if (imgs.length > 0) setImages(imgs);
+                // Les images sont incluses directement dans le Markdown et seront rendues inline
 
                 // Extraire les métadonnées (déjà normalisées par le backend)
                 if (result_document.normalized_metadata) {
@@ -564,14 +536,14 @@ function Upload() {
                 }
 
                 // Stocker les informations du document
-                const textLength = result_document.markdown_content ? result_document.markdown_content.length : 0;
+                const textLength = result_document.markdown.content ? result_document.markdown.content.length : 0;
 
                 setDocumentInfo({
-                  title: result_document.title,
-                  author: result_document.author,
+                  title: result_document.metadata.title,
+                  author: result_document.metadata.author,
                   message: result.message,
-                  is_compliant: result_document.is_compliant,
-                  uploader: result_document.username,
+                  is_compliant: result_document.metadata.is_appropriate,
+                  uploader: result_document.uploader.username,
                   status: result_document.status,
                   textLength: textLength,
                   documentId: result_document.document_id
@@ -854,22 +826,23 @@ function Upload() {
                           children={mergedMarkdown}
                           remarkPlugins={[remarkMath]}
                           rehypePlugins={[rehypeKatex]}
+                          urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
                           components={{
-                            img: ({ src, alt, ...props }) => {
-                              let finalSrc = src || '';
-                              if (finalSrc && !finalSrc.startsWith('http') && !finalSrc.startsWith('data:image')) {
-                                finalSrc = `data:image/png;base64,${finalSrc}`;
-                              }
-                              return (
-                                // eslint-disable-next-line jsx-a11y/alt-text
+                            img: ({node, ...props}) => (
                                 <img
-                                  src={finalSrc}
-                                  alt={alt || ''}
-                                  style={{ maxWidth: '100%', height: 'auto' }}
-                                  {...props}
+                                    {...props}
+                                    style={{
+                                      maxWidth: '100%',
+                                      height: 'auto',
+                                      maxHeight: '500px',
+                                      objectFit: 'contain',
+                                      border: '1px solid #ddd',
+                                      borderRadius: '4px',
+                                      margin: '10px 0'
+                                    }}
+                                    alt={props.alt || 'Image'}
                                 />
-                              );
-                            }
+                            )
                           }}
                         />
                       </div>
@@ -880,41 +853,7 @@ function Upload() {
             </div>
           )}
 
-          {images && images.length > 0 && !isLoading && (
-            <div style={{ ...styles.metadataContainer, marginTop: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h2 style={{ margin: 0 }}>Aperçus des images trouvés</h2>
-                <button
-                  onClick={() => setShowPreviews((v) => !v)}
-                  style={{ ...styles.downloadButton, padding: '6px 12px', fontSize: 13 }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
-                  aria-expanded={showPreviews}
-                >
-                  {showPreviews ? 'Masquer' : 'Afficher'}
-                </button>
-              </div>
-              {showPreviews && (
-                <div style={{
-                  marginTop: 12,
-                  border: '1px solid #ddd',
-                  borderRadius: 8,
-                  padding: 12,
-                  background: '#fff',
-                  maxHeight: 'calc(100vh - 240px)',
-                  overflow: 'auto'
-                }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {images.map((img) => (
-                      <div key={img.id} style={{ marginBottom: 0 }}>
-                        <img src={img.src} alt={img.id} style={styles.img} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* La galerie d'aperçus d'images séparée a été supprimée; les images apparaissent directement dans le Markdown. */}
         </div>
       </div>
     </div>
