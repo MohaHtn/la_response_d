@@ -4,7 +4,7 @@ import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '../hooks/useAuth';
-import { logout } from '../services/auth.service';
+import { logout } from '../services/index.js';
 import { ROUTES, USER_TYPES } from '../constants';
 import { testCorsConnection, logCorsDebugInfo } from '../utils/corsTest';
 
@@ -62,8 +62,6 @@ export default function Header() {
     logout();
     navigate('/');
   };
-
-  const isDev = import.meta.env.DEV;
 
   return (
     <AppBar style={headerStyles.appBar}>

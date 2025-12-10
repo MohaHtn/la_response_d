@@ -113,7 +113,7 @@ async def upload_document(
             ),
             moderation=DocumentModeration(
                 approval_process=ApprovalProcess(
-                    status=BookStatus.WAITING,
+                    status=BookStatus.OK if is_compliant else BookStatus.IN_APPROVAL,
                     date=current_date,
                     details="; ".join(compliance_issues) if not is_compliant else ""
                 ),
@@ -177,13 +177,15 @@ async def get_document(
 
 @router.get("/")
 async def list_documents(
-        status: Optional[str] = None
+        status: Optional[str] = None,
+        uploader: Optional[str] = None,
 ):
     """
     Lister les documents
 
     Args:
         status: Filtrer par statut (optionnel)
+        uploader: Filtrer par nom d'uploader (optionnel)
 
     Returns:
         Liste des documents
@@ -192,6 +194,18 @@ async def list_documents(
 
     if status:
         documents = [doc for doc in documents if doc.get("moderation", {}).get("approval_process", {}).get("status") == status]
+
+    if uploader:
+        documents = [doc for doc in documents if doc.get("uploader", {}).get("username") == uploader]
+
+    # Trier par date d'upload décroissante si disponible
+    def _parse_date(d: Optional[str]):
+        try:
+            return datetime.fromisoformat(d) if d else datetime.min
+        except Exception:
+            return datetime.min
+
+    documents.sort(key=lambda d: _parse_date(d.get("uploader", {}).get("upload_date")), reverse=True)
 
     if not documents:
         return APIResponse.success(data=[], count=0, message="Aucun document trouvé")

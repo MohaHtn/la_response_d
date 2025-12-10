@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from "react-router-dom";
 import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Header from './components/Header';
 import { API_CONFIG, STORAGE_KEYS, MESSAGES, FILE_CONSTRAINTS } from "./constants/index.js";
+import { ROUTES } from './constants/index.js';
+
+import remarkGfm from 'remark-gfm'
 
 const styles = {
   root: {
@@ -571,13 +575,17 @@ function Upload() {
         <Header />
       <style>{spinAnimation}</style>
       <div style={styles.mainContent}>
+
+
         <div style={{...styles.container, margin: '0 auto'}}>
+        <Link to={ROUTES.HOME} style={{ ...styles.navButton, alignSelf: 'flex-start', display: 'inline-block' }}> ← Retour à la page d'accueil</Link>
             <h1 style={{ textAlign: 'left', fontSize: '24px', marginTop: '5px', marginBottom: '8px' }}>Envoyer un document</h1>
 
           {!mergedMarkdown && (
             <p style={{ fontSize: '14px', marginTop: '5px', marginBottom: '8px' }}>Vous pouvez déposer un document en glissant-déposant le fichier dans l'espace ci-dessous, ou cliquer dessus
             pour sélectionner votre document.</p>
           )}
+
 
           <input
             type="file"
@@ -824,7 +832,7 @@ function Upload() {
                       <div style={styles.markdownContent}>
                         <ReactMarkdown
                           children={mergedMarkdown}
-                          remarkPlugins={[remarkMath]}
+                          remarkPlugins={[remarkMath, remarkGfm]}
                           rehypePlugins={[rehypeKatex]}
                           urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
                           components={{

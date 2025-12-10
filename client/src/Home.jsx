@@ -315,9 +315,10 @@ function Home() {
           id: doc.document_id,
           title: doc.metadata?.title || 'Sans titre',
           author: doc.metadata?.author || 'Auteur inconnu',
-          status: doc.moderation?.status || 'unknown',
+          status: doc.moderation?.approval_process?.status || 'unknown',
           preview: doc.preview || '',
-          uploadedAt: doc.uploaded_at || null,
+          uploadedAt: doc.uploader?.upload_date || null,
+          uploaderName: doc.uploader?.username || null,
           coverImage: doc.cover_image || null
         }))
       : []
@@ -349,6 +350,12 @@ function Home() {
 
         const documentsArray = data.data || [];
         const books = mapDocumentsToBooks(documentsArray);
+        // Trier côté client par date d'upload décroissante (sécurité au cas où l'API ne le ferait pas)
+        books.sort((a, b) => {
+          const da = a.uploadedAt ? Date.parse(a.uploadedAt) : 0;
+          const db = b.uploadedAt ? Date.parse(b.uploadedAt) : 0;
+          return db - da;
+        });
 
         setLibrary(books);
 
@@ -380,6 +387,11 @@ function Home() {
         const data = await response.json();
         const documentsArray = data.data || [];
         const myBooks = mapDocumentsToBooks(documentsArray);
+        myBooks.sort((a, b) => {
+          const da = a.uploadedAt ? Date.parse(a.uploadedAt) : 0;
+          const db = b.uploadedAt ? Date.parse(b.uploadedAt) : 0;
+          return db - da;
+        });
 
         setMyDocuments(myBooks);
       } catch (err) {
@@ -524,7 +536,7 @@ function Home() {
                           </div>
                         )}
                         {book.uploadedAt && (
-                          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                          <div style={{ fontSize: '11px', color: '#999', marginTop: 'auto' }}>
                             📅 Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
                           </div>
                         )}
@@ -573,6 +585,17 @@ function Home() {
                           {book.preview}
                         </div>
                       )}
+                      {(book.uploaderName || book.uploadedAt) && (
+                        <div style={{ fontSize: '12px', color: '#777', marginTop: '100px' }}>
+                          {book.uploaderName && (
+                            <span>👤 Ajouté par {book.uploaderName}</span>
+                          )}
+                          {book.uploaderName && book.uploadedAt && ' · '}
+                          {book.uploadedAt && (
+                            <span>le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div style={styles.buttonContainer}>
                       <Link to={ROUTES.BOOK(book.id)} style={styles.readButton}>
@@ -615,6 +638,17 @@ function Home() {
                       {book.preview && (
                         <div style={styles.listPreview}>
                           {book.preview}
+                        </div>
+                      )}
+                      {(book.uploaderName || book.uploadedAt) && (
+                        <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                          {book.uploaderName && (
+                            <span>👤 {book.uploaderName}</span>
+                          )}
+                          {book.uploaderName && book.uploadedAt && ' · '}
+                          {book.uploadedAt && (
+                            <span>📅 {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                          )}
                         </div>
                       )}
                     </div>
