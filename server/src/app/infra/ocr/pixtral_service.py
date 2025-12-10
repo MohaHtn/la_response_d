@@ -159,7 +159,6 @@ def process_pdf(
         file_name: str,
         content: bytes,
         include_image_base64: bool = True,
-        return_markdown: bool = True,
 ) -> Dict[str, Any]:
     """
     Traite un PDF via l'OCR Mistral avec analyse de contenu.
@@ -168,7 +167,6 @@ def process_pdf(
         file_name: Nom original du PDF.
         content: Octets du fichier PDF.
         include_image_base64: Inclure (ou non) les aperçus pages en base64.
-        return_markdown: Si True, concatène le markdown des pages et l'ajoute au retour.
 
     Returns:
         Dict contenant la réponse OCR, les métadonnées, l'analyse de sécurité et le markdown fusionné.
