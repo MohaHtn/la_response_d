@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Home",
+    "upload": "Upload",
+    "uploadDoc": "Upload a document",
+    "quarantine": "Quarantine",
+    "admin": "Admin",
+    "administration": "Administration",
+    "login": "Login",
+    "logout": "Logout",
+    "language": "Language",
+    "fr": "FR",
+    "en": "EN",
+    "appTitle": "La Réponse D · Biblioteko"
+  },
+  "actions": {
+    "validate": "Validate",
+    "validated": "Already validated",
+    "validating": "Validating…",
+    "publish": "Publish",
+    "publishing": "Publishing…",
+    "edit": "Edit metadata / content",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel"
+  },
+  "loading": {
+    "validations": "Loading validations…"
+  },
+  "errors": {
+    "prefix": "Error"
+  },
+  "moderation": {
+    "header": "Moderators validation ({{count}}/3)",
+    "chip": {
+      "fullyValidated": "✓ Validated by 3 moderators - Ready to publish",
+      "progress": "{{count}}/3 validations - {{remaining}} remaining",
+      "waiting": "Waiting for validation"
+    },
+    "table": {
+      "moderator": "Moderator",
+      "status": "Status",
+      "date": "Date",
+      "validated": "Validated",
+      "pending": "Pending"
+    },
+    "alerts": {
+      "fullyValidated": "🎉 This book has been validated by 3 moderators and can be published immediately!",
+      "needsMore": "This book needs {{remaining}} more validation(s) to be published.",
+      "none": "⏳ This book is waiting for its first validation."
+    },
+    "dialog": {
+      "editTitle": "Edit document",
+      "title": "Title",
+      "author": "Author",
+      "tags": "Tags (comma separated)",
+      "content": "Content / Summary"
+    }
+  }
+}

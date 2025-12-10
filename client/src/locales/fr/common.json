@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "upload": "Envoyer",
+    "uploadDoc": "Envoyer un document",
+    "quarantine": "Quarantaine",
+    "admin": "Admin",
+    "administration": "Administration",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "language": "Langue",
+    "fr": "FR",
+    "en": "EN",
+    "appTitle": "La Réponse D · Bibliothéko"
+  },
+  "actions": {
+    "validate": "Valider",
+    "validated": "Déjà validé",
+    "validating": "Validation…",
+    "publish": "Publier",
+    "publishing": "Publication…",
+    "edit": "Modifier les métadonnées / contenu",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "cancel": "Annuler"
+  },
+  "loading": {
+    "validations": "Chargement des validations…",
+    "generic": "Chargement…"
+  },
+  "errors": {
+    "prefix": "Erreur"
+  },
+  "moderation": {
+    "header": "Validation par les modérateurs ({{count}}/3)",
+    "chip": {
+      "fullyValidated": "✓ Validé par 3 modérateurs - Prêt pour publication",
+      "progress": "{{count}}/3 validations - {{remaining}} restante(s)",
+      "waiting": "En attente de validation"
+    },
+    "table": {
+      "moderator": "Modérateur",
+      "status": "Statut",
+      "date": "Date",
+      "validated": "Validé",
+      "pending": "En attente",
+      "moderatorN": "Modérateur {{index}}"
+    },
+    "alerts": {
+      "fullyValidated": "🎉 Ce livre a été validé par 3 modérateurs et peut être publié immédiatement !",
+      "needsMore": "Ce livre a besoin de {{remaining}} validation(s) supplémentaire(s) pour être publié.",
+      "none": "⏳ Ce livre est en attente de sa première validation."
+    },
+    "dialog": {
+      "editTitle": "Modifier le document",
+      "title": "Titre",
+      "author": "Auteur",
+      "tags": "Tags (séparés par des virgules)",
+      "content": "Contenu / Résumé"
+    }
+  }
+  ,
+  "quarantine": {
+    "title": "📚 Livres en quarantaine",
+    "refresh": "Rafraîchir",
+    "help": "Vous pouvez approuver (déplacer vers la bibliothèque) ou rejeter (supprimer) les documents placés en quarantaine.",
+    "backToLibrary": "Retour à la bibliothèque",
+    "backToAdmin": "Retour au panneau d'administration",
+    "none": "Aucun document en quarantaine.",
+    "by": "par",
+    "unknownAuthor": "Auteur inconnu",
+    "untitled": "Sans titre",
+    "issues": "Motifs:",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "coverOf": "Couverture de {{title}}"
+  }
+}
