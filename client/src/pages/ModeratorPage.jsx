@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
 import ModeratorValidationTable from '../components/ModeratorValidationTable';
 import Header from '../components/Header';
-import { API_CONFIG, STORAGE_KEYS, MESSAGES } from '../constants';
+import { ROUTES, MESSAGES } from '../constants';
+import { moderationService } from '../services/moderation.service';
 import {
     Box,
     Container,
@@ -16,6 +17,8 @@ import {
     Divider,
     Button,
 } from '@mui/material';
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 const styles = {
     root: {
@@ -85,91 +88,56 @@ function ModeratorPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    console.log('ModeratorPage rendered - bookId:', bookId);
-
     useEffect(() => {
-        // Charger les données du livre depuis l'API
+        // Charger les données du livre depuis l'API (service centralisé)
         const fetchBookData = async () => {
-    console.log('Fetching book data for:', bookId);
-    try {
-        setLoading(true);
-        const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_DOCUMENT(bookId)}`;
-        console.log('Fetching from URL:', url);
+            try {
+                setLoading(true);
+                const document = await moderationService.getQuarantineDocument(bookId);
 
-        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        if (!token) {
-            console.warn('No auth token found in localStorage under key `authToken`');
-        }
+                const transformedData = {
+                    id: document.document_id || bookId,
+                    title: document.metadata?.title || 'Titre non défini',
+                    author: document.metadata?.author || 'Auteur non défini',
+                    submittedBy: document.uploader?.username || 'Utilisateur inconnu',
+                    submissionDate: document.uploader?.upload_date || new Date().toISOString(),
+                    status: document.moderation?.approval_process?.status || 'WAITING',
+                    description: document.metadata?.description || '',
+                    publisher: document.metadata?.publisher || '',
+                    date: document.metadata?.parution_date || '',
+                    totalPages: document.processing_info?.total_pages || 0,
+                    markdownContent: document.markdown?.content || document.content || document.preview || '# Contenu non disponible\n\nLe contenu du document n\'a pas pu être chargé.',
+                };
 
-        const headers = {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                setBookData(transformedData);
+                setError(null);
+            } catch (err) {
+                console.error('Erreur lors du chargement du livre:', err);
+                setError(err.message);
+
+                // Données de secours pour continuer à afficher la page
+                const fallbackData = {
+                    id: bookId,
+                    title: 'Livre en modération',
+                    author: 'Auteur inconnu',
+                    submittedBy: 'Utilisateur',
+                    submissionDate: new Date().toISOString(),
+                    status: 'WAITING',
+                    description: 'Erreur lors du chargement des données...',
+                    publisher: '',
+                    date: '',
+                    totalPages: 0,
+                };
+                setBookData(fallbackData);
+            } finally {
+                setLoading(false);
+            }
         };
-
-        const response = await fetch(url, { method: 'GET', headers });
-        console.log('Response status:', response.status);
-
-        if (!response.ok) {
-            throw new Error(`Erreur ${response.status}: Impossible de charger les données du livre`);
-        }
-
-        const data = await response.json();
-        console.log('Received data:', data);
-
-        // Transformer les données de l'API pour correspondre à l'interface
-        const transformedData = {
-            id: data.document_id || bookId,
-            title: data.metadata?.title || 'Titre non défini',
-            author: data.metadata?.author || 'Auteur non défini',
-            submittedBy: data.uploader?.username || 'Utilisateur inconnu',
-            submissionDate: data.uploader?.upload_date || new Date().toISOString(),
-            status: data.moderation?.approval_process?.status || 'WAITING',
-            description: data.metadata?.description || '',
-            publisher: data.metadata?.publisher || '',
-            date: data.metadata?.parution_date || '',
-            totalPages: data.processing_info?.total_pages || 0,
-            markdownContent: data.markdown?.content || '# Contenu non disponible\n\nLe contenu du document n\'a pas pu être chargé.',
-        };
-
-        console.log('Transformed data:', transformedData);
-        setBookData(transformedData);
-        setError(null);
-    } catch (err) {
-        console.error('Erreur lors du chargement du livre:', err);
-        setError(err.message);
-
-        // Données de secours pour continuer à afficher la page
-        const fallbackData = {
-            id: bookId,
-            title: 'Livre en modération',
-            author: 'Auteur inconnu',
-            submittedBy: 'Utilisateur',
-            submissionDate: new Date().toISOString(),
-            status: 'WAITING',
-            description: 'Erreur lors du chargement des données...',
-            publisher: '',
-            date: '',
-            totalPages: 0,
-        };
-        console.log('Using fallback data:', fallbackData);
-        setBookData(fallbackData);
-    } finally {
-        setLoading(false);
-        console.log('Loading finished');
-    }
-};
-        if (bookId) {
-            fetchBookData();
-        } else {
-            console.error('No bookId provided!');
-            setLoading(false);
-        }
+        if (bookId) fetchBookData();
+        else setLoading(false);
     }, [bookId]);
 
-    console.log('Current state - loading:', loading, 'bookData:', bookData, 'error:', error);
-
     if (loading) {
-        console.log('Rendering loading state');
         return (
             <Box sx={styles.root}>
                 <Header />
@@ -183,8 +151,6 @@ function ModeratorPage() {
         );
     }
 
-    console.log('Rendering main content');
-
     return (
         <Box sx={styles.root}>
             <Header />
@@ -193,10 +159,17 @@ function ModeratorPage() {
                 <Box sx={{ marginBottom: 2 }}>
                     <Button
                         variant="outlined"
-                        onClick={() => navigate('/home')}
+                        onClick={() => navigate(ROUTES.HOME)}
                         startIcon={<span>←</span>}
                     >
                         Retour à la bibliothèque
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        onClick={() => navigate(ROUTES.ADMIN_QUARANTINE)}
+                        startIcon={<span>←</span>}
+                    >
+                        Retour à la liste des documents en quarantaine
                     </Button>
                 </Box>
 
@@ -322,26 +295,29 @@ function ModeratorPage() {
                                 <Divider sx={{ marginBottom: 3 }} />
                                 <Box sx={styles.markdownContent}>
                                     <ReactMarkdown
+                                        children={bookData?.markdownContent || 'Aucun contenu disponible'}
+                                        remarkPlugins={[remarkMath]}
+                                        rehypePlugins={[rehypeKatex]}
+                                        urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
                                         components={{
-                                            img: ({ src, alt, ...props }) => {
-                                                let finalSrc = src || '';
-                                                if (finalSrc && !finalSrc.startsWith('http') && !finalSrc.startsWith('data:image')) {
-                                                    finalSrc = `data:image/png;base64,${finalSrc}`;
-                                                }
-                                                return (
-                                                    // eslint-disable-next-line jsx-a11y/alt-text
-                                                    <img
-                                                        src={finalSrc}
-                                                        alt={alt || ''}
-                                                        style={{ maxWidth: '100%', height: 'auto' }}
-                                                        {...props}
-                                                    />
-                                                );
-                                            }
+                                          img: ({node, ...props}) => (
+                                              <img
+                                                  {...props}
+                                                  style={{
+                                                    maxWidth: '100%',
+                                                    height: 'auto',
+                                                    display: 'block',
+                                                    maxHeight: '500px',
+                                                    objectFit: 'contain',
+                                                    border: '1px solid #ddd',
+                                                    borderRadius: '4px',
+                                                    margin: '10px 0'
+                                                  }}
+                                                  alt={props.alt || 'Image'}
+                                              />
+                                          )
                                         }}
-                                    >
-                                        {bookData.markdownContent}
-                                    </ReactMarkdown>
+                                    />
                                 </Box>
                             </Paper>
                         </Box>

@@ -4,7 +4,7 @@ Pixtral OCR service for PDF processing
 import json
 import os
 import base64
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Callable
 from mistralai import Mistral
 
 from .. import Config
@@ -159,6 +159,7 @@ def process_pdf(
         file_name: str,
         content: bytes,
         include_image_base64: bool = True,
+        on_progress: Optional[Callable[..., None]] = None,
 ) -> Dict[str, Any]:
     """
     Traite un PDF via l'OCR Mistral avec analyse de contenu.
@@ -173,6 +174,22 @@ def process_pdf(
     """
     client = get_client()
 
+    # Petite fonction utilitaire pour émettre la progression sans échec
+    def _emit(stage: str, progress: Optional[int] = None, **kwargs):
+        if not on_progress:
+            return
+        try:
+            payload = {"stage": stage}
+            if progress is not None:
+                payload["progress"] = progress
+            payload.update(kwargs)
+            on_progress(**payload)
+        except Exception:
+            # Ne jamais casser le flux OCR si la remontée de progression échoue
+            pass
+
+    _emit("ocr:init", 5)
+
     uploaded_pdf = client.files.upload(
         file={
             "file_name": file_name or "uploaded_file.pdf",
@@ -181,8 +198,12 @@ def process_pdf(
         purpose="ocr",
     )
 
-    signed_url = client.files.get_signed_url(file_id=uploaded_pdf.id)
+    _emit("ocr:upload", 8)
 
+    signed_url = client.files.get_signed_url(file_id=uploaded_pdf.id)
+    _emit("ocr:signed_url", 10)
+
+    _emit("ocr:request", 12)
     ocr_response = client.ocr.process(
         model=OCR_MODEL,
         document={
@@ -196,10 +217,12 @@ def process_pdf(
 
     # Extraction du texte complet pour l'analyse
     pages = ocr_dict.get("pages", [])
+    _emit("ocr:response", 20, total_pages=len(pages))
     full_text = ""
     markdown_parts = []
 
-    for page in pages:
+    total_pages = len(pages) or 1
+    for idx, page in enumerate(pages):
         # Corps markdown de la page (déjà segmenté)
         page_md = page.get("markdown", "") or ""
         full_text += page_md + "\n"
@@ -260,17 +283,25 @@ def process_pdf(
 
         markdown_parts.append(updated_md.strip())
 
+        # Progression par page entre 20 et 30
+        page_progress = 20 + int(10 * (idx + 1) / total_pages)
+        _emit("ocr:page", page_progress, page_index=idx + 1, total_pages=total_pages)
+
     # Fusion du markdown de toutes les pages
     final_markdown = "\n\n---\n\n".join(markdown_parts) + "\n"
+    _emit("ocr:markdown:merged", 32)
 
     # Analyse du contenu avec Mistral
     print("Extraction des métadonnées...")
+    _emit("ocr:analysis:metadata", 34)
     metadata = _extract_metadata(client, full_text)
 
     print("Détection des prompts de sécurité...")
+    _emit("ocr:analysis:security", 36)
     security_analysis = _detect_security_prompts(client, full_text)
 
     print("Vérification du contenu inapproprié...")
+    _emit("ocr:analysis:content", 38)
     content_analysis = _check_inappropriate_content(client, full_text)
 
     # Construction de la réponse complète
@@ -302,6 +333,7 @@ def process_pdf(
             print(f"  - {w}")
     print("="*30+'\n')
 
+    _emit("ocr:internal:done", 39)
     return result
 
 

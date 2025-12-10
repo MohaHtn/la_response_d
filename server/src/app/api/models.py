@@ -10,6 +10,7 @@ class BookStatus(str, Enum):
     """Book moderation status"""
     WAITING = "WAITING"
     IN_APPROVAL = "IN_APPROVAL"
+    IN_QUARANTINE = "IN_QUARANTINE"
     OK = "OK"
     NOK = "NOK"
 

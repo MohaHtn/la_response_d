@@ -5,6 +5,7 @@ Permet de créer jusqu'à 3 administrateurs.
 from fastapi import APIRouter
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Dict, Any
+from datetime import datetime
 
 from ...domain.services import AuthService
 from ...infra.repositories import user_repository
@@ -81,6 +82,7 @@ async def create_admins(admins: List[AdminCreate]):
                     "email": str(admin.email),
                     "account_type": "ADMIN",
                     "encrypted_auth": encrypted_auth,
+                    "created_at": datetime.now().isoformat(),
                 }
             )
             created.append(admin.username)

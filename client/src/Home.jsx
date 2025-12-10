@@ -292,6 +292,36 @@ const styles = {
     padding: '4px 8px',
     borderRadius: '4px',
     fontWeight: '500',
+  },
+  // Pagination
+  paginationContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    marginTop: '12px',
+  },
+  paginationInfo: {
+    fontSize: '13px',
+    color: '#666',
+  },
+  paginationButtons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  paginationButton: {
+    padding: '6px 10px',
+    fontSize: '13px',
+    backgroundColor: '#2196f3',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+  },
+  paginationButtonDisabled: {
+    backgroundColor: '#b0bec5',
+    cursor: 'not-allowed',
   }
 };
 
@@ -307,6 +337,8 @@ function Home() {
     // Initialiser depuis localStorage ou défaut 'grid'
     return localStorage.getItem('libraryViewMode') || 'grid';
   });
+  const [pageAll, setPageAll] = useState(1);
+  const [pageMy, setPageMy] = useState(1);
 
   // Helper pour factoriser la transformation des documents API en livres UI
   const mapDocumentsToBooks = (documentsArray) => (
@@ -328,6 +360,21 @@ function Home() {
   useEffect(() => {
     localStorage.setItem('libraryViewMode', viewMode);
   }, [viewMode]);
+
+  // Réinitialiser la page lors d'un changement de vue
+  useEffect(() => {
+    setPageAll(1);
+    setPageMy(1);
+  }, [viewMode]);
+
+  // Réinitialiser/clamp la pagination lorsque les données changent
+  useEffect(() => {
+    setPageAll(1);
+  }, [library.length]);
+
+  useEffect(() => {
+    setPageMy(1);
+  }, [myDocuments.length]);
 
   useEffect(() => {
     // Récupérer le nom d'utilisateur et le rôle depuis localStorage
@@ -407,6 +454,17 @@ function Home() {
     .map((s) => ({ ...s, ...library.find((b) => b.id === s.bookId) }))
     .filter(Boolean);
 
+  // Pagination — calculs dérivés
+  const pageSizeAll = viewMode === 'grid' ? 12 : 8;
+  const totalPagesAll = Math.max(1, Math.ceil(library.length / pageSizeAll));
+  const safePageAll = Math.min(pageAll, totalPagesAll);
+  const pagedLibrary = library.slice((safePageAll - 1) * pageSizeAll, safePageAll * pageSizeAll);
+
+  const pageSizeMy = viewMode === 'grid' ? 12 : 8;
+  const totalPagesMy = Math.max(1, Math.ceil(myDocuments.length / pageSizeMy));
+  const safePageMy = Math.min(pageMy, totalPagesMy);
+  const pagedMyDocuments = myDocuments.slice((safePageMy - 1) * pageSizeMy, safePageMy * pageSizeMy);
+
   return (
     <div style={{minHeight: '100vh', overflowX: 'hidden'}}>
       <Header />
@@ -467,7 +525,7 @@ function Home() {
 
               {viewMode === 'grid' ? (
                 <div style={styles.libraryGrid}>
-                  {myDocuments.map((book) => (
+                  {pagedMyDocuments.map((book) => (
                     <div key={book.id} style={styles.libraryCard}>
                       {book.coverImage ? (
                         <img
@@ -507,7 +565,7 @@ function Home() {
                 </div>
               ) : (
                 <div style={styles.libraryList}>
-                  {myDocuments.map((book) => (
+                  {pagedMyDocuments.map((book) => (
                     <div
                       key={book.id}
                       style={styles.libraryListItem}
@@ -558,6 +616,36 @@ function Home() {
                   ))}
                 </div>
               )}
+              {/* Pagination – Mes documents */}
+              {myDocuments.length > 0 && (
+                <div style={styles.paginationContainer}>
+                  <div style={styles.paginationInfo}>
+                    Page {safePageMy} / {Math.max(1, totalPagesMy)} — {myDocuments.length} éléments
+                  </div>
+                  <div style={styles.paginationButtons}>
+                    <button
+                      style={{
+                        ...styles.paginationButton,
+                        ...(safePageMy <= 1 ? styles.paginationButtonDisabled : {}),
+                      }}
+                      onClick={() => safePageMy > 1 && setPageMy(safePageMy - 1)}
+                      disabled={safePageMy <= 1}
+                    >
+                      ← Précédent
+                    </button>
+                    <button
+                      style={{
+                        ...styles.paginationButton,
+                        ...(safePageMy >= totalPagesMy ? styles.paginationButtonDisabled : {}),
+                      }}
+                      onClick={() => safePageMy < totalPagesMy && setPageMy(safePageMy + 1)}
+                      disabled={safePageMy >= totalPagesMy}
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -566,7 +654,7 @@ function Home() {
 
             {viewMode === 'grid' ? (
               <div style={styles.libraryGrid}>
-                {library.map((book) => (
+                {pagedLibrary.map((book) => (
                   <div key={book.id} style={styles.libraryCard}>
                     {book.coverImage ? (
                       <img
@@ -612,7 +700,7 @@ function Home() {
               </div>
             ) : (
               <div style={styles.libraryList}>
-                {library.map((book) => (
+                {pagedLibrary.map((book) => (
                   <div
                     key={book.id}
                     style={styles.libraryListItem}
@@ -667,6 +755,36 @@ function Home() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {/* Pagination – Tous les livres */}
+            {library.length > 0 && (
+              <div style={styles.paginationContainer}>
+                <div style={styles.paginationInfo}>
+                  Page {safePageAll} / {Math.max(1, totalPagesAll)} — {library.length} éléments
+                </div>
+                <div style={styles.paginationButtons}>
+                  <button
+                    style={{
+                      ...styles.paginationButton,
+                      ...(safePageAll <= 1 ? styles.paginationButtonDisabled : {}),
+                    }}
+                    onClick={() => safePageAll > 1 && setPageAll(safePageAll - 1)}
+                    disabled={safePageAll <= 1}
+                  >
+                    ← Précédent
+                  </button>
+                  <button
+                    style={{
+                      ...styles.paginationButton,
+                      ...(safePageAll >= totalPagesAll ? styles.paginationButtonDisabled : {}),
+                    }}
+                    onClick={() => safePageAll < totalPagesAll && setPageAll(safePageAll + 1)}
+                    disabled={safePageAll >= totalPagesAll}
+                  >
+                    Suivant →
+                  </button>
+                </div>
               </div>
             )}
           </div>

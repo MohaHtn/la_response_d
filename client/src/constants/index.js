@@ -130,6 +130,9 @@ export const API_CONFIG = {
     MODERATION_QUARANTINE_APPROVE: (id) => `/moderation/quarantine/${id}/approve`,
     MODERATION_QUARANTINE_REJECT: (id) => `/moderation/quarantine/${id}/reject`,
     MODERATION_QUARANTINE_MODERATE: (id) => `/moderation/quarantine/${id}/moderate`,
+    MODERATION_QUARANTINE_VALIDATE: (id) => `/moderation/quarantine/${id}/validate`,
+    MODERATION_QUARANTINE_UPDATE: (id) => `/moderation/quarantine/${id}`,
+    MODERATION_QUARANTINE_PUBLISH: (id) => `/moderation/quarantine/${id}/publish`,
     MODERATION_PENDING: '/moderation/pending',
     MODERATION_APPROVE: (id) => `/moderation/${id}/approve`,
     MODERATION_REJECT: (id) => `/moderation/${id}/reject`,
@@ -137,6 +140,10 @@ export const API_CONFIG = {
     // Setup (Configuration initiale)
     SETUP_STATUS: '/setup/status',
     SETUP_ADMINS: '/setup/admins',
+
+    // Admin - Users management
+    ADMIN_USERS: '/admin/users',
+    ADMIN_USER: (username) => `/admin/users/${username}`,
   },
 };
 

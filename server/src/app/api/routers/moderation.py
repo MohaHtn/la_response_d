@@ -1,8 +1,8 @@
 """
 Routes pour la modération (admin/modérateur)
 """
-from fastapi import APIRouter, Depends, Query, HTTPException
-from typing import List
+from fastapi import APIRouter, Depends, Query, HTTPException, Body
+from typing import List, Dict, Any
 from starlette.responses import JSONResponse
 from ..models import BookStatus
 from ..responses import APIResponse
@@ -36,7 +36,7 @@ async def get_quarantine_documents(
 @router.get("/quarantine/{document_id}")
 async def get_quarantine_document(
     document_id: str,
-    admin_user: dict = Depends(get_admin_user)
+    moderator_user: dict = Depends(get_moderator_user)
 ):
     """
     Récupérer un document en quarantaine par ID (admin uniquement)
@@ -74,7 +74,7 @@ async def approve_quarantine_document(
     Returns:
         Confirmation d'approbation
     """
-    document = await document_repository.get_quarantine_document(document_id)
+    document = await document_repository.get_quarantined_document(document_id)
 
     if not document:
         return APIResponse.error(
@@ -312,3 +312,120 @@ async def moderate_quarantined_document(
             status_code=500,
             detail=f"Échec de la modération du document : {str(e)}"
         )
+
+
+# ==================== New endpoints for quarantine validation workflow ====================
+
+@router.post("/quarantine/{document_id}/validate")
+async def validate_quarantined_document(
+    document_id: str,
+    moderator_user: dict = Depends(get_moderator_user)
+):
+    """
+    Un modérateur valide un document en quarantaine (ajout dans la liste `approved_by`).
+    Ne publie pas le document automatiquement: la publication se fait avec un endpoint dédié
+    quand au moins 3 validations sont atteintes.
+    """
+    # Charger le document en quarantaine
+    document = await document_repository.get_quarantined_document(document_id)
+    if not document:
+        return APIResponse.error(
+            message="Document en quarantaine introuvable",
+            status_code=404
+        )
+
+    username = moderator_user.get("username")
+    moderation = document.setdefault("moderation", {})
+    approved_by: List[str] = moderation.setdefault("approved_by", [])
+    approval_process = moderation.setdefault("approval_process", {"status": BookStatus.WAITING.value})
+
+    if username and username not in approved_by:
+        approved_by.append(username)
+        approval_process["date"] = approval_process.get("date") or None
+
+    # Conserver le statut en WAITING tant que 3 validations ne sont pas atteintes
+    if len(approved_by) >= 3:
+        approval_process["status"] = BookStatus.IN_QUARANTINE.value  # prêt à publier (flag visuel côté client)
+
+    success = await document_repository.update_quarantined_document(document_id, document)
+    if not success:
+        return APIResponse.error(
+            message="Échec de la mise à jour du document en quarantaine",
+            status_code=500
+        )
+
+    return APIResponse.success(
+        message="Validation enregistrée",
+        data={
+            "document_id": document_id,
+            "approved_by": approved_by
+        }
+    )
+
+
+@router.patch("/quarantine/{document_id}")
+async def update_quarantined_document(
+    document_id: str,
+    updates: Dict[str, Any] = Body(..., description="Champs à mettre à jour: metadata.*, content, etc."),
+    moderator_user: dict = Depends(get_moderator_user)
+):
+    """
+    Modifier les métadonnées et/ou le contenu d'un document en quarantaine (modérateur ou admin).
+    """
+    # Optionnel: validation légère des champs autorisés
+    allowed_keys = {"metadata", "content", "preview", "moderation"}
+    sanitized_updates: Dict[str, Any] = {k: v for k, v in updates.items() if k in allowed_keys}
+
+    if not sanitized_updates:
+        return APIResponse.error(
+            message="Aucun champ valide à mettre à jour",
+            status_code=400
+        )
+
+    success = await document_repository.update_quarantined_document(document_id, sanitized_updates)
+    if not success:
+        return APIResponse.error(
+            message="Document en quarantaine introuvable ou mise à jour impossible",
+            status_code=404
+        )
+
+    return APIResponse.success(
+        message="Document en quarantaine mis à jour",
+        data={"document_id": document_id}
+    )
+
+
+@router.post("/quarantine/{document_id}/publish")
+async def publish_quarantined_document(
+    document_id: str,
+    moderator_user: dict = Depends(get_moderator_user)
+):
+    """
+    Publier (déplacer hors de quarantaine) un document si au moins 3 modérateurs l'ont validé.
+    Accessible aux modérateurs et admins.
+    """
+    document = await document_repository.get_quarantined_document(document_id)
+    if not document:
+        return APIResponse.error(
+            message="Document en quarantaine introuvable",
+            status_code=404
+        )
+
+    approved_by = document.get("moderation", {}).get("approved_by", []) or []
+    if len(approved_by) < 3:
+        return APIResponse.error(
+            message="Publication impossible: moins de 3 validations",
+            status_code=400
+        )
+
+    success = await document_repository.move_from_quarantine_to_approved(document_id)
+    if not success:
+        return APIResponse.error(
+            message="Échec de la publication du document",
+            status_code=500
+        )
+
+    return APIResponse.success(
+        message="Document publié",
+        data={"document_id": document_id}
+    )

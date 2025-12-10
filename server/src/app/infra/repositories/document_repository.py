@@ -431,6 +431,30 @@ class DocumentRepository:
 
         return False
 
+    async def update_quarantined_document(self, document_id: str, updates: Dict) -> bool:
+        """
+        Update a quarantined document record
+
+        Args:
+            document_id: The document ID to update (in quarantine)
+            updates: Dictionary of fields to update
+
+        Returns:
+            True if document was updated, False otherwise
+        """
+        # Load existing quarantined document
+        existing = await self.get_quarantined_document(document_id)
+        if not existing:
+            return False
+
+        # Merge updates (deep)
+        self._deep_update(existing, updates)
+
+        # Save back to quarantine key
+        key = self._get_quarantine_key(document_id)
+        self.redis_client.set(key, json.dumps(existing))
+        return True
+
 
 # Global instance
 document_repository = DocumentRepository()

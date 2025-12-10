@@ -18,6 +18,16 @@ import {
   Button,
   Chip,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Stack,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
@@ -93,7 +103,7 @@ async function fetchAllBooks() {
  */
 async function fetchPendingBooks() {
   try {
-    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_PENDING}`, {
+    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE}`, {
       headers: getAuthHeaders()
     });
     if (!res.ok) return [];
@@ -128,9 +138,12 @@ async function fetchQuarantineBooks() {
  */
 async function fetchUsers() {
   try {
-    // TODO: Créer l'endpoint backend /api/users/
-    console.warn('fetchUsers: endpoint non implémenté côté backend');
-    return [];
+    const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ADMIN_USERS}`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data ?? [];
   } catch (e) {
     console.warn('fetchUsers failed', e);
     return [];
@@ -177,6 +190,13 @@ function AdminPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // États pour la gestion des utilisateurs (édition/suppression)
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [editEmail, setEditEmail] = useState('');
+  const [editAccountType, setEditAccountType] = useState(USER_TYPES.USER);
+  const [editPassword, setEditPassword] = useState('');
 
   // États pour le tri
   const [sortBy, setSortBy] = useState('date'); // 'date', 'title', 'author'
@@ -323,6 +343,91 @@ function AdminPage() {
     return <Chip label={config.label} color={config.color} size="small" />;
   };
 
+  // Rafraîchir la liste des utilisateurs
+  const refreshUsers = async () => {
+    try {
+      const usersData = await fetchUsers();
+      const transformedUsers = usersData.map(user => ({
+        username: user.username || user.email || 'Inconnu',
+        email: user.email || '',
+        accountType: user.account_type || user.type || USER_TYPES.USER,
+        registrationDate: user.created_at || user.registration_date || new Date().toISOString(),
+      }));
+      setUsers(transformedUsers);
+      // Mettre à jour le compteur utilisateurs dans les stats
+      setStats(prev => ({ ...prev, totalUsers: transformedUsers.length }));
+    } catch (e) {
+      console.warn('refreshUsers failed', e);
+    }
+  };
+
+  // Ouvrir le dialogue d'édition
+  const handleOpenEdit = (user) => {
+    setSelectedUser(user);
+    setEditEmail(user.email || '');
+    setEditAccountType(user.accountType || USER_TYPES.USER);
+    setEditPassword('');
+    setEditOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    setEditOpen(false);
+    setSelectedUser(null);
+    setEditPassword('');
+  };
+
+  // Sauvegarder les modifications utilisateur
+  const handleSaveEdit = async () => {
+    if (!selectedUser) return;
+    try {
+      const payload = {
+        email: editEmail,
+        account_type: editAccountType,
+      };
+      if (editPassword && editPassword.trim().length > 0) {
+        payload.password = editPassword.trim();
+      }
+
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ADMIN_USER(selectedUser.username)}`,
+        {
+          method: 'PATCH',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || 'Erreur lors de la mise à jour');
+      }
+      await refreshUsers();
+      handleCloseEdit();
+    } catch (e) {
+      console.error('handleSaveEdit error', e);
+      setError(e?.message || 'Erreur lors de la mise à jour de l’utilisateur');
+    }
+  };
+
+  // Supprimer un utilisateur
+  const handleDeleteUser = async (user) => {
+    if (!user) return;
+    const confirmed = window.confirm(`Supprimer l’utilisateur "${user.username}" ? Cette action est irréversible.`);
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ADMIN_USER(user.username)}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || 'Erreur lors de la suppression');
+      }
+      await refreshUsers();
+    } catch (e) {
+      console.error('handleDeleteUser error', e);
+      setError(e?.message || 'Erreur lors de la suppression de l’utilisateur');
+    }
+  };
+
   return (
     <Box sx={styles.root}>
       <Header />
@@ -362,7 +467,7 @@ function AdminPage() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                       {stats.totalBooks}
                     </Typography>
-                    <Typography variant="body2">Livres total</Typography>
+                    <Typography variant="body2">Livres au total</Typography>
                   </Box>
                   <LibraryBooksIcon sx={styles.statsIcon} />
                 </Box>
@@ -377,7 +482,7 @@ function AdminPage() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                       {stats.pendingModeration}
                     </Typography>
-                    <Typography variant="body2">En modération</Typography>
+                    <Typography variant="body2">Livres en modération</Typography>
                   </Box>
                   <PendingActionsIcon sx={styles.statsIcon} />
                 </Box>
@@ -607,9 +712,14 @@ function AdminPage() {
                                 {user.registrationDate ? new Date(user.registrationDate).toLocaleDateString('fr-FR') : ''}
                               </TableCell>
                               <TableCell>
-                                <Button size="small" variant="text">
-                                  Gérer
-                                </Button>
+                                <Stack direction="row" spacing={1}>
+                                  <Button size="small" variant="outlined" onClick={() => handleOpenEdit(user)}>
+                                    Modifier
+                                  </Button>
+                                  <Button size="small" variant="outlined" color="error" onClick={() => handleDeleteUser(user)}>
+                                    Supprimer
+                                  </Button>
+                                </Stack>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -623,6 +733,50 @@ function AdminPage() {
           )}
         </Paper>
       </Container>
+
+      {/* Dialogue édition utilisateur */}
+      <Dialog open={editOpen} onClose={handleCloseEdit} fullWidth maxWidth="sm">
+        <DialogTitle>Modifier l’utilisateur</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Nom d’utilisateur"
+              value={selectedUser?.username || ''}
+              InputProps={{ readOnly: true }}
+            />
+            <TextField
+              label="Email"
+              type="email"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+            />
+            <FormControl>
+              <InputLabel id="account-type-label">Type de compte</InputLabel>
+              <Select
+                labelId="account-type-label"
+                label="Type de compte"
+                value={editAccountType}
+                onChange={(e) => setEditAccountType(e.target.value)}
+              >
+                <MenuItem value={USER_TYPES.USER}>Utilisateur</MenuItem>
+                <MenuItem value={USER_TYPES.MODERATOR}>Modérateur</MenuItem>
+                <MenuItem value={USER_TYPES.ADMIN}>Administrateur</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Nouveau mot de passe (optionnel)"
+              type="password"
+              value={editPassword}
+              onChange={(e) => setEditPassword(e.target.value)}
+              helperText="Laissez vide pour ne pas modifier le mot de passe"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEdit}>Annuler</Button>
+          <Button variant="contained" onClick={handleSaveEdit}>Enregistrer</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

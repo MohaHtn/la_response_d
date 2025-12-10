@@ -345,6 +345,14 @@ function Upload() {
   // No separate previews toggle needed since images render inline in Markdown.
   const fileInputRef = useRef(null);
 
+  // Upload/processing real-time states
+  const [uploadProgress, setUploadProgress] = useState(0); // 0..100
+  const [procProgress, setProcProgress] = useState(0); // 0..100
+  const [procStage, setProcStage] = useState("");
+  const [currentJobId, setCurrentJobId] = useState(null);
+  const sseRef = useRef(null);
+  const [previewReady, setPreviewReady] = useState(false); // permet d'afficher le markdown pendant que le serveur continue
+
   // Fonction pour déclencher l'ouverture du gestionnaire de fichiers
   const handleButtonClick = () => {
     if (!isLoading) {
@@ -356,7 +364,13 @@ function Upload() {
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      if (sseRef.current) {
+        try { sseRef.current.close(); } catch {}
+        sseRef.current = null;
+      }
+    };
   }, []);
 
   // Style d'encadré d'analyse (fusion de classes redondantes)
@@ -434,6 +448,126 @@ function Upload() {
     }
   };
 
+  const hydrateFromDocument = (result_document, apiMessage) => {
+    try {
+      // Markdown
+      if (result_document?.markdown?.content) {
+        setMergedMarkdown(result_document.markdown.content);
+      }
+
+      // Metadata (déjà normalisées par le backend si présent)
+      if (result_document?.normalized_metadata) {
+        setMetadata(result_document.normalized_metadata);
+      } else if (result_document?.metadata) {
+        setMetadata(result_document.metadata);
+      }
+
+      if (result_document?.security_analysis) {
+        setSecurityAnalysis(result_document.security_analysis);
+      }
+      if (result_document?.content_analysis) {
+        setContentAnalysis(result_document.content_analysis);
+      }
+
+      const textLength = result_document?.markdown?.content ? result_document.markdown.content.length : 0;
+      setDocumentInfo({
+        title: result_document?.metadata?.title,
+        author: result_document?.metadata?.author,
+        message: apiMessage,
+        is_compliant: result_document?.metadata?.is_appropriate,
+        uploader: result_document?.uploader?.username,
+        status: result_document?.status,
+        textLength,
+        documentId: result_document?.document_id,
+      });
+    } catch (err) {
+      console.error('Erreur lors de l\'extraction des données:', err);
+      setMessage('Erreur lors du traitement de la réponse');
+    }
+  };
+
+  const fetchDocumentById = async (documentId) => {
+    try {
+      const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENT_DETAILS(documentId)}`, {
+        headers: { 'authorization': `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}` }
+      });
+      if (!resp.ok) {
+        const error = await resp.json().catch(() => ({}));
+        setMessage(`Erreur serveur (lecture doc) : ${error.detail || resp.statusText}`);
+        return;
+      }
+      const json = await resp.json();
+      const doc = json?.data;
+      if (doc) {
+        // Ne pas afficher "Traitement terminé" par défaut
+        hydrateFromDocument(doc, json?.message || '');
+      }
+    } catch (e) {
+      setMessage(`Erreur réseau lors du chargement du document: ${e}`);
+    }
+  };
+
+  const startSSE = (jobId) => {
+    if (sseRef.current) {
+      try { sseRef.current.close(); } catch {}
+      sseRef.current = null;
+    }
+    const url = `${API_CONFIG.BASE_URL}/documents/status/stream/${jobId}`;
+    const es = new EventSource(url, { withCredentials: false });
+    sseRef.current = es;
+
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setProcProgress(data?.progress ?? 0);
+        const stageLabel = data?.stage ? `${data.status} · ${data.stage}` : data?.status;
+        setProcStage(stageLabel || "");
+        // Lorsque le backend diffuse le markdown et les analyses en milieu de traitement,
+        // on met à jour immédiatement l'aperçu côté client.
+        if (data?.stage === 'deliver:markdown') {
+          if (typeof data?.markdown === 'string') {
+            setMergedMarkdown(data.markdown);
+          }
+          if (data?.extracted_metadata) {
+            setMetadata(data.extracted_metadata);
+          }
+          if (data?.security_analysis) {
+            setSecurityAnalysis(data.security_analysis);
+          }
+          if (data?.content_analysis) {
+            setContentAnalysis(data.content_analysis);
+          }
+          // Informer l'utilisateur que le contenu est disponible tout en poursuivant le traitement
+          setMessage((m) => m || 'Prévisualisation du contenu disponible');
+          setPreviewReady(true);
+        }
+        if (data?.status === 'done') {
+          // Fermer le flux et récupérer le document final
+          try { es.close(); } catch {}
+          sseRef.current = null;
+          const documentId = data?.document_id;
+          setIsLoading(false);
+          if (documentId) {
+            fetchDocumentById(documentId);
+          }
+        } else if (data?.status === 'error') {
+          try { es.close(); } catch {}
+          sseRef.current = null;
+          setIsLoading(false);
+          setMessage(`Erreur de traitement: ${data?.error || 'inconnue'}`);
+        }
+      } catch (e) {
+        // Ignore JSON parse errors from heartbeat lines if any
+      }
+    };
+
+    es.onerror = () => {
+      // en cas d'erreur réseau, on laisse EventSource tenter de se reconnecter
+      // mais on peut informer l'utilisateur
+      setProcStage((s) => s || 'Connexion au flux SSE...');
+    };
+  };
+
   // Fonction pour télécharger le markdown fusionné
   const downloadMarkdown = () => {
     if (!mergedMarkdown) return;
@@ -447,6 +581,40 @@ function Upload() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // Réinitialise l'état et propose immédiatement d'envoyer un nouveau document
+  const resetAndStartNewUpload = () => {
+    // Fermer un éventuel flux SSE encore ouvert
+    if (sseRef.current) {
+      try { sseRef.current.close(); } catch {}
+      sseRef.current = null;
+    }
+
+    // Réinitialiser tous les états liés à l'envoi/traitement
+    setSelectedFile(null);
+    setMergedMarkdown("");
+    setMetadata(null);
+    setSecurityAnalysis(null);
+    setContentAnalysis(null);
+    setDocumentInfo(null);
+    setIsLoading(false);
+    setUploadProgress(0);
+    setProcProgress(0);
+    setProcStage("");
+    setCurrentJobId(null);
+    setPreviewReady(false);
+    setMessage("");
+    setIsDragging(false);
+
+    // Réinitialiser l'input fichier et ouvrir le sélecteur
+    if (fileInputRef.current) {
+      try { fileInputRef.current.value = null; } catch {}
+    }
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   // Les images sont désormais rendues directement dans l'aperçu Markdown.
@@ -487,7 +655,16 @@ function Upload() {
         setMetadata(null);
         setSecurityAnalysis(null);
         setContentAnalysis(null);
+        setPreviewReady(false);
         setIsLoading(true);
+        setUploadProgress(0);
+        setProcProgress(0);
+        setProcStage("");
+        setDocumentInfo(null);
+        if (sseRef.current) {
+          try { sseRef.current.close(); } catch {}
+          sseRef.current = null;
+        }
 
         const formData = new FormData();
         formData.append('file', file);
@@ -499,71 +676,55 @@ function Upload() {
         if (metadata?.author) {
           formData.append('author', metadata.author);
         }
+        // Utiliser XMLHttpRequest pour suivre la progression d'upload
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_UPLOAD}`);
+        // Headers (EventSource ne supporte pas les headers, mais ici c'est l'upload)
+        try {
+          xhr.setRequestHeader('Username', localStorage.getItem(STORAGE_KEYS.USERNAME) || '');
+          xhr.setRequestHeader('authorization', `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}`);
+        } catch {}
 
-        fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_UPLOAD}`, {
-          method: "POST",
-          headers: {'Username': localStorage.getItem(STORAGE_KEYS.USERNAME), "authorization" : `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}`},
-          body: formData,
-        })
-          .then(async (response) => {
-            if (!response.ok) {
-              const error = await response.json().catch(() => ({}));
-              setMessage(`Erreur serveur : ${error.detail || response.statusText}`);
-              return;
-            }
-            const result = await response.json();
-            const result_document = result.data
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percent);
+          }
+        };
 
-            try {
-              if (result.success) {
-
-                // Extraire le markdown
-                if (result_document.markdown.content) {
-                  setMergedMarkdown(result_document.markdown.content);
-                }
-
-                // Les images sont incluses directement dans le Markdown et seront rendues inline
-
-                // Extraire les métadonnées (déjà normalisées par le backend)
-                if (result_document.normalized_metadata) {
-                  setMetadata(result_document.normalized_metadata);
-                }
-
-                // Extraire l'analyse de sécurité
-                if (result_document.security_analysis) {
-                  setSecurityAnalysis(result_document.security_analysis);
-                }
-
-                // Extraire l'analyse de contenu
-                if (result_document.content_analysis) {
-                  setContentAnalysis(result_document.content_analysis);
-                }
-
-                // Stocker les informations du document
-                const textLength = result_document.markdown.content ? result_document.markdown.content.length : 0;
-
-                setDocumentInfo({
-                  title: result_document.metadata.title,
-                  author: result_document.metadata.author,
-                  message: result.message,
-                  is_compliant: result_document.metadata.is_appropriate,
-                  uploader: result_document.uploader.username,
-                  status: result_document.status,
-                  textLength: textLength,
-                  documentId: result_document.document_id
-                });
-
-                setMessage(result.message);
-              } else {
-                setMessage(`Traitement terminé (${new Date().toLocaleTimeString()})`);
+        xhr.onload = async () => {
+          // 202 attendu avec { data: { job_id } }
+          try {
+            const json = JSON.parse(xhr.responseText || '{}');
+            if (xhr.status === 202 && json?.data?.job_id) {
+              setCurrentJobId(json.data.job_id);
+              setMessage('Traitement lancé');
+              // Démarrer le suivi SSE
+              startSSE(json.data.job_id);
+            } else if (xhr.status >= 200 && xhr.status < 300) {
+              // Compatibilité: si le backend renvoie directement le document (ancien comportement)
+              const result_document = json?.data;
+              if (result_document) {
+                hydrateFromDocument(result_document, json?.message);
               }
-            } catch (err) {
-              console.error('Erreur lors de l\'extraction des données:', err);
-              setMessage('Erreur lors du traitement de la réponse');
+              setIsLoading(false);
+            } else {
+              const errMsg = json?.error || json?.detail || xhr.statusText;
+              setMessage(`Erreur serveur : ${errMsg}`);
+              setIsLoading(false);
             }
-          })
-          .catch((err) => setMessage(`Erreur réseau : ${err}`))
-          .finally(() => setIsLoading(false));
+          } catch (e) {
+            setMessage('Erreur lors du traitement de la réponse');
+            setIsLoading(false);
+          }
+        };
+
+        xhr.onerror = () => {
+          setMessage('Erreur réseau pendant l\'upload');
+          setIsLoading(false);
+        };
+
+        xhr.send(formData);
       } else {
         setMessage("Erreur : Veuillez sélectionner un fichier PDF.");
       }
@@ -627,14 +788,29 @@ function Upload() {
             <div style={styles.loadingContainer}>
               <div style={styles.loader}></div>
               <div style={styles.loadingText}>
-                Traitement du PDF en cours...
+                {uploadProgress < 100 ? (
+                  <>
+                    <div>Envoi du fichier... {uploadProgress}%</div>
+                    <div style={{marginTop: 6, height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden'}}>
+                      <div style={{width: `${uploadProgress}%`, height: '100%', background: '#2196f3', transition: 'width 0.2s'}}></div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>Traitement côté serveur... {procProgress}%</div>
+                    {procStage && <div style={{fontSize: 12, color: '#555'}}>Étape: {procStage}</div>}
+                    <div style={{marginTop: 6, height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden'}}>
+                      <div style={{width: `${procProgress}%`, height: '100%', background: '#4caf50', transition: 'width 0.2s'}}></div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
           {message && !isLoading && !documentInfo && <p style={styles.message}>{message}</p>}
 
 
-          {(securityAnalysis || contentAnalysis || metadata || mergedMarkdown || documentInfo) && !isLoading && (
+          {(securityAnalysis || contentAnalysis || metadata || mergedMarkdown || documentInfo) && (!isLoading || previewReady) && (
             <div
               style={{
                 ...styles.gridContainer,
@@ -685,6 +861,20 @@ function Upload() {
                                   📥 Télécharger .md
                                 </button>
                             )}
+                            <button
+                              onClick={resetAndStartNewUpload}
+                              style={{
+                                ...styles.downloadButton,
+                                padding: '6px 12px',
+                                fontSize: 13,
+                                backgroundColor: '#1976d2'
+                              }}
+                              onMouseEnter={(e) => (e.target.style.backgroundColor = '#1565c0')}
+                              onMouseLeave={(e) => (e.target.style.backgroundColor = '#1976d2')}
+                              aria-label="Renvoyer un nouveau document"
+                            >
+                              ➕ Renvoyer un nouveau document
+                            </button>
                           </div>
                         </div>
 

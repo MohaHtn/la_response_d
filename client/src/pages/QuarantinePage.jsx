@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import { API_CONFIG, STORAGE_KEYS, MODERATION_ACTIONS, ROUTES } from '../constants';
+import { MODERATION_ACTIONS, ROUTES } from '../constants';
+import { moderationService } from '../services/moderation.service';
+import { colors, spacing, radii } from '../styles/tokens';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const styles = {
   container: {
     width: '100%',
     minHeight: '100vh',
-    padding: '32px',
+    padding: spacing.xl,
     // espace supérieur pour le Header fixé (évite que les boutons soient masqués)
     paddingTop: '92px',
     boxSizing: 'border-box',
@@ -22,28 +26,28 @@ const styles = {
   },
   help: {
     fontSize: '13px',
-    color: '#555',
+    color: colors.muted,
     marginBottom: '16px',
   },
   list: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: spacing.sm,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: '8px',
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     boxShadow: '0 1px 6px rgba(0,0,0,0.08)',
-    padding: '16px',
+    padding: spacing.md,
     display: 'flex',
-    gap: '16px',
+    gap: spacing.md,
     alignItems: 'flex-start',
   },
   cover: {
     width: '90px',
     height: '124px',
     backgroundColor: '#e8eefb',
-    borderRadius: '6px',
+    borderRadius: radii.sm,
     objectFit: 'cover',
     flexShrink: 0,
   },
@@ -77,19 +81,19 @@ const styles = {
     fontSize: '12px',
     color: '#a13b00',
     backgroundColor: '#fff3e0',
-    padding: '8px',
-    borderRadius: '6px',
-    marginBottom: '12px',
+    padding: spacing.xs,
+    borderRadius: radii.sm,
+    marginBottom: spacing.sm,
   },
   actions: {
     display: 'flex',
-    gap: '8px',
+    gap: spacing.xs,
   },
   btnApprove: {
     padding: '8px 12px',
     backgroundColor: '#2e7d32',
     color: 'white',
-    borderRadius: '6px',
+    borderRadius: radii.sm,
     border: 'none',
     cursor: 'pointer',
   },
@@ -97,7 +101,7 @@ const styles = {
     padding: '8px 12px',
     backgroundColor: '#c62828',
     color: 'white',
-    borderRadius: '6px',
+    borderRadius: radii.sm,
     border: 'none',
     cursor: 'pointer',
   },
@@ -105,7 +109,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '12px',
+    marginBottom: spacing.sm,
   },
   refreshBtn: {
     padding: '6px 10px',
@@ -118,16 +122,9 @@ const styles = {
   }
 };
 
-function getToken() {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) || '';
-  } catch {
-    return '';
-  }
-}
-
 export default function QuarantinePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -137,22 +134,10 @@ export default function QuarantinePage() {
     setLoading(true);
     setError('');
     try {
-      const token = getToken();
-      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = payload?.detail || payload?.message || 'Erreur serveur';
-        throw new Error(msg);
-      }
-      // L'API renvoie { success: true, data: [...] }
-      const documents = payload.data || payload.documents || [];
+      const documents = await moderationService.getQuarantineList();
       setDocs(Array.isArray(documents) ? documents : []);
     } catch (e) {
-      setError(e?.message || 'Erreur inconnue');
+      setError(e?.message || '');
     } finally {
       setLoading(false);
     }
@@ -165,22 +150,10 @@ export default function QuarantinePage() {
   async function moderate(document_id, action) {
     try {
       setBusyId(document_id + ':' + action);
-      const token = getToken();
-      const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_MODERATE(document_id)}?action=${action}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = payload?.detail || payload?.message || 'Erreur serveur';
-        throw new Error(msg);
-      }
-      // Rafraîchir la liste
+      await moderationService.moderateQuarantine(document_id, action);
       await fetchDocs();
     } catch (e) {
-      setError(e?.message || 'Erreur inconnue');
+      setError(e?.message || '');
     } finally {
       setBusyId('');
     }
@@ -193,47 +166,47 @@ export default function QuarantinePage() {
         {/* Bouton retour */}
         <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => navigate(ROUTES.HOME)}
             style={{
               padding: '8px 16px',
               fontSize: '14px',
-              backgroundColor: '#1976d2',
+              backgroundColor: colors.primary,
               color: 'white',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: radii.sm,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}
           >
-            <span>←</span> retour a la bibliothèque
+            <span>←</span> {t('quarantine.backToLibrary')}
           </button>
 
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate(ROUTES.ADMIN)}
             style={{
               padding: '8px 16px',
               fontSize: '14px',
               backgroundColor: '#6c757d',
               color: 'white',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: radii.sm,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}
           >
-            <span>←</span> Retour au panneau admin
+            <span>←</span> {t("quarantine.backToAdmin")}
           </button>
         </div>
 
         <div style={styles.toolbar}>
-          <h1 style={styles.title}>📚 Livres en quarantaine</h1>
-          <button onClick={fetchDocs} style={styles.refreshBtn}>Rafraîchir</button>
+          <h1 style={styles.title}>{t('quarantine.title')}</h1>
+          <button onClick={fetchDocs} style={styles.refreshBtn}>{t('quarantine.refresh')}</button>
         </div>
-        <div style={styles.help}>Cette page est réservée aux administrateurs. Vous pouvez approuver (déplacer vers la bibliothèque) ou rejeter (supprimer) les documents placés en quarantaine.</div>
+        <div style={styles.help}>{t('quarantine.help')}</div>
 
         {error && (
           <div style={{padding: '12px', background: '#ffebee', color: '#c62828', borderRadius: '8px', marginBottom: '12px'}}>
@@ -242,16 +215,16 @@ export default function QuarantinePage() {
         )}
 
         {loading ? (
-          <div style={{padding: '24px', color: '#666'}}>Chargement…</div>
+          <div style={{padding: '24px', color: '#666'}}>{t('loading.generic')}</div>
         ) : (
           <div style={styles.list}>
             {docs.length === 0 && (
-              <div style={{padding: '12px', color: '#666'}}>Aucun document en quarantaine.</div>
+              <div style={{padding: '12px', color: '#666'}}>{t('quarantine.none')}</div>
             )}
             {docs.map((doc) => {
               const id = doc?.document_id || doc?.id || '';
-              const title = doc?.metadata?.title || 'Sans titre';
-              const author = doc?.metadata?.author || 'Auteur inconnu';
+              const title = doc?.metadata?.title || t('quarantine.untitled');
+              const author = doc?.metadata?.author || t('quarantine.unknownAuthor');
               const preview = doc?.preview || '';
               const cover = doc?.cover_image || '';
               const issues = (doc?.compliance_issues && doc.compliance_issues.length)
@@ -261,26 +234,26 @@ export default function QuarantinePage() {
               return (
                 <div key={id} style={styles.card}>
                   {cover ? (
-                    <img src={cover} alt={`Couverture de ${title}`} style={styles.cover}/>
+                    <img src={cover} alt={t('quarantine.coverOf', { title })} style={styles.cover}/>
                   ) : (
-                    <div role="img" aria-label={`Couverture de ${title}`} style={styles.cover} />
+                    <div role="img" aria-label={t('quarantine.coverOf', { title })} style={styles.cover} />
                   )}
                   <div style={styles.content}>
-                    <div style={styles.bookTitle}>{title}</div>
-                    <div style={styles.bookMeta}>par {author} — id: {id}</div>
+                    <Link to={ROUTES.MODERATION(encodeURIComponent(id))} style={styles.bookTitle}>{title}</Link>
+                    <div style={styles.bookMeta}>{t('quarantine.by')} {author} — id: {id}</div>
                     {preview && <div style={styles.preview}>{preview}</div>}
-                    {issues && <div style={styles.issues}>Motifs: {issues}</div>}
+                    {issues && <div style={styles.issues}>{t('quarantine.issues')} {issues}</div>}
                     <div style={styles.actions}>
                       <button
                         style={styles.btnApprove}
                         disabled={!id}
                         onClick={() => navigate(ROUTES.MODERATION(encodeURIComponent(id)))}
-                      >✅ Approuver</button>
+                      >✅ {t('quarantine.approve')}</button>
                       <button
                         style={styles.btnReject}
                         disabled={!id || busyId === id+':reject'}
                         onClick={() => moderate(id, MODERATION_ACTIONS.REJECT)}
-                      >🗑️ Rejeter</button>
+                      >🗑️ {t('quarantine.reject')}</button>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.routers import auth_router, documents_router, moderation_router, setup_router
+from .api.routers import auth_router, documents_router, moderation_router, setup_router, admin_router
 from .api.middleware import error_handler_middleware, logging_middleware
 from .api.routes import router as legacy_router
 
@@ -42,6 +42,7 @@ app.include_router(auth_router)
 app.include_router(documents_router)
 app.include_router(moderation_router)
 app.include_router(setup_router)
+app.include_router(admin_router)
 app.include_router(legacy_router)  # send-book endpoint
 
 
