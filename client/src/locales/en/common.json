@@ -25,7 +25,8 @@
     "cancel": "Cancel"
   },
   "loading": {
-    "validations": "Loading validations…"
+    "validations": "Loading validations…",
+    "generic": "Loading…"
   },
   "errors": {
     "prefix": "Error"
@@ -42,7 +43,8 @@
       "status": "Status",
       "date": "Date",
       "validated": "Validated",
-      "pending": "Pending"
+      "pending": "Pending",
+      "moderatorN": "Moderator {{index}}"
     },
     "alerts": {
       "fullyValidated": "🎉 This book has been validated by 3 moderators and can be published immediately!",
@@ -55,6 +57,135 @@
       "author": "Author",
       "tags": "Tags (comma separated)",
       "content": "Content / Summary"
+    }
+  },
+  "quarantine": {
+    "title": "📚 Books in quarantine",
+    "refresh": "Refresh",
+    "help": "You can approve (move to the library) or reject (delete) documents placed in quarantine.",
+    "backToLibrary": "Back to the library",
+    "backToAdmin": "Back to admin panel",
+    "none": "No document in quarantine.",
+    "by": "by",
+    "unknownAuthor": "Unknown author",
+    "untitled": "Untitled",
+    "issues": "Issues:",
+    "approve": "Approve",
+    "reject": "Reject",
+    "coverOf": "Cover of {{title}}"
+  },
+  "admin": {
+    "title": "Admin panel",
+    "subtitle": "Manage users, books, and moderation",
+    "stats": {
+      "users": "Users",
+      "totalBooks": "Total books",
+      "pendingModeration": "Books in moderation",
+      "approvedBooks": "Approved books"
+    },
+    "tabs": {
+      "pending": "Pending books",
+      "all": "All books",
+      "users": "Users"
+    },
+    "pending": {
+      "info": "These books are awaiting validation by moderators",
+      "sortLabel": "Sort by:",
+      "sort": {
+        "date": "Date",
+        "title": "Title",
+        "author": "Author"
+      },
+      "table": {
+        "title": "Title",
+        "author": "Author",
+        "submittedBy": "Submitted by",
+        "date": "Date",
+        "validations": "Validations",
+        "actions": "Actions"
+      },
+      "buttons": {
+        "moderate": "Moderate",
+        "view": "View"
+      }
+    },
+    "all": {
+      "info": "Complete list of all books in the library",
+      "none": "No books available",
+      "table": {
+        "title": "Title",
+        "author": "Author",
+        "submittedBy": "Submitted by",
+        "date": "Date",
+        "status": "Status",
+        "validations": "Validations",
+        "actions": "Actions"
+      },
+      "status": {
+        "ok": "Approved",
+        "waiting": "Pending"
+      },
+      "buttons": {
+        "moderate": "Moderate",
+        "view": "View"
+      }
+    },
+    "users": {
+      "table": {
+        "username": "Username",
+        "email": "Email",
+        "accountType": "Account type",
+        "registrationDate": "Registration date",
+        "actions": "Actions"
+      },
+      "buttons": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "dialog": {
+        "editTitle": "Edit user",
+        "username": "Username",
+        "email": "Email",
+        "accountType": "Account type",
+        "newPassword": "New password (optional)",
+        "passwordHint": "Leave empty to keep the current password"
+      }
+    },
+    "loading": {
+      "data": "Loading data..."
+    }
+  },
+  "home": {
+    "loadingDocuments": "Loading documents...",
+    "myUploads": {
+      "title": "📤 My uploaded documents ({{count}})"
+    },
+    "read": "Read",
+    "moderate": "Moderate",
+    "coverOf": "Cover of {{title}}",
+    "uploadedOn": "Uploaded on {{date}}",
+    "pagination": "Page {{page}} / {{total}} — {{count}} item(s)"
+  },
+  "presentation": {
+    "title": "Biblioteko - Your collaborative digital library",
+    "about": "About the project",
+    "aboutText": "Biblioteko is an innovative platform that enables digitization, sharing, and browsing of literary works while respecting copyright. Our goal is to facilitate access to knowledge while preserving our literary heritage.",
+    "features": "Main features",
+    "featureList": {
+      "consult": "📚 Browsing digitized works",
+      "ocr": "🔍 Advanced text recognition (OCR)",
+      "edit": "📝 Collaborative content editing",
+      "rights": "🔐 Access rights management and moderation"
+    },
+    "gettingStarted": "Getting started with Biblioteko",
+    "gettingStartedText": "To take full advantage of all features, create an account or sign in:",
+    "why": "Why use Biblioteko?",
+    "whyText": "Our platform offers a unique approach to preserving and sharing knowledge:",
+    "whyList": {
+      "ui": "✨ Modern and intuitive interface",
+      "collab": "🤝 Collaboration between members",
+      "responsive": "📱 Accessible on all devices",
+      "security": "🔒 Security and respect of copyright"
     }
   }
 }

@@ -75,4 +75,121 @@
     "reject": "Rejeter",
     "coverOf": "Couverture de {{title}}"
   }
+  ,
+  "admin": {
+    "title": "Panneau d'administration",
+    "subtitle": "Gérez les utilisateurs, les livres et la modération",
+    "stats": {
+      "users": "Utilisateurs",
+      "totalBooks": "Livres au total",
+      "pendingModeration": "Livres en modération",
+      "approvedBooks": "Livres validés"
+    },
+    "tabs": {
+      "pending": "Livres en attente",
+      "all": "Tous les livres",
+      "users": "Utilisateurs"
+    },
+    "pending": {
+      "info": "Ces livres sont en attente de validation par les modérateurs",
+      "sortLabel": "Trier par:",
+      "sort": {
+        "date": "Date",
+        "title": "Titre",
+        "author": "Auteur"
+      },
+      "table": {
+        "title": "Titre",
+        "author": "Auteur",
+        "submittedBy": "Soumis par",
+        "date": "Date",
+        "validations": "Validations",
+        "actions": "Actions"
+      },
+      "buttons": {
+        "moderate": "Modérer",
+        "view": "Voir"
+      }
+    },
+    "all": {
+      "info": "Liste complète de tous les livres de la bibliothèque",
+      "none": "Aucun livre disponible",
+      "table": {
+        "title": "Titre",
+        "author": "Auteur",
+        "submittedBy": "Soumis par",
+        "date": "Date",
+        "status": "Statut",
+        "validations": "Validations",
+        "actions": "Actions"
+      },
+      "status": {
+        "ok": "Approuvé",
+        "waiting": "En attente"
+      },
+      "buttons": {
+        "moderate": "Modérer",
+        "view": "Voir"
+      }
+    },
+    "users": {
+      "table": {
+        "username": "Nom d'utilisateur",
+        "email": "Email",
+        "accountType": "Type de compte",
+        "registrationDate": "Date d'inscription",
+        "actions": "Actions"
+      },
+      "buttons": {
+        "edit": "Modifier",
+        "delete": "Supprimer"
+      },
+      "dialog": {
+        "editTitle": "Modifier l’utilisateur",
+        "username": "Nom d’utilisateur",
+        "email": "Email",
+        "accountType": "Type de compte",
+        "newPassword": "Nouveau mot de passe (optionnel)",
+        "passwordHint": "Laissez vide pour ne pas modifier le mot de passe"
+      }
+    },
+    "loading": {
+      "data": "Chargement des données..."
+    }
+  }
+  ,
+  "home": {
+    "loadingDocuments": "Chargement des documents...",
+    "myUploads": {
+      "title": "📤 Mes documents uploadés ({{count}})"
+    },
+    "read": "Lire",
+    "moderate": "Modérer",
+    "coverOf": "Couverture de {{title}}",
+    "uploadedOn": "Uploadé le {{date}}",
+    "pagination": "Page {{page}} / {{total}} — {{count}} élément(s)"
+  }
+  ,
+  "presentation": {
+    "title": "Bibliothéko - Votre bibliothèque numérique collaborative",
+    "about": "À propos du projet",
+    "aboutText": "Bibliothéko est une plateforme innovante qui permet la numérisation, le partage et la consultation d'œuvres littéraires dans le respect du droit d'auteur. Notre objectif est de faciliter l'accès à la connaissance tout en préservant notre patrimoine littéraire.",
+    "features": "Fonctionnalités principales",
+    "featureList": {
+      "consult": "📚 Consultation d'œuvres numérisées",
+      "ocr": "🔍 Reconnaissance de texte (OCR) avancée",
+      "edit": "📝 Édition collaborative de contenus",
+      "rights": "🔐 Gestion des droits d'accès et modération"
+    },
+    "gettingStarted": "Commencer à utiliser Bibliothéko",
+    "gettingStartedText": "Pour profiter pleinement de toutes les fonctionnalités, créez un compte ou connectez-vous :",
+    "why": "Pourquoi utiliser Bibliothéko ?",
+    "whyText": "Notre plateforme offre une approche unique pour la préservation et le partage du savoir :",
+    "whyList": {
+      "ui": "✨ Interface moderne et intuitive",
+      "collab": "🤝 Collaboration entre membres",
+      "responsive": "📱 Accessible sur tous les appareils",
+      "security": "🔒 Sécurité et respect des droits d'auteur"
+    }
+  }
 }
