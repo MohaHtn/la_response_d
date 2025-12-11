@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from './components/Header';
 import { API_CONFIG, STORAGE_KEYS, ROUTES, MESSAGES, USER_TYPES } from "./constants/index.js";
+import { useTranslation } from 'react-i18next';
 
 const styles = {
   container: {
@@ -326,6 +327,7 @@ const styles = {
 };
 
 function Home() {
+  const { t } = useTranslation();
   const [library, setLibrary] = useState([]);
   const [started, setStarted] = useState([]);
   const [myDocuments, setMyDocuments] = useState([]);
@@ -345,8 +347,8 @@ function Home() {
     Array.isArray(documentsArray)
       ? documentsArray.map(doc => ({
           id: doc.document_id,
-          title: doc.metadata?.title || 'Sans titre',
-          author: doc.metadata?.author || 'Auteur inconnu',
+          title: doc.metadata?.title || t('quarantine.untitled'),
+          author: doc.metadata?.author || t('quarantine.unknownAuthor'),
           status: doc.moderation?.approval_process?.status || 'unknown',
           preview: doc.preview || '',
           uploadedAt: doc.uploader?.upload_date || null,
@@ -390,7 +392,7 @@ function Home() {
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}`);
 
         if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des documents');
+          throw new Error(t('errors.prefix'));
         }
 
         const data = await response.json();
@@ -514,14 +516,14 @@ function Home() {
               textAlign: 'center',
               color: '#666'
             }}>
-              Chargement des documents...
+              {t('home.loadingDocuments')}
             </div>
           )}
 
           {/* Section Mes Documents Uploadés */}
           {username && myDocuments.length > 0 && (
             <div style={styles.myDocumentsSection}>
-              <div style={styles.sectionTitle}>📤 Mes documents uploadés ({myDocuments.length})</div>
+              <div style={styles.sectionTitle}>{t('home.myUploads.title', { count: myDocuments.length })}</div>
 
               {viewMode === 'grid' ? (
                 <div style={styles.libraryGrid}>
@@ -530,11 +532,11 @@ function Home() {
                       {book.coverImage ? (
                         <img
                           src={book.coverImage}
-                          alt={`Couverture de ${book.title}`}
+                          alt={t('home.coverOf', { title: book.title })}
                           style={styles.libraryCover}
                         />
                       ) : (
-                        <div style={styles.libraryCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                        <div style={styles.libraryCover} role="img" aria-label={t('home.coverOf', { title: book.title })} />
                       )}
                       <div>
                         <div style={styles.libraryTitle}>{book.title}</div>
@@ -546,17 +548,17 @@ function Home() {
                         )}
                         {book.uploadedAt && (
                           <div style={{ fontSize: '10px', color: '#999', marginTop: '6px' }}>
-                            Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
+                            {t('home.uploadedOn', { date: new Date(book.uploadedAt).toLocaleDateString(undefined) })}
                           </div>
                         )}
                       </div>
                       <div style={styles.buttonContainer}>
                         <Link to={ROUTES.BOOK(book.id)} style={styles.readButton}>
-                          Lire
+                          {t('home.read')}
                         </Link>
                         {userRole === USER_TYPES.ADMIN && (
                           <Link to={ROUTES.MODERATION(book.id)} style={styles.moderateButton}>
-                            Modérer
+                            {t('home.moderate')}
                           </Link>
                         )}
                       </div>
@@ -579,11 +581,11 @@ function Home() {
                       {book.coverImage ? (
                         <img
                           src={book.coverImage}
-                          alt={`Couverture de ${book.title}`}
+                          alt={t('home.coverOf', { title: book.title })}
                           style={styles.listCover}
                         />
                       ) : (
-                        <div style={styles.listCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                        <div style={styles.listCover} role="img" aria-label={t('home.coverOf', { title: book.title })} />
                       )}
                       <div style={styles.listContent}>
                         <div style={styles.listTitle}>{book.title}</div>
@@ -595,20 +597,20 @@ function Home() {
                         )}
                         {book.uploadedAt && (
                           <div style={{ fontSize: '11px', color: '#999', marginTop: 'auto' }}>
-                            📅 Uploadé le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}
+                            📅 {t('home.uploadedOn', { date: new Date(book.uploadedAt).toLocaleDateString(undefined) })}
                           </div>
                         )}
                       </div>
                       <div style={styles.listActions}>
                         <Link to={ROUTES.BOOK(book.id)} style={styles.listButton}>
-                          Lire
+                          {t('home.read')}
                         </Link>
                         {userRole === USER_TYPES.ADMIN && (
                           <Link
                             to={ROUTES.MODERATION(book.id)}
                             style={{...styles.listButton, ...styles.listButtonModerate}}
                           >
-                            Modérer
+                            {t('home.moderate')}
                           </Link>
                         )}
                       </div>
@@ -620,7 +622,7 @@ function Home() {
               {myDocuments.length > 0 && (
                 <div style={styles.paginationContainer}>
                   <div style={styles.paginationInfo}>
-                    Page {safePageMy} / {Math.max(1, totalPagesMy)} — {myDocuments.length} éléments
+                    {t('home.pagination', { page: safePageMy, total: Math.max(1, totalPagesMy), count: myDocuments.length })}
                   </div>
                   <div style={styles.paginationButtons}>
                     <button
@@ -680,18 +682,18 @@ function Home() {
                           )}
                           {book.uploaderName && book.uploadedAt && ' · '}
                           {book.uploadedAt && (
-                            <span>le {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                            <span>{t('home.uploadedOn', { date: new Date(book.uploadedAt).toLocaleDateString(undefined) })}</span>
                           )}
                         </div>
                       )}
                     </div>
                     <div style={styles.buttonContainer}>
                       <Link to={ROUTES.BOOK(book.id)} style={styles.readButton}>
-                        Lire
+                        {t('home.read')}
                       </Link>
                       {userRole === USER_TYPES.ADMIN && (
                         <Link to={ROUTES.MODERATION(book.id)} style={styles.moderateButton}>
-                          Modérer
+                          {t('home.moderate')}
                         </Link>
                       )}
                     </div>
@@ -714,11 +716,11 @@ function Home() {
                     {book.coverImage ? (
                       <img
                         src={book.coverImage}
-                        alt={`Couverture de ${book.title}`}
+                        alt={t('home.coverOf', { title: book.title })}
                         style={styles.listCover}
                       />
                     ) : (
-                      <div style={styles.listCover} role="img" aria-label={`Couverture de ${book.title}`} />
+                      <div style={styles.listCover} role="img" aria-label={t('home.coverOf', { title: book.title })} />
                     )}
                     <div style={styles.listContent}>
                       <div style={styles.listTitle}>{book.title}</div>
@@ -735,21 +737,21 @@ function Home() {
                           )}
                           {book.uploaderName && book.uploadedAt && ' · '}
                           {book.uploadedAt && (
-                            <span>📅 {new Date(book.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                            <span>📅 {t('home.uploadedOn', { date: new Date(book.uploadedAt).toLocaleDateString(undefined) })}</span>
                           )}
                         </div>
                       )}
                     </div>
                     <div style={styles.listActions}>
                       <Link to={ROUTES.BOOK(book.id)} style={styles.listButton}>
-                        Lire
+                        {t('home.read')}
                       </Link>
                       {userRole === USER_TYPES.ADMIN && (
                         <Link
                           to={ROUTES.MODERATION(book.id)}
                           style={{...styles.listButton, ...styles.listButtonModerate}}
                         >
-                          Modérer
+                          {t('home.moderate')}
                         </Link>
                       )}
                     </div>
@@ -761,7 +763,7 @@ function Home() {
             {library.length > 0 && (
               <div style={styles.paginationContainer}>
                 <div style={styles.paginationInfo}>
-                  Page {safePageAll} / {Math.max(1, totalPagesAll)} — {library.length} éléments
+                  {t('home.pagination', { page: safePageAll, total: Math.max(1, totalPagesAll), count: library.length })}
                 </div>
                 <div style={styles.paginationButtons}>
                   <button
@@ -772,7 +774,7 @@ function Home() {
                     onClick={() => safePageAll > 1 && setPageAll(safePageAll - 1)}
                     disabled={safePageAll <= 1}
                   >
-                    ← Précédent
+                    {t('home.prev')}
                   </button>
                   <button
                     style={{
@@ -782,7 +784,7 @@ function Home() {
                     onClick={() => safePageAll < totalPagesAll && setPageAll(safePageAll + 1)}
                     disabled={safePageAll >= totalPagesAll}
                   >
-                    Suivant →
+                    {t('home.next')}
                   </button>
                 </div>
               </div>
@@ -790,7 +792,7 @@ function Home() {
           </div>
 
           <div>
-            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>← Retour</Link>
+            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>{t('home.back')}</Link>
           </div>
         </div>
       </div>

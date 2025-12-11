@@ -1,6 +1,7 @@
 import React from 'react';
 import { Typography, Paper, Container, Box } from '@mui/material';
 import Header from './components/Header';
+import { useTranslation } from 'react-i18next';
 
 const styles = {
   root: {
@@ -44,42 +45,41 @@ const styles = {
 };
 
 function Presentation() {
+  const { t } = useTranslation();
   return (
     <Box sx={styles.root}>
       <Header />
       <Container maxWidth="lg">
         <Paper sx={styles.paper} elevation={3}>
           <Typography variant="h3" component="h1" sx={styles.title}>
-            Bibliothéko - Votre bibliothèque numérique collaborative
+            {t('presentation.title')}
           </Typography>
           
           <Box sx={styles.section}>
             <Typography variant="h5" sx={styles.subtitle}>
-              À propos du projet
+              {t('presentation.about')}
             </Typography>
             <Typography variant="body1" sx={{ marginBottom: '1rem' }}>
-              Bibliothéko est une plateforme innovante qui permet la numérisation, le partage et la consultation
-              d'œuvres littéraires dans le respect du droit d'auteur. Notre objectif est de faciliter l'accès 
-              à la connaissance tout en préservant notre patrimoine littéraire.
+              {t('presentation.aboutText')}
             </Typography>
           </Box>
 
           <Box sx={styles.section}>
             <Typography variant="h5" sx={styles.subtitle}>
-              Fonctionnalités principales
+              {t('presentation.features')}
             </Typography>
             <Box sx={{ marginLeft: '16px' }}>
               <Typography sx={styles.feature}>
-                📚 Consultation d'œuvres numérisées
+                {t('presentation.featureList.consult')}
               </Typography>
               <Typography sx={styles.feature}>
-                🔍 Reconnaissance de texte (OCR) avancée
+                {t('presentation.featureList.ocr')}
               </Typography>
               <Typography sx={styles.feature}>
-                📝 Édition collaborative de contenus
+                {t('presentation.featureList.edit')}
               </Typography>
               <Typography sx={styles.feature}>
-                🔐 Gestion des droits d'accès et modération
+                {t('presentation.featureList.rights')}
               </Typography>
             </Box>
           </Box>
@@ -88,10 +88,10 @@ function Presentation() {
 
           <Box sx={styles.section}>
             <Typography variant="h5" sx={styles.subtitle}>
-              Commencer à utiliser Bibliothéko
+              {t('presentation.gettingStarted')}
             </Typography>
             <Typography variant="body1" sx={{ marginBottom: '1rem' }}>
-              Pour profiter pleinement de toutes les fonctionnalités, créez un compte ou connectez-vous :
+              {t('presentation.gettingStartedText')}
             </Typography>
 
           </Box>
@@ -99,23 +99,23 @@ function Presentation() {
 
         <Paper sx={styles.paper} elevation={3}>
           <Typography variant="h5" sx={styles.subtitle}>
-            Pourquoi utiliser Bibliothéko ?
+            {t('presentation.why')}
           </Typography>
           <Typography variant="body1" sx={{ marginBottom: '1rem' }}>
-            Notre plateforme offre une approche unique pour la préservation et le partage du savoir :
+            {t('presentation.whyText')}
           </Typography>
           <Box sx={{ marginLeft: '16px' }}>
             <Typography sx={styles.feature}>
-              ✨ Interface moderne et intuitive
+              {t('presentation.whyList.ui')}
             </Typography>
             <Typography sx={styles.feature}>
-              🤝 Collaboration entre membres
+              {t('presentation.whyList.collab')}
             </Typography>
             <Typography sx={styles.feature}>
-              📱 Accessible sur tous les appareils
+              {t('presentation.whyList.responsive')}
             </Typography>
             <Typography sx={styles.feature}>
-              🔒 Sécurité et respect des droits d'auteur
+              {t('presentation.whyList.security')}
             </Typography>
           </Box>
         </Paper>

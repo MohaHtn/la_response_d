@@ -191,5 +191,20 @@
       "responsive": "📱 Accessible sur tous les appareils",
       "security": "🔒 Sécurité et respect des droits d'auteur"
     }
+  },
+  "auth": {
+    "title": "Connexion / Inscription",
+    "loginTab": "Connexion",
+    "signupTab": "Inscription",
+    "backToHome": "Retour à l'accueil",
+    "form": {
+      "username": "Pseudonyme",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "loading": "En cours...",
+      "login": "Se connecter",
+      "signup": "S'inscrire"
+    }
   }
 }

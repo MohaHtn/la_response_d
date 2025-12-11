@@ -164,7 +164,12 @@
     "moderate": "Moderate",
     "coverOf": "Cover of {{title}}",
     "uploadedOn": "Uploaded on {{date}}",
-    "pagination": "Page {{page}} / {{total}} — {{count}} item(s)"
+    "pagination": "Page {{page}} / {{total}} — {{count}} item(s)",
+    "prev": "← Previous",
+    "next": "Next →",
+    "back": "← Back",
+    "allBooks": "All books",
+    "byUploader": "By {{name}}"
   },
   "presentation": {
     "title": "Biblioteko - Your collaborative digital library",
@@ -186,6 +191,22 @@
       "collab": "🤝 Collaboration between members",
       "responsive": "📱 Accessible on all devices",
       "security": "🔒 Security and respect of copyright"
+    }
+  }
+  ,
+  "auth": {
+    "title": "Login / Sign up",
+    "loginTab": "Login",
+    "signupTab": "Sign up",
+    "backToHome": "Back to home",
+    "form": {
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "loading": "Loading...",
+      "login": "Log in",
+      "signup": "Create account"
     }
   }
 }

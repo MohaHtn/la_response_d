@@ -7,6 +7,7 @@ import { Alert } from './components/Alert';
 import { login, register, getRedirectPath } from './services/auth.service';
 import { colors, spacing } from './styles/commonStyles';
 import { ROUTES, MESSAGES, ALERT_TYPES } from './constants';
+import { useTranslation } from 'react-i18next';
 
 const styles = {
   container: {
@@ -54,6 +55,7 @@ const styles = {
 
 function Auth() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [tab, setTab] = useState('login'); // 'login' | 'signup'
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -106,7 +108,7 @@ function Auth() {
       <Header />
       <div style={{ paddingTop: '64px' }}>
         <div style={styles.container}>
-          <h1 style={styles.title}>Connexion / Inscription</h1>
+          <h1 style={styles.title}>{t('auth.title')}</h1>
 
           <div style={styles.tabBar}>
             <button
@@ -114,14 +116,14 @@ function Auth() {
               onClick={() => setTab('login')}
               style={styles.tabButton(tab === 'login')}
             >
-              Connexion
+              {t('auth.loginTab')}
             </button>
             <button
               type="button"
               onClick={() => setTab('signup')}
               style={styles.tabButton(tab === 'signup')}
             >
-              Inscription
+              {t('auth.signupTab')}
             </button>
           </div>
 
@@ -137,7 +139,7 @@ function Auth() {
           )}
 
           <div style={{ marginTop: '28px' }}>
-            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>← Retour à l'accueil</Link>
+            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>← {t('auth.backToHome')}</Link>
           </div>
         </div>
       </div>

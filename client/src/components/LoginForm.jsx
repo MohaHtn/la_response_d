@@ -7,11 +7,13 @@ import { Input } from './Input';
 import { Button } from './Button';
 import { Alert } from './Alert';
 import { validateLoginForm } from '../utils/validators';
+import { useTranslation } from 'react-i18next';
 
 export const LoginForm = ({ onSubmit, loading }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,7 +45,7 @@ export const LoginForm = ({ onSubmit, loading }) => {
       <Alert type="error" message={error} />
 
       <Input
-        placeholder="Pseudonyme"
+        placeholder={t('auth.form.username')}
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         disabled={loading}
@@ -51,14 +53,14 @@ export const LoginForm = ({ onSubmit, loading }) => {
 
       <Input
         type="password"
-        placeholder="Mot de passe"
+        placeholder={t('auth.form.password')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         disabled={loading}
       />
 
       <Button type="submit" disabled={loading}>
-        {loading ? 'En cours...' : 'Se connecter'}
+        {loading ? t('auth.form.loading') : t('auth.form.login')}
       </Button>
     </form>
   );

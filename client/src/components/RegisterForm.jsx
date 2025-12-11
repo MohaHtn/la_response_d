@@ -7,6 +7,7 @@ import { Input } from './Input';
 import { Button } from './Button';
 import { Alert } from './Alert';
 import { validateRegisterForm } from '../utils/validators';
+import { useTranslation } from 'react-i18next';
 
 export const RegisterForm = ({ onSubmit, loading }) => {
   const [username, setUsername] = useState('');
@@ -14,6 +15,7 @@ export const RegisterForm = ({ onSubmit, loading }) => {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [error, setError] = useState(null);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +52,7 @@ export const RegisterForm = ({ onSubmit, loading }) => {
       <Alert type="error" message={error} />
 
       <Input
-        placeholder="Pseudonyme"
+        placeholder={t('auth.form.username')}
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         disabled={loading}
@@ -58,7 +60,7 @@ export const RegisterForm = ({ onSubmit, loading }) => {
 
       <Input
         type="email"
-        placeholder="Email"
+        placeholder={t('auth.form.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         disabled={loading}
@@ -66,7 +68,7 @@ export const RegisterForm = ({ onSubmit, loading }) => {
 
       <Input
         type="password"
-        placeholder="Mot de passe"
+        placeholder={t('auth.form.password')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         disabled={loading}
@@ -74,14 +76,14 @@ export const RegisterForm = ({ onSubmit, loading }) => {
 
       <Input
         type="password"
-        placeholder="Confirmer le mot de passe"
+        placeholder={t('auth.form.confirmPassword')}
         value={passwordConfirm}
         onChange={(e) => setPasswordConfirm(e.target.value)}
         disabled={loading}
       />
 
       <Button type="submit" disabled={loading}>
-        {loading ? 'En cours...' : 'S\'inscrire'}
+        {loading ? t('auth.form.loading') : t('auth.form.signup')}
       </Button>
     </form>
   );
