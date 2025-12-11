@@ -156,12 +156,14 @@ export default function Header() {
   const DrawerContent = (
     <Box sx={{ width: 290 }} role="presentation" onClick={() => setOpen(false)}>
       <List>
-        <ListItem disablePadding>
-          <ListItemButton component={RouterLink} to={ROUTES.HOME}>
-            <ListItemIcon><HomeIcon /></ListItemIcon>
-            <ListItemText primary={t('nav.home')} />
-          </ListItemButton>
-        </ListItem>
+        {isAuthenticated && (
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to={ROUTES.HOME}>
+              <ListItemIcon><HomeIcon /></ListItemIcon>
+              <ListItemText primary={t('nav.home')} />
+            </ListItemButton>
+          </ListItem>
+        )}
         {isAuthenticated && (
           <ListItem disablePadding>
             <ListItemButton component={RouterLink} to={ROUTES.UPLOAD}>
@@ -253,7 +255,7 @@ export default function Header() {
           <Typography
             variant="h6"
             component={RouterLink}
-            to={ROUTES.HOME}
+            to={isAuthenticated ? ROUTES.HOME : ROUTES.PRESENTATION}
             style={{ textDecoration: 'none', color: 'inherit' }}
             sx={{ fontWeight: 700, flexGrow: 1 }}
           >

@@ -790,15 +790,15 @@ function Upload() {
               <div style={styles.loadingText}>
                 {uploadProgress < 100 ? (
                   <>
-                    <div>Envoi du fichier... {uploadProgress}%</div>
+                    <div>Envoi du fichier ... {uploadProgress}%</div>
                     <div style={{marginTop: 6, height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden'}}>
                       <div style={{width: `${uploadProgress}%`, height: '100%', background: '#2196f3', transition: 'width 0.2s'}}></div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div>Traitement côté serveur... {procProgress}%</div>
-                    {procStage && <div style={{fontSize: 12, color: '#555'}}>Étape: {procStage}</div>}
+                    <div>Traitement du document ... {procProgress}%</div>
+                    {procStage && <div style={{fontSize: 12, color: '#555'}}>{procStage}</div>}
                     <div style={{marginTop: 6, height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden'}}>
                       <div style={{width: `${procProgress}%`, height: '100%', background: '#4caf50', transition: 'width 0.2s'}}></div>
                     </div>

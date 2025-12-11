@@ -8,6 +8,8 @@ from datetime import datetime
 from uuid import uuid4
 import asyncio
 import json
+import os
+import tempfile
 
 from ...domain.image_generator import PreviewImageGenerator
 from ...infra.repositories import document_repository
@@ -35,6 +37,25 @@ def _set_progress(job_id: str, **payload) -> None:
     # Historique : ajouter à une liste pour que le SSE puisse lire toutes les étapes
     client.rpush(_JOB_HISTORY_KEY.format(job_id=job_id), json_data)
     client.expire(_JOB_HISTORY_KEY.format(job_id=job_id), 60 * 60)
+
+def _clear_job(job_id: str) -> None:
+    """Supprime les clés Redis associées à un job donné."""
+    client = redis_manager.get_client()
+    try:
+        client.delete(_JOB_KEY.format(job_id=job_id))
+        client.delete(_JOB_HISTORY_KEY.format(job_id=job_id))
+        client.delete(_JOB_HISTORY_INDEX_KEY.format(job_id=job_id))
+    except Exception:
+        # Nettoyage best-effort: ignorer les erreurs de suppression
+        pass
+
+async def _cleanup_job_later(job_id: str, delay_seconds: float = 1.0) -> None:
+    """Planifie la suppression des clés du job après un léger délai pour laisser
+    le temps au SSE de livrer le dernier événement au client."""
+    try:
+        await asyncio.sleep(delay_seconds)
+    finally:
+        _clear_job(job_id)
 
 def _get_progress(job_id: str) -> Optional[dict]:
     """Récupère l'état courant (pour usage ponctuel)."""
@@ -73,13 +94,33 @@ async def upload_document(
             status_code=400
         )
 
-    # Lire et vérifier la taille
-    data = await file.read()
-    if len(data) > config.MAX_FILE_SIZE_BYTES:
-        return APIResponse.error(
-            message=f"Fichier trop volumineux. Taille maximale : {config.MAX_FILE_SIZE_BYTES // (1024*1024)} Mo",
-            status_code=413
-        )
+    # Écrire le fichier en chunks sur disque et vérifier la taille au fil de l'eau
+    max_size = config.MAX_FILE_SIZE_BYTES
+    total = 0
+    tmp_file_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp_file_path = tmp.name
+            while True:
+                chunk = await file.read(1024 * 1024)  # 1 MiB
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_size:
+                    tmp.close()
+                    os.remove(tmp_file_path)
+                    return APIResponse.error(
+                        message=f"Fichier trop volumineux. Taille maximale : {config.MAX_FILE_SIZE_BYTES // (1024*1024)} Mo",
+                        status_code=413
+                    )
+                tmp.write(chunk)
+    except Exception:
+        if tmp_file_path and os.path.exists(tmp_file_path):
+            try:
+                os.remove(tmp_file_path)
+            except Exception:
+                pass
+        raise
 
     # Créer un job et démarrer une tâche asynchrone
     job_id = str(uuid4())
@@ -92,7 +133,7 @@ async def upload_document(
         _process_document_job_async(
             job_id=job_id,
             filename=filename,
-            data=data,
+            file_path=tmp_file_path,
             title=title,
             author=author,
             username=current_user["username"],
@@ -110,17 +151,17 @@ async def upload_document(
 async def _process_document_job_async(
     job_id: str,
     filename: str,
-    data: bytes,
+    file_path: str,
     title: Optional[str],
     author: Optional[str],
     username: str,
 ):
     try:
-        _set_progress(job_id, status="processing", stage="ocr:start", progress=5)
+        _set_progress(job_id, status="Début du traitement", stage="Lancement de l'OCR ...", progress=5)
 
         # Callback pour relayer la progression interne de process_pdf vers le SSE
         def _on_progress(stage: str, progress: int | None = None, **kwargs):
-            payload = {"status": "processing", "stage": stage}
+            payload = {"status": "Lecture du fichier PDF", "stage": stage}
             if progress is not None:
                 payload["progress"] = progress
             payload.update(kwargs)
@@ -129,10 +170,11 @@ async def _process_document_job_async(
         # Étape OCR (potentiellement longue) - exécuter hors de la boucle événementielle
         ocr_result = await asyncio.to_thread(
             process_pdf,
-            filename,
-            data,
-            # include_image_base64 par défaut True
+            # utilisation d'arguments nommés pour éviter les erreurs d'ordre
+            file_name=filename,
+            file_path=file_path,
             on_progress=_on_progress,
+            include_image_base64=True,
         )
 
         _set_progress(job_id, status="processing", stage="ocr:done", progress=40)
@@ -170,16 +212,19 @@ async def _process_document_job_async(
         is_appropriate = content_analysis.get("is_appropriate", True)
         _set_progress(job_id, status="processing", stage="appropriateness:done", progress=60, is_appropriate=is_appropriate)
 
-        # Diffuser le markdown et les analyses au client avant les étapes de preview/persist
+        # Diffuser une mise à jour légère (sans gros contenus)
         _set_progress(
             job_id,
             status="processing",
             stage="deliver:markdown",
             progress=65,
-            markdown=markdown_content,
-            extracted_metadata=extracted_metadata,
-            security_analysis=security_analysis,
-            content_analysis=content_analysis,
+            extracted_metadata={
+                "title": extracted_metadata.get("title"),
+                "author": extracted_metadata.get("author"),
+                "date": extracted_metadata.get("date") or extracted_metadata.get("parution_date"),
+            },
+            has_security_prompts=bool(security_analysis.get("has_security_prompts", False)),
+            is_appropriate=content_analysis.get("is_appropriate", True),
         )
 
         _set_progress(job_id, status="processing", stage="preview", progress=75)
@@ -253,8 +298,19 @@ async def _process_document_job_async(
 
         # Événement terminal (sans message utilisateur spécifique)
         _set_progress(job_id, status="done", stage="complete", progress=100, document_id=document_id)
+        # Planifier la suppression du job dans Redis après un court délai
+        asyncio.create_task(_cleanup_job_later(job_id))
     except Exception as e:
         _set_progress(job_id, status="error", stage="failed", progress=100, error=str(e))
+        # Nettoyage également en cas d'erreur
+        asyncio.create_task(_cleanup_job_later(job_id))
+    finally:
+        # Nettoyage du fichier temporaire
+        try:
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception:
+            pass
 
 
 @router.get("/status/stream/{job_id}")

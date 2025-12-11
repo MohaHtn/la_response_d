@@ -635,7 +635,6 @@ function AdminPage() {
                               <TableCell><strong>Soumis par</strong></TableCell>
                               <TableCell><strong>Date</strong></TableCell>
                               <TableCell><strong>Statut</strong></TableCell>
-                              <TableCell><strong>Validations</strong></TableCell>
                               <TableCell><strong>Actions</strong></TableCell>
                             </TableRow>
                           </TableHead>
@@ -655,13 +654,7 @@ function AdminPage() {
                                     size="small"
                                   />
                                 </TableCell>
-                                <TableCell>
-                                  <Chip
-                                    label={`${book.approvals ?? 0}/3`}
-                                    color={(book.approvals ?? 0) === 3 ? 'success' : 'warning'}
-                                    size="small"
-                                  />
-                                </TableCell>
+
                                 <TableCell>
                                   <Button
                                     size="small"

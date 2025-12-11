@@ -10,7 +10,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { token, userType } = getAuthData();
 
   if (!token) {
-    return <Navigate to={ROUTES.AUTH} replace />;
+    return <Navigate to={ROUTES.PRESENTATION} replace />;
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(userType)) {

@@ -19,7 +19,7 @@ import ModeratorPage from "./pages/ModeratorPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import QuarantinePage from "./pages/QuarantinePage.jsx";
 import SetupPage from "./pages/SetupPage.jsx";
-import { AdminRoute, ModeratorRoute } from './components/ProtectedRoute.jsx';
+import { AdminRoute, ModeratorRoute, ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { ROUTES } from './constants';
 
 createRoot(document.getElementById('root')).render(
@@ -30,10 +30,38 @@ createRoot(document.getElementById('root')).render(
         <Routes>
           <Route path={ROUTES.PRESENTATION} element={<Presentation />} />
           <Route path={ROUTES.AUTH} element={<Auth />} />
-          <Route path={ROUTES.HOME} element={<Home />} />
-          <Route path={ROUTES.SETUP} element={<SetupPage />} />
-          <Route path={ROUTES.UPLOAD} element={<Upload />} />
-          <Route path="/book/:bookId" element={<ReadBookPage />} />
+          <Route
+            path={ROUTES.HOME}
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.SETUP}
+            element={
+              <ProtectedRoute>
+                <SetupPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={ROUTES.UPLOAD}
+            element={
+              <ProtectedRoute>
+                <Upload />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/book/:bookId"
+            element={
+              <ProtectedRoute>
+                <ReadBookPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/moderation/:bookId"
             element={

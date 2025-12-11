@@ -2,7 +2,7 @@
  * Service API centralisé pour toutes les requêtes HTTP
  */
 
-import { API_CONFIG, STORAGE_KEYS } from '../constants';
+import { API_CONFIG, STORAGE_KEYS, ROUTES } from '../constants';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
@@ -10,6 +10,20 @@ const API_BASE_URL = API_CONFIG.BASE_URL;
  * Gère les erreurs API de manière cohérente
  */
 const handleApiError = async (response) => {
+  // Gestion spécifique 401: token invalide/expiré -> retour à la présentation
+  if (response.status === 401) {
+    try {
+      // Nettoyage minimal local
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER_TYPE);
+      localStorage.removeItem(STORAGE_KEYS.USERNAME);
+      window.dispatchEvent(new Event('authChange'));
+    } catch {}
+    // Rediriger vers la page de présentation
+    if (typeof window !== 'undefined') {
+      window.location.replace(ROUTES.PRESENTATION);
+    }
+  }
   const payload = await response.json().catch(() => null);
   const message =
     (payload && (payload.error || payload.detail || payload.message)) ||

@@ -25,7 +25,6 @@ for env_path in possible_env_paths:
     if env_path.exists():
         load_dotenv(dotenv_path=env_path, override=True)
         env_loaded = True
-        print(f"✓ Fichier .env chargé depuis: {env_path}")
         break
 
 if not env_loaded:

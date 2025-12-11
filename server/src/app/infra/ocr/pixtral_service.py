@@ -157,17 +157,19 @@ def _check_inappropriate_content(client: Mistral, text_content: str) -> Dict[str
 
 def process_pdf(
         file_name: str,
-        content: bytes,
+        content: Optional[bytes] = None,
         include_image_base64: bool = True,
         on_progress: Optional[Callable[..., None]] = None,
+        file_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Traite un PDF via l'OCR Mistral avec analyse de contenu.
 
     Args:
         file_name: Nom original du PDF.
-        content: Octets du fichier PDF.
+        content: Octets du fichier PDF (optionnel si `file_path` est fourni).
         include_image_base64: Inclure (ou non) les aperçus pages en base64.
+        file_path: Chemin du fichier PDF sur disque (optionnel si `content` est fourni).
 
     Returns:
         Dict contenant la réponse OCR, les métadonnées, l'analyse de sécurité et le markdown fusionné.
@@ -188,22 +190,33 @@ def process_pdf(
             # Ne jamais casser le flux OCR si la remontée de progression échoue
             pass
 
-    _emit("ocr:init", 5)
+    _emit("Ouverture du PDF ...", 5)
+
+    # Permettre de fournir soit des octets, soit un chemin de fichier
+    if content is None and file_path is None:
+        raise ValueError("process_pdf: 'content' ou 'file_path' doit être fourni")
+
+    effective_name = file_name or (os.path.basename(file_path) if file_path else "uploaded_file.pdf")
+
+    if content is None and file_path is not None:
+        # Lecture depuis le disque (sera exécutée dans un thread appelant)
+        with open(file_path, "rb") as f:
+            content = f.read()
 
     uploaded_pdf = client.files.upload(
         file={
-            "file_name": file_name or "uploaded_file.pdf",
+            "file_name": effective_name,
             "content": content,
         },
         purpose="ocr",
     )
 
-    _emit("ocr:upload", 8)
+    _emit("Envoi du PDF ...", 8)
 
     signed_url = client.files.get_signed_url(file_id=uploaded_pdf.id)
-    _emit("ocr:signed_url", 10)
+    _emit("Obtention du lien pointant vers le PDF ...", 10)
 
-    _emit("ocr:request", 12)
+    _emit("Demande de la requête à l'IA ...", 12)
     ocr_response = client.ocr.process(
         model=OCR_MODEL,
         document={
@@ -217,7 +230,7 @@ def process_pdf(
 
     # Extraction du texte complet pour l'analyse
     pages = ocr_dict.get("pages", [])
-    _emit("ocr:response", 20, total_pages=len(pages))
+    _emit("Markdown créé, analyse ...", 20, total_pages=len(pages))
     full_text = ""
     markdown_parts = []
 
@@ -285,23 +298,20 @@ def process_pdf(
 
         # Progression par page entre 20 et 30
         page_progress = 20 + int(10 * (idx + 1) / total_pages)
-        _emit("ocr:page", page_progress, page_index=idx + 1, total_pages=total_pages)
+        _emit("Création du Markdown page par page ...", page_progress, page_index=idx + 1, total_pages=total_pages)
 
     # Fusion du markdown de toutes les pages
     final_markdown = "\n\n---\n\n".join(markdown_parts) + "\n"
-    _emit("ocr:markdown:merged", 32)
+    _emit("Création du markdown terminée.", 32)
 
     # Analyse du contenu avec Mistral
-    print("Extraction des métadonnées...")
-    _emit("ocr:analysis:metadata", 34)
+    _emit("Extraction des métadonnées du Markdown ...", 34)
     metadata = _extract_metadata(client, full_text)
 
-    print("Détection des prompts de sécurité...")
-    _emit("ocr:analysis:security", 36)
+    _emit("Détection des prompts de sécurité ...", 36)
     security_analysis = _detect_security_prompts(client, full_text)
 
-    print("Vérification du contenu inapproprié...")
-    _emit("ocr:analysis:content", 38)
+    _emit("Vérification du contenu inapproprié ...", 38)
     content_analysis = _check_inappropriate_content(client, full_text)
 
     # Construction de la réponse complète
@@ -318,22 +328,9 @@ def process_pdf(
         }
     }
 
-    # Affichage du résumé
-    print(f"\n=== Résumé du traitement ===")
-    print(f"Fichier: {file_name}")
-    print(f"Pages traitées: {len(pages)}")
-    print(f"Titre détecté: {metadata.get('title', 'Non trouvé')}")
-    print(f"Auteur détecté: {metadata.get('author', 'Non trouvé')}")
-    print(f"Contient des prompts de sécurité: {'Oui' if security_analysis.get('has_security_prompts') else 'Non'}")
-    print(f"Contenu approprié: {'Oui' if content_analysis.get('is_appropriate') else 'Non'}")
     warnings = content_analysis.get("content_warnings")
-    if warnings:
-        print("Contenu contenant :")
-        for w in warnings:
-            print(f"  - {w}")
-    print("="*30+'\n')
 
-    _emit("ocr:internal:done", 39)
+    _emit("Analyse terminé.", 39)
     return result
 
 
