@@ -1,5 +1,5 @@
 """
-Réponses standardisées pour l'API
+Standardized API responses
 """
 from typing import Any, Dict, Optional, List
 from fastapi.responses import JSONResponse
@@ -11,21 +11,21 @@ class APIResponse:
     @staticmethod
     def success(
         data: Any = None,
-        message: str = "Opération réussie",
+        message: str = "Operation successful",
         status_code: int = 200,
         **kwargs
     ) -> JSONResponse:
         """
-        Crée une réponse de succès standardisée
+        Create a standardized success response
 
         Args:
-            data: Données à retourner
-            message: Message de succès
-            status_code: Code de statut HTTP
-            **kwargs: Données supplémentaires
+            data: Data to return
+            message: Success message
+            status_code: HTTP status code
+            **kwargs: Additional data
 
         Returns:
-            JSONResponse avec format standardisé
+            JSONResponse with standardized format
         """
         content = {
             "success": True,
@@ -46,16 +46,16 @@ class APIResponse:
         **kwargs
     ) -> JSONResponse:
         """
-        Crée une réponse d'erreur standardisée
+        Create a standardized error response
 
         Args:
-            message: Message d'erreur principal
-            status_code: Code de statut HTTP
-            errors: Liste d'erreurs détaillées
-            **kwargs: Données supplémentaires
+            message: Main error message
+            status_code: HTTP status code
+            errors: Detailed errors list
+            **kwargs: Additional data
 
         Returns:
-            JSONResponse avec format standardisé
+            JSONResponse with standardized format
         """
         content = {
             "success": False,
@@ -71,21 +71,21 @@ class APIResponse:
     @staticmethod
     def created(
         data: Any = None,
-        message: str = "Ressource créée avec succès",
+        message: str = "Resource created successfully",
         resource_id: Optional[str] = None,
         **kwargs
     ) -> JSONResponse:
         """
-        Crée une réponse de création (201) standardisée
+        Create a standardized creation (201) response
 
         Args:
-            data: Données à retourner
-            message: Message de succès
-            resource_id: ID de la ressource créée
-            **kwargs: Données supplémentaires
+            data: Data to return
+            message: Success message
+            resource_id: ID of the created resource
+            **kwargs: Additional data
 
         Returns:
-            JSONResponse avec format standardisé
+            JSONResponse with standardized format
         """
         content = {
             "success": True,
@@ -102,15 +102,15 @@ class APIResponse:
         return JSONResponse(status_code=201, content=content)
 
     @staticmethod
-    def no_content(message: str = "Opération réussie") -> JSONResponse:
+    def no_content(message: str = "Operation successful") -> JSONResponse:
         """
-        Crée une réponse sans contenu (204)
+        Create a no-content response (204)
 
         Args:
-            message: Message de succès
+            message: Success message
 
         Returns:
-            JSONResponse vide
+            Empty JSONResponse
         """
         return JSONResponse(
             status_code=204,

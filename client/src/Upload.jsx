@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from "react-router-dom";
-import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
+import MarkdownRenderer from './components/MarkdownRenderer';
 import 'katex/dist/katex.min.css';
 import Header from './components/Header';
 import { useTranslation } from 'react-i18next';
 import { API_CONFIG, STORAGE_KEYS, MESSAGES, FILE_CONSTRAINTS } from "./constants/index.js";
 import { ROUTES } from './constants/index.js';
+import { getCommonHeaders } from './utils/http';
 
 import remarkGfm from 'remark-gfm'
 
@@ -491,7 +490,7 @@ function Upload() {
   const fetchDocumentById = async (documentId) => {
     try {
       const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENT_DETAILS(documentId)}`, {
-        headers: { 'authorization': `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}` }
+        headers: getCommonHeaders()
       });
       if (!resp.ok) {
         const error = await resp.json().catch(() => ({}));
@@ -514,7 +513,8 @@ function Upload() {
       try { sseRef.current.close(); } catch {}
       sseRef.current = null;
     }
-    const url = `${API_CONFIG.BASE_URL}/documents/status/stream/${jobId}`;
+    const lang = (localStorage.getItem('i18nextLng') || 'en').split('-')[0];
+    const url = `${API_CONFIG.BASE_URL}/documents/status/stream/${jobId}?lang=${encodeURIComponent(lang)}`;
     const es = new EventSource(url, { withCredentials: false });
     sseRef.current = es;
 
@@ -1021,30 +1021,7 @@ function Upload() {
                     </div>
                     <div style={styles.markdownDocument}>
                       <div style={styles.markdownContent}>
-                        <ReactMarkdown
-                          children={mergedMarkdown}
-                          remarkPlugins={[remarkMath, remarkGfm]}
-                          rehypePlugins={[rehypeKatex]}
-                          urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
-                          components={{
-                            img: ({node, ...props}) => (
-                                <img
-                                    {...props}
-                                    style={{
-                                      maxWidth: '100%',
-                                      height: 'auto',
-                                      display: 'block',
-                                      maxHeight: '500px',
-                                      objectFit: 'contain',
-                                      border: '1px solid #ddd',
-                                      borderRadius: '4px',
-                                      margin: '10px 0'
-                                    }}
-                                    alt={props.alt || t('uploadPage.imageAlt')}
-                                />
-                            )
-                          }}
-                        />
+                        <MarkdownRenderer content={mergedMarkdown} />
                       </div>
                     </div>
                   </div>

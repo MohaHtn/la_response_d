@@ -1,11 +1,12 @@
 """
-Routes pour la modération (admin/modérateur)
+Moderation routes (admin/moderator)
 """
-from fastapi import APIRouter, Depends, Query, HTTPException, Body
+from fastapi import APIRouter, Depends, Query, HTTPException, Body, Request
 from typing import List, Dict, Any
 from starlette.responses import JSONResponse
 from ..models import BookStatus
 from ..responses import APIResponse
+from ...infra.i18n import get_lang, translate
 from ..dependencies import get_admin_user, get_moderator_user
 from ...infra.repositories import document_repository
 
@@ -14,16 +15,17 @@ router = APIRouter(prefix="/moderation", tags=["moderation"])
 
 @router.get("/quarantine")
 async def get_quarantine_documents(
-    admin_user: dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user),
+    request: Request = None,
 ):
     """
-    Récupérer tous les documents en quarantaine (admin uniquement)
+    Get all documents in quarantine (admin only)
 
     Args:
-        admin_user: Utilisateur admin (injecté)
+        admin_user: Admin user (injected)
 
     Returns:
-        Liste des documents en quarantaine
+        List of quarantined documents
     """
     documents = await document_repository.get_all_quarantined_documents()
 
@@ -36,23 +38,25 @@ async def get_quarantine_documents(
 @router.get("/quarantine/{document_id}")
 async def get_quarantine_document(
     document_id: str,
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Récupérer un document en quarantaine par ID (admin uniquement)
+    Get a quarantined document by ID (admin only)
 
     Args:
-        document_id: ID du document
-        admin_user: Utilisateur admin (injecté)
+        document_id: Document ID
+        admin_user: Admin user (injected)
 
     Returns:
-        Document en quarantaine
+        Quarantined document
     """
     document = await document_repository.get_quarantined_document(document_id)
 
     if not document:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document introuvable en quarantaine",
+            message=translate(lang, "moderation.quarantine_not_found", default="Quarantined document not found"),
             status_code=404
         )
 
@@ -62,37 +66,41 @@ async def get_quarantine_document(
 @router.post("/quarantine/{document_id}/approve")
 async def approve_quarantine_document(
     document_id: str,
-    admin_user: dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user),
+    request: Request = None,
 ):
     """
-    Approuver un document en quarantaine (admin uniquement)
+    Approve a quarantined document (admin only)
 
     Args:
-        document_id: ID du document
-        admin_user: Utilisateur admin (injecté)
+        document_id: Document ID
+        admin_user: Admin user (injected)
 
     Returns:
-        Confirmation d'approbation
+        Approval confirmation
     """
     document = await document_repository.get_quarantined_document(document_id)
 
     if not document:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document introuvable en quarantaine",
+            message=translate(lang, "moderation.quarantine_not_found", default="Quarantined document not found"),
             status_code=404
         )
 
-    # Déplacer de la quarantaine vers les documents approuvés
+    # Move from quarantine to approved documents
     success = await document_repository.move_from_quarantine_to_approved(document_id)
 
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Erreur lors de l'approbation du document",
+            message=translate(lang, "moderation.approval_error", default="Error while approving document"),
             status_code=500
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Document approuvé et déplacé vers la bibliothèque",
+        message=translate(lang, "moderation.approved_moved", default="Document approved and moved to the library"),
         data={"document_id": document_id}
     )
 
@@ -100,44 +108,48 @@ async def approve_quarantine_document(
 @router.post("/quarantine/{document_id}/reject")
 async def reject_quarantine_document(
     document_id: str,
-    admin_user: dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user),
+    request: Request = None,
 ):
     """
-    Rejeter un document en quarantaine (admin uniquement)
+    Reject a quarantined document (admin only)
 
     Args:
-        document_id: ID du document
-        admin_user: Utilisateur admin (injecté)
+        document_id: Document ID
+        admin_user: Admin user (injected)
 
     Returns:
-        Confirmation de rejet
+        Rejection confirmation
     """
     success = await document_repository.delete_quarantine_document(document_id)
 
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document introuvable ou erreur lors de la suppression",
+            message=translate(lang, "moderation.not_found_or_delete_failed", default="Document not found or deletion failed"),
             status_code=404
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Document rejeté et supprimé",
+        message=translate(lang, "moderation.rejected_deleted", default="Document rejected and deleted"),
         data={"document_id": document_id}
     )
 
 
 @router.get("/pending")
 async def get_pending_documents(
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Récupérer les documents en attente de modération
+    Get documents pending moderation
 
     Args:
-        moderator_user: Utilisateur modérateur/admin (injecté)
+        moderator_user: Moderator/Admin user (injected)
 
     Returns:
-        Liste des documents en attente
+        List of pending documents
     """
     documents = await document_repository.get_all_documents()
 
@@ -156,40 +168,44 @@ async def get_pending_documents(
 @router.post("/{document_id}/approve")
 async def approve_document(
     document_id: str,
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Approuver un document (modérateur/admin)
+    Approve a document (moderator/admin)
 
     Args:
-        document_id: ID du document
-        moderator_user: Utilisateur modérateur/admin (injecté)
+        document_id: Document ID
+        moderator_user: Moderator/Admin user (injected)
 
     Returns:
-        Confirmation d'approbation
+        Approval confirmation
     """
     document = await document_repository.get_document(document_id)
 
     if not document:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document introuvable",
+            message=translate(lang, "moderation.doc_not_found", default="Document not found"),
             status_code=404
         )
 
-    # Mettre à jour le statut
+    # Update status
     document["moderation"]["approval_process"]["status"] = BookStatus.OK.value
     document["moderation"]["approved_by"].append(moderator_user["username"])
 
     success = await document_repository.update_document(document_id, document)
 
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Erreur lors de l'approbation",
+            message=translate(lang, "moderation.error_approval", default="Error during approval"),
             status_code=500
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Document approuvé",
+        message=translate(lang, "moderation.approved", default="Document approved"),
         data={"document_id": document_id}
     )
 
@@ -197,39 +213,43 @@ async def approve_document(
 @router.post("/{document_id}/reject")
 async def reject_document(
     document_id: str,
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Rejeter un document (modérateur/admin)
+    Reject a document (moderator/admin)
 
     Args:
-        document_id: ID du document
-        moderator_user: Utilisateur modérateur/admin (injecté)
+        document_id: Document ID
+        moderator_user: Moderator/Admin user (injected)
 
     Returns:
-        Confirmation de rejet
+        Rejection confirmation
     """
     document = await document_repository.get_document(document_id)
 
     if not document:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document introuvable",
+            message=translate(lang, "moderation.doc_not_found", default="Document not found"),
             status_code=404
         )
 
-    # Mettre à jour le statut
+    # Update status
     document["moderation"]["approval_process"]["status"] = BookStatus.NOK.value
 
     success = await document_repository.update_document(document_id, document)
 
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Erreur lors du rejet",
+            message=translate(lang, "moderation.error_rejection", default="Error during rejection"),
             status_code=500
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Document rejeté",
+        message=translate(lang, "moderation.rejected", default="Document rejected"),
         data={
             "document_id": document_id,
             "rejected_by": moderator_user["username"]
@@ -240,8 +260,9 @@ async def reject_document(
 @router.post("/quarantine/{document_id}/moderate")
 async def moderate_quarantined_document(
     document_id: str,
-    action: str = Query(..., description="Action à effectuer : 'approve' ou 'reject'"),
-    admin_user: dict = Depends(get_admin_user)
+    action: str = Query(..., description="Action to perform: 'approve' or 'reject'"),
+    admin_user: dict = Depends(get_admin_user),
+    request: Request = None,
 ):
     """
     Moderate a quarantined document (Admin only)
@@ -256,10 +277,11 @@ async def moderate_quarantined_document(
     Returns:
         JSON response with moderation result
     """
+    lang = get_lang(request) if request else "en"
     if action not in ["approve", "reject"]:
         raise HTTPException(
             status_code=400,
-            detail="Action invalide. Utilisez 'approve' ou 'reject'."
+            detail=translate(lang, "moderation.invalid_action", default="Invalid action. Use 'approve' or 'reject'.")
         )
 
     try:
@@ -268,7 +290,7 @@ async def moderate_quarantined_document(
         if not document:
             raise HTTPException(
                 status_code=404,
-                detail="Document en quarantaine introuvable."
+                detail=translate(lang, "moderation.quarantine_not_found", default="Quarantined document not found.")
             )
 
         if action == "approve":
@@ -278,11 +300,11 @@ async def moderate_quarantined_document(
             if not success:
                 raise HTTPException(
                     status_code=500,
-                    detail="Échec du déplacement du document vers les documents approuvés."
+                    detail=translate(lang, "moderation.failed_move", default="Failed to move document to approved documents.")
                 )
 
             return JSONResponse(content={
-                "message": "Document approuvé et déplacé vers les documents normaux.",
+                "message": translate(lang, "moderation.approved_moved", default="Document approved and moved to the library"),
                 "document_id": document_id,
                 "action": "approved",
                 "moderated_by": admin_user["username"]
@@ -295,11 +317,11 @@ async def moderate_quarantined_document(
             if not success:
                 raise HTTPException(
                     status_code=500,
-                    detail="Échec de la suppression du document en quarantaine."
+                    detail=translate(lang, "moderation.failed_delete", default="Failed to delete quarantined document.")
                 )
 
             return JSONResponse(content={
-                "message": "Document rejeté et supprimé de la base de données.",
+                "message": translate(lang, "moderation.rejected_deleted", default="Document rejected and deleted"),
                 "document_id": document_id,
                 "action": "rejected",
                 "moderated_by": admin_user["username"]
@@ -310,7 +332,7 @@ async def moderate_quarantined_document(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Échec de la modération du document : {str(e)}"
+            detail=translate(lang, "moderation.moderation_failed", default=f"Failed to moderate document: {str(e)}").format(error=str(e))
         )
 
 
@@ -319,18 +341,20 @@ async def moderate_quarantined_document(
 @router.post("/quarantine/{document_id}/validate")
 async def validate_quarantined_document(
     document_id: str,
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Un modérateur valide un document en quarantaine (ajout dans la liste `approved_by`).
-    Ne publie pas le document automatiquement: la publication se fait avec un endpoint dédié
-    quand au moins 3 validations sont atteintes.
+    A moderator validates a quarantined document (adds username to `approved_by`).
+    Does not publish the document automatically: publishing is done with a dedicated endpoint
+    when at least 3 validations are reached.
     """
     # Charger le document en quarantaine
     document = await document_repository.get_quarantined_document(document_id)
     if not document:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document en quarantaine introuvable",
+            message=translate(lang, "moderation.quarantine_not_found", default="Quarantined document not found"),
             status_code=404
         )
 
@@ -343,19 +367,21 @@ async def validate_quarantined_document(
         approved_by.append(username)
         approval_process["date"] = approval_process.get("date") or None
 
-    # Conserver le statut en WAITING tant que 3 validations ne sont pas atteintes
+    # Keep status as WAITING until 3 validations are reached
     if len(approved_by) >= 3:
-        approval_process["status"] = BookStatus.IN_QUARANTINE.value  # prêt à publier (flag visuel côté client)
+        approval_process["status"] = BookStatus.IN_QUARANTINE.value  # ready to publish (visual flag client-side)
 
     success = await document_repository.update_quarantined_document(document_id, document)
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Échec de la mise à jour du document en quarantaine",
+            message=translate(lang, "moderation.q_update_failed", default="Failed to update quarantined document"),
             status_code=500
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Validation enregistrée",
+        message=translate(lang, "moderation.validation_saved", default="Validation saved"),
         data={
             "document_id": document_id,
             "approved_by": approved_by
@@ -367,30 +393,34 @@ async def validate_quarantined_document(
 async def update_quarantined_document(
     document_id: str,
     updates: Dict[str, Any] = Body(..., description="Champs à mettre à jour: metadata.*, content, etc."),
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Modifier les métadonnées et/ou le contenu d'un document en quarantaine (modérateur ou admin).
+    Update metadata and/or content of a quarantined document (moderator or admin).
     """
-    # Optionnel: validation légère des champs autorisés
+    # Optional: light validation of allowed fields
     allowed_keys = {"metadata", "content", "preview", "moderation"}
     sanitized_updates: Dict[str, Any] = {k: v for k, v in updates.items() if k in allowed_keys}
 
     if not sanitized_updates:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Aucun champ valide à mettre à jour",
+            message=translate(lang, "moderation.no_valid_fields", default="No valid fields to update"),
             status_code=400
         )
 
     success = await document_repository.update_quarantined_document(document_id, sanitized_updates)
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document en quarantaine introuvable ou mise à jour impossible",
+            message=translate(lang, "moderation.q_update_failed", default="Failed to update quarantined document"),
             status_code=404
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Document en quarantaine mis à jour",
+        message=translate(lang, "moderation.q_updated", default="Quarantined document updated"),
         data={"document_id": document_id}
     )
 
@@ -398,34 +428,39 @@ async def update_quarantined_document(
 @router.post("/quarantine/{document_id}/publish")
 async def publish_quarantined_document(
     document_id: str,
-    moderator_user: dict = Depends(get_moderator_user)
+    moderator_user: dict = Depends(get_moderator_user),
+    request: Request = None,
 ):
     """
-    Publier (déplacer hors de quarantaine) un document si au moins 3 modérateurs l'ont validé.
-    Accessible aux modérateurs et admins.
+    Publish (move out of quarantine) a document if at least 3 moderators validated it.
+    Accessible to moderators and admins.
     """
     document = await document_repository.get_quarantined_document(document_id)
     if not document:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Document en quarantaine introuvable",
+            message=translate(lang, "moderation.quarantine_not_found", default="Quarantined document not found"),
             status_code=404
         )
 
     approved_by = document.get("moderation", {}).get("approved_by", []) or []
     if len(approved_by) < 3:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Publication impossible: moins de 3 validations",
+            message=translate(lang, "moderation.publishing_not_allowed", default="Publishing not allowed: fewer than 3 validations"),
             status_code=400
         )
 
     success = await document_repository.move_from_quarantine_to_approved(document_id)
     if not success:
+        lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message="Échec de la publication du document",
+            message=translate(lang, "moderation.publish_failed", default="Failed to publish document"),
             status_code=500
         )
 
+    lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message="Document publié",
+        message=translate(lang, "moderation.published", default="Document published"),
         data={"document_id": document_id}
     )

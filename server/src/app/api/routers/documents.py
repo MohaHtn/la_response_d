@@ -2,7 +2,7 @@
 Router pour la gestion des documents
 """
 from typing import Optional, AsyncGenerator
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, UploadFile, File, Depends, Request
 from fastapi.responses import StreamingResponse
 from datetime import datetime
 from uuid import uuid4
@@ -18,6 +18,7 @@ from ...infra.ocr import process_pdf
 from ...infra.database.redis_manager import redis_manager
 from ..dependencies import get_current_user
 from ..responses import APIResponse
+from ...infra.i18n import get_lang, translate
 from ..models import Document, DocumentMetadata, DocumentModeration, ApprovalProcess, DocumentUploader, DocumentMarkdown, BookStatus
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -82,19 +83,21 @@ async def upload_document(
     file: UploadFile = File(...),
     title: Optional[str] = None,
     author: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    request: Request = None,
 ):
     """
-    Upload d'un PDF et lancement asynchrone du traitement avec suivi temps réel (SSE)
+    Upload a PDF and start async processing with real-time tracking (SSE)
     """
-    # Valider le type de contenu
+    # Validate content type
+    lang = get_lang(request) if request else "en"
     if file.content_type not in config.ALLOWED_CONTENT_TYPES:
         return APIResponse.error(
-            message="Type de fichier non supporté. Veuillez envoyer un PDF.",
+            message=translate(lang, "documents.unsupported_type", default="Unsupported file type. Please send a PDF."),
             status_code=400
         )
 
-    # Écrire le fichier en chunks sur disque et vérifier la taille au fil de l'eau
+    # Write the file in chunks to disk and check size progressively
     max_size = config.MAX_FILE_SIZE_BYTES
     total = 0
     tmp_file_path = None
@@ -110,7 +113,7 @@ async def upload_document(
                     tmp.close()
                     os.remove(tmp_file_path)
                     return APIResponse.error(
-                        message=f"Fichier trop volumineux. Taille maximale : {config.MAX_FILE_SIZE_BYTES // (1024*1024)} Mo",
+                        message=translate(lang, "documents.file_too_large", default="File too large. Max size: {size} MB").format(size=(config.MAX_FILE_SIZE_BYTES // (1024*1024))),
                         status_code=413
                     )
                 tmp.write(chunk)
@@ -122,13 +125,13 @@ async def upload_document(
                 pass
         raise
 
-    # Créer un job et démarrer une tâche asynchrone
+    # Create a job and start an async task
     job_id = str(uuid4())
     _set_progress(job_id, status="queued", stage="init", progress=0)
 
     filename = file.filename or "uploaded.pdf"
 
-    # Démarrer le traitement sans bloquer la réponse
+    # Start processing without blocking the response
     asyncio.create_task(
         _process_document_job_async(
             job_id=job_id,
@@ -140,9 +143,9 @@ async def upload_document(
         )
     )
 
-    # Répondre immédiatement avec 202 et le job_id
+    # Immediately respond with 202 and the job_id
     return APIResponse.success(
-        message="Traitement lancé",
+        message=translate(lang, "documents.processing_started", default="Processing started"),
         status_code=202,
         data={"job_id": job_id}
     )
@@ -157,17 +160,17 @@ async def _process_document_job_async(
     username: str,
 ):
     try:
-        _set_progress(job_id, status="Début du traitement", stage="Lancement de l'OCR ...", progress=5)
+        _set_progress(job_id, status="processing", stage="ocr:start", progress=5)
 
-        # Callback pour relayer la progression interne de process_pdf vers le SSE
+        # Callback to relay internal progress from process_pdf to SSE
         def _on_progress(stage: str, progress: int | None = None, **kwargs):
-            payload = {"status": "Lecture du fichier PDF", "stage": stage}
+            payload = {"status": "processing", "stage": stage}
             if progress is not None:
                 payload["progress"] = progress
             payload.update(kwargs)
             _set_progress(job_id, **payload)
 
-        # Étape OCR (potentiellement longue) - exécuter hors de la boucle événementielle
+        # OCR step (potentially long) - run out of the event loop
         ocr_result = await asyncio.to_thread(
             process_pdf,
             # utilisation d'arguments nommés pour éviter les erreurs d'ordre
@@ -179,7 +182,7 @@ async def _process_document_job_async(
 
         _set_progress(job_id, status="processing", stage="ocr:done", progress=40)
 
-        # Extraction des données issues de l'OCR
+        # Extract data from OCR output
         _set_progress(job_id, status="processing", stage="extraction:start", progress=45)
         extracted_metadata = ocr_result.get("metadata", {})
         security_analysis = ocr_result.get("security_analysis", {})
@@ -287,7 +290,7 @@ async def _process_document_job_async(
         else:
             document_id = await document_repository.add_document(document_data)
 
-        # Nouvelle dernière étape: envoi de la réponse finale au client avant la complétion
+        # New final step: send final response to client before completion
         _set_progress(
             job_id,
             status="processing",
@@ -298,14 +301,14 @@ async def _process_document_job_async(
 
         # Événement terminal (sans message utilisateur spécifique)
         _set_progress(job_id, status="done", stage="complete", progress=100, document_id=document_id)
-        # Planifier la suppression du job dans Redis après un court délai
+        # Schedule job cleanup in Redis after a short delay
         asyncio.create_task(_cleanup_job_later(job_id))
     except Exception as e:
         _set_progress(job_id, status="error", stage="failed", progress=100, error=str(e))
-        # Nettoyage également en cas d'erreur
+        # Cleanup also on error
         asyncio.create_task(_cleanup_job_later(job_id))
     finally:
-        # Nettoyage du fichier temporaire
+        # Temp file cleanup
         try:
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
@@ -316,32 +319,32 @@ async def _process_document_job_async(
 @router.get("/status/stream/{job_id}")
 async def stream_status(job_id: str) -> StreamingResponse:
     """
-    SSE: diffuse l'état du job en temps réel jusqu'à completion/erreur.
-    Cette route ne requiert pas d'auth header afin de permettre EventSource (qui ne supporte pas les headers).
-    Assurez-vous que job_id n'est pas divulgué et est non devinable (UUID).
+    SSE: stream job status in real time until completion/error.
+    This route does not require auth headers to allow EventSource (which doesn't support custom headers).
+    Make sure job_id is not disclosed and is unguessable (UUID).
     """
 
     async def event_generator() -> AsyncGenerator[bytes, None]:
         history_index = 0
-        max_iterations = 600  # Timeout de 10 minutes (600 * 1s)
+        max_iterations = 600  # 10-minute timeout (600 * 1s)
         iterations = 0
 
         while iterations < max_iterations:
             iterations += 1
-            # Récupérer toutes les nouvelles entrées depuis le dernier index
+            # Fetch all new entries since last index
             new_entries, history_index = _get_progress_history(job_id, history_index)
 
             for entry in new_entries:
                 payload = json.dumps(entry)
                 yield f"data: {payload}\n\n".encode("utf-8")
 
-                # Vérifier si c'est la fin
+                # Check if it's the end
                 if entry.get("status") in {"done", "error"}:
                     return
 
-            # Heartbeat pour garder la connexion ouverte
+            # Heartbeat to keep the connection alive
             yield b": keep-alive\n\n"
-            await asyncio.sleep(0.3)  # Poll plus fréquemment pour réduire la latence
+            await asyncio.sleep(0.3)  # Poll more frequently to reduce latency
 
     return StreamingResponse(event_generator(), media_type="text/event-stream", headers={
         "Cache-Control": "no-cache",
@@ -355,30 +358,30 @@ async def get_document(
     document_id: str,
 ):
     """
-    Récupérer un document par son ID
+    Get a document by its ID
 
     Args:
-        document_id: ID du document
-        current_user: Utilisateur courant (injecté)
+        document_id: Document ID
+        current_user: Current user (injected)
 
     Returns:
-        Données du document
+        Document data
     """
     document = await document_repository.get_document(document_id)
 
-    # Si non trouvé dans les documents approuvés, vérifier en quarantaine
+    # If not found in approved documents, check quarantine
     if not document:
         quarantined = await document_repository.get_quarantined_document(document_id)
         if quarantined:
-            # S'assurer que le flag est bien positionné
+            # Ensure the flag is properly set
             quarantined["in_quarantine"] = True
             return APIResponse.success(
                 data=quarantined,
-                message="Document trouvé en quarantaine"
+                message=translate("en", "documents.found_in_quarantine", default="Document found in quarantine")
             )
 
         return APIResponse.error(
-            message="Document introuvable",
+            message=translate("en", "documents.not_found", default="Document not found"),
             status_code=404
         )
 
@@ -391,14 +394,14 @@ async def list_documents(
         uploader: Optional[str] = None,
 ):
     """
-    Lister les documents
+    List documents
 
     Args:
-        status: Filtrer par statut (optionnel)
-        uploader: Filtrer par nom d'uploader (optionnel)
+        status: Filter by status (optional)
+        uploader: Filter by uploader username (optional)
 
     Returns:
-        Liste des documents
+        List of documents
     """
     documents = await document_repository.get_all_documents() or []
 
@@ -418,7 +421,7 @@ async def list_documents(
     documents.sort(key=lambda d: _parse_date(d.get("uploader", {}).get("upload_date")), reverse=True)
 
     if not documents:
-        return APIResponse.success(data=[], count=0, message="Aucun document trouvé")
+        return APIResponse.success(data=[], count=0, message=translate("en", "documents.none_found", default="No documents found"))
 
     return APIResponse.success(data=documents, count=len(documents))
 

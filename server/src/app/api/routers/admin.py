@@ -1,11 +1,12 @@
 """
-Routes d'administration (gestion des utilisateurs)
+Administration routes (user management)
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Literal, Dict, Any, List
 
 from ..responses import APIResponse
+from ...infra.i18n import get_lang, translate
 from ..dependencies import get_admin_user
 from ...infra.repositories import user_repository
 from ...domain.services import AuthService
@@ -34,16 +35,16 @@ def _sanitize_user_record(user: Dict[str, Any]) -> Dict[str, Any]:
 @router.get("/users")
 async def list_users(admin_user: dict = Depends(get_admin_user)):
     """
-    Lister tous les utilisateurs (admin uniquement)
-    Retourne: username, email, account_type, created_at.
+    List all users (admin only)
+    Returns: username, email, account_type, created_at.
     """
     users = await user_repository.get_all_users()
 
-    # Assurer un created_at pour les anciens enregistrements
+    # Ensure created_at for legacy records
     sanitized: List[Dict[str, Any]] = []
     for u in users:
         if not u.get("created_at"):
-            # Ne pas écrire en base, simplement retourner une valeur par défaut
+            # Do not write back, just return a default value
             u = {**u, "created_at": None}
         sanitized.append(_sanitize_user_record(u))
 
@@ -51,14 +52,15 @@ async def list_users(admin_user: dict = Depends(get_admin_user)):
 
 
 @router.patch("/users/{username}")
-async def update_user(username: str, payload: UserUpdatePayload, admin_user: dict = Depends(get_admin_user)):
+async def update_user(username: str, payload: UserUpdatePayload, admin_user: dict = Depends(get_admin_user), request: Request = None):
     """
-    Mettre à jour un utilisateur (email, type de compte, mot de passe)
+    Update a user (email, account type, password)
     """
-    # Vérifier que l'utilisateur existe
+    # Check user exists
     user = await user_repository.get_user_record(username)
+    lang = get_lang(request) if request else "en"
     if not user:
-        return APIResponse.error(message="Utilisateur introuvable", status_code=404)
+        return APIResponse.error(message=translate(lang, "admin.user_not_found", default="User not found"), status_code=404)
 
     updates: Dict[str, Any] = {}
 
@@ -74,27 +76,28 @@ async def update_user(username: str, payload: UserUpdatePayload, admin_user: dic
         updates["encrypted_auth"] = AuthService.encrypt_auth_data(pwd_hash, salt)
 
     if not updates:
-        return APIResponse.success(message="Aucune mise à jour à effectuer", data=_sanitize_user_record(user))
+        return APIResponse.success(message=translate(lang, "admin.nothing_to_update", default="Nothing to update"), data=_sanitize_user_record(user))
 
     success = await user_repository.update_user(username, updates)
     if not success:
-        return APIResponse.error(message="Échec de la mise à jour de l'utilisateur", status_code=500)
+        return APIResponse.error(message=translate(lang, "admin.update_failed", default="Failed to update user"), status_code=500)
 
     updated = await user_repository.get_user_record(username)
-    return APIResponse.success(message="Utilisateur mis à jour", data=_sanitize_user_record(updated))
+    return APIResponse.success(message=translate(lang, "admin.user_updated", default="User updated"), data=_sanitize_user_record(updated))
 
 
 @router.delete("/users/{username}")
-async def delete_user(username: str, admin_user: dict = Depends(get_admin_user)):
+async def delete_user(username: str, admin_user: dict = Depends(get_admin_user), request: Request = None):
     """
-    Supprimer un utilisateur (admin uniquement)
+    Delete a user (admin only)
     """
-    # Interdire de supprimer le dernier admin éventuellement? (non demandé)
+    # Optionally, prevent deleting the last admin (not required)
     deleted = await user_repository.delete_user(username)
+    lang = get_lang(request) if request else "en"
     if not deleted:
-        return APIResponse.error(message="Utilisateur introuvable", status_code=404)
+        return APIResponse.error(message=translate(lang, "admin.user_not_found", default="User not found"), status_code=404)
 
-    return APIResponse.no_content(message="Utilisateur supprimé")
+    return APIResponse.no_content(message=translate(lang, "admin.user_deleted", default="User deleted"))
 
 
 # --- Alias endpoints using singular path for compatibility ---

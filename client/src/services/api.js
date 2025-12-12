@@ -3,6 +3,7 @@
  */
 
 import { API_CONFIG, STORAGE_KEYS, ROUTES } from '../constants';
+import i18n from '../i18n';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
@@ -41,6 +42,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Accept-Language': (i18n?.language || localStorage.getItem('i18nextLng') || 'en').split('-')[0],
       ...options.headers,
     };
 

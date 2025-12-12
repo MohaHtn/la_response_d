@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from './components/Header';
 import { API_CONFIG, STORAGE_KEYS, ROUTES, MESSAGES, USER_TYPES } from "./constants/index.js";
+import { getCommonHeaders } from './utils/http';
 import { useTranslation } from 'react-i18next';
+import { mapDocumentsToBooks } from './utils/mappers';
 
 const styles = {
   container: {
@@ -342,21 +344,7 @@ function Home() {
   const [pageAll, setPageAll] = useState(1);
   const [pageMy, setPageMy] = useState(1);
 
-  // Helper pour factoriser la transformation des documents API en livres UI
-  const mapDocumentsToBooks = (documentsArray) => (
-    Array.isArray(documentsArray)
-      ? documentsArray.map(doc => ({
-          id: doc.document_id,
-          title: doc.metadata?.title || t('quarantine.untitled'),
-          author: doc.metadata?.author || t('quarantine.unknownAuthor'),
-          status: doc.moderation?.approval_process?.status || 'unknown',
-          preview: doc.preview || '',
-          uploadedAt: doc.uploader?.upload_date || null,
-          uploaderName: doc.uploader?.username || null,
-          coverImage: doc.cover_image || null
-        }))
-      : []
-  );
+  // Mapping centralisé (utils/mappers)
 
   // Sauvegarder le mode de vue dans localStorage quand il change
   useEffect(() => {
@@ -389,7 +377,9 @@ function Home() {
     const fetchDocuments = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}`, {
+          headers: getCommonHeaders({ skipAuth: true })
+        });
 
         if (!response.ok) {
           throw new Error(t('errors.prefix'));
@@ -398,7 +388,7 @@ function Home() {
         const data = await response.json();
 
         const documentsArray = data.data || [];
-        const books = mapDocumentsToBooks(documentsArray);
+        const books = mapDocumentsToBooks(documentsArray, { t });
         // Trier côté client par date d'upload décroissante (sécurité au cas où l'API ne le ferait pas)
         books.sort((a, b) => {
           const da = a.uploadedAt ? Date.parse(a.uploadedAt) : 0;
@@ -426,7 +416,9 @@ function Home() {
       if (!storedUsername) return;
 
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}?uploader=${storedUsername}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTS_LIST}?uploader=${storedUsername}`, {
+          headers: getCommonHeaders({ skipAuth: true })
+        });
 
         if (!response.ok) {
           console.error('Erreur lors de la récupération des documents uploadés');
@@ -435,7 +427,7 @@ function Home() {
 
         const data = await response.json();
         const documentsArray = data.data || [];
-        const myBooks = mapDocumentsToBooks(documentsArray);
+        const myBooks = mapDocumentsToBooks(documentsArray, { t });
         myBooks.sort((a, b) => {
           const da = a.uploadedAt ? Date.parse(a.uploadedAt) : 0;
           const db = b.uploadedAt ? Date.parse(b.uploadedAt) : 0;

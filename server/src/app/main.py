@@ -1,13 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routers import auth_router, documents_router, moderation_router, setup_router, admin_router
 from .api.middleware import error_handler_middleware, logging_middleware
 from .api.routes import router as legacy_router
+from .infra.i18n import get_lang, translate
 
 app = FastAPI(
-    title="Bibliothéko API",
-    description="API pour la gestion d'une bibliothèque numérique",
+    title="Bibliotheko API",
+    description="API for managing a digital library",
     version="2.0.0",
 )
 
@@ -19,7 +20,7 @@ app.add_middleware(
         "http://localhost:5173",  # Vite dev server
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "http://localhost:8080",  # Au cas où vous utiliseriez un autre port
+        "http://localhost:8080",  # In case you use another port
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -29,15 +30,15 @@ app.add_middleware(
         "Accept",
         "Origin",
         "X-Requested-With",
-        "Username",  # Pour votre endpoint send-book
+        "Username",  # For your send-book endpoint
     ],
 )
 
-# Middleware personnalisés
+# Custom middlewares
 app.middleware("http")(error_handler_middleware)
 app.middleware("http")(logging_middleware)
 
-# Inclusion des routers modulaires
+# Routers
 app.include_router(auth_router)
 app.include_router(documents_router)
 app.include_router(moderation_router)
@@ -48,32 +49,36 @@ app.include_router(legacy_router)  # send-book endpoint
 
 # Health check endpoint
 @app.get("/health")
-async def health():
-    """Endpoint de santé de l'API"""
-    return {"status": "ok", "version": "2.0.0"}
+async def health(request: Request):
+    """API health endpoint"""
+    lang = get_lang(request)
+    return {"status": translate(lang, "health.ok", default="ok"), "version": "2.0.0"}
 
 
 @app.get("/test-cors")
-async def test_cors():
-    """Endpoint pour tester la configuration CORS"""
+async def test_cors(request: Request):
+    """Endpoint to test CORS configuration"""
+    lang = get_lang(request)
     return {
-        "message": "CORS fonctionne correctement",
+        "message": translate(lang, "cors.ok", default="CORS works correctly"),
         "timestamp": "2024-12-08T12:00:00Z",
         "headers": "Check developer tools for CORS headers"
     }
 
 
 @app.options("/test-cors")
-async def test_cors_preflight():
-    """Gestion des requêtes OPTIONS pour CORS"""
-    return {"message": "CORS preflight OK"}
+async def test_cors_preflight(request: Request):
+    """Handle OPTIONS requests for CORS"""
+    lang = get_lang(request)
+    return {"message": translate(lang, "cors.preflight", default="CORS preflight OK")}
 
 
 @app.get("/")
-async def root():
-    """Page d'accueil de l'API"""
+async def root(request: Request):
+    """API root endpoint"""
+    lang = get_lang(request)
     return {
-        "message": "Bienvenue sur l'API Bibliothéko",
+        "message": translate(lang, "root.welcome", default="Welcome to the Bibliotheko API"),
         "version": "2.0.0",
         "docs": "/docs",
         "health": "/health",

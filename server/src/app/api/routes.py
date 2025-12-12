@@ -141,9 +141,9 @@ async def send_book(
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
-        print(f"❌ Erreur dans send_book: {e}")
-        print(f"Traceback complet:\n{error_details}")
+        print(f"❌ Error in send_book: {e}")
+        print(f"Full traceback:\n{error_details}")
         raise HTTPException(
             status_code=500,
-            detail=f"Échec du traitement OCR ou de la création du document : {str(e)}"
+            detail=f"Failed OCR processing or document creation: {str(e)}"
         )

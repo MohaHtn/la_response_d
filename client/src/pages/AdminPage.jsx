@@ -36,6 +36,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES, USER_TYPES, STORAGE_KEYS, API_CONFIG } from '../constants';
+import i18n from '../i18n';
+import { getCommonHeaders } from '../utils/http';
 import { useTranslation } from 'react-i18next';
 
 const styles = {
@@ -75,10 +77,9 @@ const styles = {
  * Get authorization headers
  */
 function getAuthHeaders() {
-  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   return {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
+    ...getCommonHeaders(),
   };
 }
 

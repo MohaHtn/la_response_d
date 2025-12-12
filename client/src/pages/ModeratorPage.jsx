@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import ModeratorValidationTable from '../components/ModeratorValidationTable';
 import Header from '../components/Header';
 import { ROUTES, MESSAGES } from '../constants';
@@ -17,8 +17,6 @@ import {
     Divider,
     Button,
 } from '@mui/material';
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
 import { useTranslation } from 'react-i18next';
 
 const styles = {
@@ -300,29 +298,8 @@ function ModeratorPage() {
                                 </Typography>
                                 <Divider sx={{ marginBottom: 3 }} />
                                 <Box sx={styles.markdownContent}>
-                                    <ReactMarkdown
-                                        children={bookData?.markdownContent || t('moderator.noContent')}
-                                        remarkPlugins={[remarkMath]}
-                                        rehypePlugins={[rehypeKatex]}
-                                        urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
-                                        components={{
-                                          img: ({node, ...props}) => (
-                                              <img
-                                                  {...props}
-                                                  style={{
-                                                    maxWidth: '100%',
-                                                    height: 'auto',
-                                                    display: 'block',
-                                                    maxHeight: '500px',
-                                                    objectFit: 'contain',
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '4px',
-                                                    margin: '10px 0'
-                                                  }}
-                                                  alt={props.alt || t('moderator.image')}
-                                              />
-                                          )
-                                        }}
+                                    <MarkdownRenderer
+                                      content={bookData?.markdownContent || t('moderator.noContent')}
                                     />
                                 </Box>
                             </Paper>

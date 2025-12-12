@@ -1,20 +1,21 @@
 """
-Middleware personnalisés pour FastAPI
+Custom middlewares for FastAPI
 """
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Callable
 import time
 import logging
+from ..infra.i18n import get_lang, translate
 
 logger = logging.getLogger(__name__)
 
 
 async def error_handler_middleware(request: Request, call_next: Callable):
     """
-    Middleware pour gérer les erreurs de manière cohérente
+    Middleware to handle errors consistently
     """
-    # Laisser passer les requêtes OPTIONS (CORS preflight)
+    # Let OPTIONS (CORS preflight) requests pass through
     if request.method == "OPTIONS":
         response = await call_next(request)
         return response
@@ -31,23 +32,24 @@ async def error_handler_middleware(request: Request, call_next: Callable):
                 "status_code": e.status_code
             }
         )
-        # Préserver les headers CORS en cas d'erreur
+        # Preserve CORS headers on error
         origin = request.headers.get("origin")
         if origin:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
     except Exception as e:
-        logger.error(f"Erreur non gérée: {str(e)}", exc_info=True)
+        logger.error(f"Unhandled error: {str(e)}", exc_info=True)
+        lang = get_lang(request)
         response = JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "error": "Erreur interne du serveur",
+                "error": translate(lang, "errors.internal", default="Internal server error"),
                 "detail": str(e) if logger.level == logging.DEBUG else None
             }
         )
-        # Préserver les headers CORS en cas d'erreur
+        # Preserve CORS headers on error
         origin = request.headers.get("origin")
         if origin:
             response.headers["Access-Control-Allow-Origin"] = origin
@@ -57,23 +59,23 @@ async def error_handler_middleware(request: Request, call_next: Callable):
 
 async def logging_middleware(request: Request, call_next: Callable):
     """
-    Middleware pour logger les requêtes
+    Middleware to log requests
     """
-    # Laisser passer les requêtes OPTIONS (CORS preflight) sans logging détaillé
+    # Let OPTIONS (CORS preflight) requests pass without detailed logging
     if request.method == "OPTIONS":
         response = await call_next(request)
         return response
 
     start_time = time.time()
 
-    logger.info(f"Début requête: {request.method} {request.url.path}")
+    logger.info(f"Request start: {request.method} {request.url.path}")
 
     response = await call_next(request)
 
     process_time = time.time() - start_time
     logger.info(
-        f"Fin requête: {request.method} {request.url.path} "
-        f"- Status: {response.status_code} - Durée: {process_time:.2f}s"
+        f"Request end: {request.method} {request.url.path} "
+        f"- Status: {response.status_code} - Duration: {process_time:.2f}s"
     )
 
     response.headers["X-Process-Time"] = str(process_time)
