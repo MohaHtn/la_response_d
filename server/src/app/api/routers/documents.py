@@ -366,7 +366,17 @@ async def get_document(
     """
     document = await document_repository.get_document(document_id)
 
+    # Si non trouvé dans les documents approuvés, vérifier en quarantaine
     if not document:
+        quarantined = await document_repository.get_quarantined_document(document_id)
+        if quarantined:
+            # S'assurer que le flag est bien positionné
+            quarantined["in_quarantine"] = True
+            return APIResponse.success(
+                data=quarantined,
+                message="Document trouvé en quarantaine"
+            )
+
         return APIResponse.error(
             message="Document introuvable",
             status_code=404

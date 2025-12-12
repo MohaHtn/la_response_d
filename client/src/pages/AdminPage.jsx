@@ -36,6 +36,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES, USER_TYPES, STORAGE_KEYS, API_CONFIG } from '../constants';
+import { useTranslation } from 'react-i18next';
 
 const styles = {
   root: {
@@ -183,6 +184,7 @@ async function fetchAdminStats() {
 
 function AdminPage() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
   const [stats, setStats] = useState({ totalUsers: 0, totalBooks: 0, pendingModeration: 0, approvedBooks: 0 });
   const [pendingBooks, setPendingBooks] = useState([]);
@@ -261,7 +263,7 @@ function AdminPage() {
         setUsers(transformedUsers);
       } catch (e) {
         console.error('Erreur lors du chargement des données admin:', e);
-        setError('Erreur lors du chargement des données. Veuillez réessayer.');
+        setError(t('admin.loading.data'));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -335,9 +337,9 @@ function AdminPage() {
 
   const getAccountTypeChip = (type) => {
     const configs = {
-      [USER_TYPES.ADMIN]: { color: 'error', label: 'Administrateur' },
-      [USER_TYPES.MODERATOR]: { color: 'warning', label: 'Modérateur' },
-      [USER_TYPES.USER]: { color: 'success', label: 'Utilisateur' },
+      [USER_TYPES.ADMIN]: { color: 'error', label: t('admin.users.roles.admin') },
+      [USER_TYPES.MODERATOR]: { color: 'warning', label: t('admin.users.roles.moderator') },
+      [USER_TYPES.USER]: { color: 'success', label: t('admin.users.roles.user') },
     };
     const config = configs[type] || configs[USER_TYPES.USER];
     return <Chip label={config.label} color={config.color} size="small" />;
@@ -397,20 +399,22 @@ function AdminPage() {
       );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || 'Erreur lors de la mise à jour');
+        throw new Error(err?.error || t('admin.users.updateGenericError'));
       }
       await refreshUsers();
       handleCloseEdit();
     } catch (e) {
       console.error('handleSaveEdit error', e);
-      setError(e?.message || 'Erreur lors de la mise à jour de l’utilisateur');
+      setError(e?.message || t('admin.users.updateError'));
     }
   };
 
   // Supprimer un utilisateur
   const handleDeleteUser = async (user) => {
     if (!user) return;
-    const confirmed = window.confirm(`Supprimer l’utilisateur "${user.username}" ? Cette action est irréversible.`);
+    const confirmed = window.confirm(
+      t('admin.users.confirmDelete', { username: user.username })
+    );
     if (!confirmed) return;
     try {
       const res = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ADMIN_USER(user.username)}`, {
@@ -419,12 +423,12 @@ function AdminPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || 'Erreur lors de la suppression');
+        throw new Error(err?.error || t('admin.users.deleteError'));
       }
       await refreshUsers();
     } catch (e) {
       console.error('handleDeleteUser error', e);
-      setError(e?.message || 'Erreur lors de la suppression de l’utilisateur');
+      setError(e?.message || t('admin.users.deleteError'));
     }
   };
 
@@ -435,10 +439,10 @@ function AdminPage() {
         {/* En-tête */}
         <Box sx={styles.header}>
           <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Panneau d'administration
+            {t('admin.title')}
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
-            Gérez les utilisateurs, les livres et la modération
+            {t('admin.subtitle')}
           </Typography>
         </Box>
 
@@ -452,7 +456,7 @@ function AdminPage() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                       {stats.totalUsers}
                     </Typography>
-                    <Typography variant="body2">Utilisateurs</Typography>
+                    <Typography variant="body2">{t('admin.stats.users')}</Typography>
                   </Box>
                   <PeopleIcon sx={styles.statsIcon} />
                 </Box>
@@ -467,7 +471,7 @@ function AdminPage() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                       {stats.totalBooks}
                     </Typography>
-                    <Typography variant="body2">Livres au total</Typography>
+                    <Typography variant="body2">{t('admin.stats.totalBooks')}</Typography>
                   </Box>
                   <LibraryBooksIcon sx={styles.statsIcon} />
                 </Box>
@@ -482,7 +486,7 @@ function AdminPage() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                       {stats.pendingModeration}
                     </Typography>
-                    <Typography variant="body2">Livres en modération</Typography>
+                    <Typography variant="body2">{t('admin.stats.pendingModeration')}</Typography>
                   </Box>
                   <PendingActionsIcon sx={styles.statsIcon} />
                 </Box>
@@ -497,7 +501,7 @@ function AdminPage() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                       {stats.approvedBooks}
                     </Typography>
-                    <Typography variant="body2">Livres validés</Typography>
+                    <Typography variant="body2">{t('admin.stats.approvedBooks')}</Typography>
                   </Box>
                   <CheckCircleIcon sx={styles.statsIcon} />
                 </Box>
@@ -516,16 +520,16 @@ function AdminPage() {
 
           {loading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-              <Typography>Chargement des données...</Typography>
+              <Typography>{t('admin.loading.data')}</Typography>
             </Box>
           )}
 
           {!loading && (
             <>
               <Tabs value={activeTab} onChange={handleTabChange}>
-                <Tab label="Livres en attente" />
-                <Tab label="Tous les livres" />
-                <Tab label="Utilisateurs" />
+                <Tab label={t('admin.tabs.pending')} />
+                <Tab label={t('admin.tabs.all')} />
+                <Tab label={t('admin.tabs.users')} />
               </Tabs>
 
               <Box sx={styles.tabContent}>
@@ -533,32 +537,32 @@ function AdminPage() {
                 {activeTab === 0 && (
                   <Box>
                     <Alert severity="info" sx={{ mb: 2 }}>
-                      Ces livres sont en attente de validation par les modérateurs
+                      {t('admin.pending.info')}
                     </Alert>
 
                     {/* Boutons de tri */}
                     <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <Typography variant="body2" sx={{ mr: 1 }}>Trier par:</Typography>
+                      <Typography variant="body2" sx={{ mr: 1 }}>{t('admin.pending.sortLabel')}</Typography>
                       <Button
                         size="small"
                         variant={sortBy === 'date' ? 'contained' : 'outlined'}
                         onClick={() => handleSort('date')}
                       >
-                        Date {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        {t('admin.pending.sort.date')} {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </Button>
                       <Button
                         size="small"
                         variant={sortBy === 'title' ? 'contained' : 'outlined'}
                         onClick={() => handleSort('title')}
                       >
-                        Titre {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        {t('admin.pending.sort.title')} {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </Button>
                       <Button
                         size="small"
                         variant={sortBy === 'author' ? 'contained' : 'outlined'}
                         onClick={() => handleSort('author')}
                       >
-                        Auteur {sortBy === 'author' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        {t('admin.pending.sort.author')} {sortBy === 'author' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </Button>
                     </Box>
 
@@ -566,12 +570,12 @@ function AdminPage() {
                       <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell><strong>Titre</strong></TableCell>
-                            <TableCell><strong>Auteur</strong></TableCell>
-                            <TableCell><strong>Soumis par</strong></TableCell>
-                            <TableCell><strong>Date</strong></TableCell>
-                            <TableCell><strong>Validations</strong></TableCell>
-                            <TableCell><strong>Actions</strong></TableCell>
+                            <TableCell><strong>{t('admin.pending.table.title')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.pending.table.author')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.pending.table.submittedBy')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.pending.table.date')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.pending.table.validations')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.pending.table.actions')}</strong></TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -581,7 +585,7 @@ function AdminPage() {
                               <TableCell>{book.author}</TableCell>
                               <TableCell>{book.submittedBy}</TableCell>
                               <TableCell>
-                                {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString('fr-FR') : ''}
+                                {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString(undefined) : ''}
                               </TableCell>
                               <TableCell>
                                 <Chip
@@ -597,14 +601,14 @@ function AdminPage() {
                                   onClick={() => handleModerateBook(book.id)}
                                   sx={{ mr: 1 }}
                                 >
-                                  Modérer
+                                  {t('admin.pending.buttons.moderate')}
                                 </Button>
                                 <Button
                                   size="small"
                                   variant="text"
                                   onClick={() => handleViewBook(book.id)}
                                 >
-                                  Voir
+                                  {t('admin.pending.buttons.view')}
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -619,23 +623,23 @@ function AdminPage() {
                 {activeTab === 1 && (
                   <Box>
                     <Alert severity="info" sx={{ mb: 2 }}>
-                      Liste complète de tous les livres de la bibliothèque
+                      {t('admin.all.info')}
                     </Alert>
                     {allBooks.length === 0 ? (
                       <Typography variant="body1" color="text.secondary">
-                        Aucun livre disponible
+                        {t('admin.all.none')}
                       </Typography>
                     ) : (
                       <TableContainer>
                         <Table>
                           <TableHead>
                             <TableRow>
-                              <TableCell><strong>Titre</strong></TableCell>
-                              <TableCell><strong>Auteur</strong></TableCell>
-                              <TableCell><strong>Soumis par</strong></TableCell>
-                              <TableCell><strong>Date</strong></TableCell>
-                              <TableCell><strong>Statut</strong></TableCell>
-                              <TableCell><strong>Actions</strong></TableCell>
+                              <TableCell><strong>{t('admin.all.table.title')}</strong></TableCell>
+                              <TableCell><strong>{t('admin.all.table.author')}</strong></TableCell>
+                              <TableCell><strong>{t('admin.all.table.submittedBy')}</strong></TableCell>
+                              <TableCell><strong>{t('admin.all.table.date')}</strong></TableCell>
+                              <TableCell><strong>{t('admin.all.table.status')}</strong></TableCell>
+                              <TableCell><strong>{t('admin.all.table.actions')}</strong></TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
@@ -645,11 +649,11 @@ function AdminPage() {
                                 <TableCell>{book.author}</TableCell>
                                 <TableCell>{book.submittedBy}</TableCell>
                                 <TableCell>
-                                  {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString('fr-FR') : ''}
+                                  {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString(undefined) : ''}
                                 </TableCell>
                                 <TableCell>
                                   <Chip
-                                    label={book.status === 'OK' ? 'Approuvé' : book.status === 'WAITING' ? 'En attente' : book.status}
+                                    label={book.status === 'OK' ? t('admin.all.status.ok') : book.status === 'WAITING' ? t('admin.all.status.waiting') : book.status}
                                     color={book.status === 'OK' ? 'success' : book.status === 'WAITING' ? 'warning' : 'default'}
                                     size="small"
                                   />
@@ -662,14 +666,14 @@ function AdminPage() {
                                     onClick={() => handleModerateBook(book.id)}
                                     sx={{ mr: 1 }}
                                   >
-                                    Modérer
+                                    {t('admin.all.buttons.moderate')}
                                   </Button>
                                   <Button
                                     size="small"
                                     variant="text"
                                     onClick={() => handleViewBook(book.id)}
                                   >
-                                    Voir
+                                    {t('admin.all.buttons.view')}
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -688,11 +692,11 @@ function AdminPage() {
                       <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell><strong>Nom d'utilisateur</strong></TableCell>
-                            <TableCell><strong>Email</strong></TableCell>
-                            <TableCell><strong>Type de compte</strong></TableCell>
-                            <TableCell><strong>Date d'inscription</strong></TableCell>
-                            <TableCell><strong>Actions</strong></TableCell>
+                            <TableCell><strong>{t('admin.users.table.username')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.users.table.email')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.users.table.accountType')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.users.table.registrationDate')}</strong></TableCell>
+                            <TableCell><strong>{t('admin.users.table.actions')}</strong></TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -702,15 +706,15 @@ function AdminPage() {
                               <TableCell>{user.email}</TableCell>
                               <TableCell>{getAccountTypeChip(user.accountType)}</TableCell>
                               <TableCell>
-                                {user.registrationDate ? new Date(user.registrationDate).toLocaleDateString('fr-FR') : ''}
+                                {user.registrationDate ? new Date(user.registrationDate).toLocaleDateString(undefined) : ''}
                               </TableCell>
                               <TableCell>
                                 <Stack direction="row" spacing={1}>
                                   <Button size="small" variant="outlined" onClick={() => handleOpenEdit(user)}>
-                                    Modifier
+                                    {t('admin.users.buttons.edit')}
                                   </Button>
                                   <Button size="small" variant="outlined" color="error" onClick={() => handleDeleteUser(user)}>
-                                    Supprimer
+                                    {t('admin.users.buttons.delete')}
                                   </Button>
                                 </Stack>
                               </TableCell>
@@ -729,45 +733,45 @@ function AdminPage() {
 
       {/* Dialogue édition utilisateur */}
       <Dialog open={editOpen} onClose={handleCloseEdit} fullWidth maxWidth="sm">
-        <DialogTitle>Modifier l’utilisateur</DialogTitle>
+        <DialogTitle>{t('admin.users.dialog.editTitle')}</DialogTitle>
         <DialogContent dividers>
           <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Nom d’utilisateur"
+              label={t('admin.users.dialog.username')}
               value={selectedUser?.username || ''}
               InputProps={{ readOnly: true }}
             />
             <TextField
-              label="Email"
+              label={t('admin.users.dialog.email')}
               type="email"
               value={editEmail}
               onChange={(e) => setEditEmail(e.target.value)}
             />
             <FormControl>
-              <InputLabel id="account-type-label">Type de compte</InputLabel>
+              <InputLabel id="account-type-label">{t('admin.users.dialog.accountType')}</InputLabel>
               <Select
                 labelId="account-type-label"
-                label="Type de compte"
+                label={t('admin.users.dialog.accountType')}
                 value={editAccountType}
                 onChange={(e) => setEditAccountType(e.target.value)}
               >
-                <MenuItem value={USER_TYPES.USER}>Utilisateur</MenuItem>
-                <MenuItem value={USER_TYPES.MODERATOR}>Modérateur</MenuItem>
-                <MenuItem value={USER_TYPES.ADMIN}>Administrateur</MenuItem>
+                <MenuItem value={USER_TYPES.USER}>{t('admin.users.roles.user')}</MenuItem>
+                <MenuItem value={USER_TYPES.MODERATOR}>{t('admin.users.roles.moderator')}</MenuItem>
+                <MenuItem value={USER_TYPES.ADMIN}>{t('admin.users.roles.admin')}</MenuItem>
               </Select>
             </FormControl>
             <TextField
-              label="Nouveau mot de passe (optionnel)"
+              label={t('admin.users.dialog.newPassword')}
               type="password"
               value={editPassword}
               onChange={(e) => setEditPassword(e.target.value)}
-              helperText="Laissez vide pour ne pas modifier le mot de passe"
+              helperText={t('admin.users.dialog.passwordHint')}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseEdit}>Annuler</Button>
-          <Button variant="contained" onClick={handleSaveEdit}>Enregistrer</Button>
+          <Button onClick={handleCloseEdit}>{t('actions.cancel')}</Button>
+          <Button variant="contained" onClick={handleSaveEdit}>{t('actions.save')}</Button>
         </DialogActions>
       </Dialog>
     </Box>

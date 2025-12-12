@@ -473,7 +473,7 @@ function Home() {
       <div style={{paddingTop: '64px', overflowX: 'hidden'}}>
         <div style={styles.container}>
           <div style={styles.viewToggleContainer}>
-            <h1 style={styles.title}>Bibliothèque — Accueil</h1>
+            <h1 style={styles.title}>{t('home.title')}</h1>
             <div style={styles.viewToggleButtons}>
               <button
                 style={{
@@ -481,9 +481,9 @@ function Home() {
                   ...(viewMode === 'grid' ? styles.viewToggleButtonActive : {})
                 }}
                 onClick={() => setViewMode('grid')}
-                title="Vue en grille"
+                title={t('home.view.gridTitle')}
               >
-                ⊞ Grille
+                ⊞ {t('home.view.grid')}
               </button>
               <button
                 style={{
@@ -491,9 +491,9 @@ function Home() {
                   ...(viewMode === 'list' ? styles.viewToggleButtonActive : {})
                 }}
                 onClick={() => setViewMode('list')}
-                title="Vue en liste"
+                title={t('home.view.listTitle')}
               >
-                ☰ Liste
+                ☰ {t('home.view.list')}
               </button>
             </div>
           </div>
@@ -633,7 +633,7 @@ function Home() {
                       onClick={() => safePageMy > 1 && setPageMy(safePageMy - 1)}
                       disabled={safePageMy <= 1}
                     >
-                      ← Précédent
+                      {t('home.prev')}
                     </button>
                     <button
                       style={{
@@ -643,7 +643,7 @@ function Home() {
                       onClick={() => safePageMy < totalPagesMy && setPageMy(safePageMy + 1)}
                       disabled={safePageMy >= totalPagesMy}
                     >
-                      Suivant →
+                      {t('home.next')}
                     </button>
                   </div>
                 </div>
@@ -652,7 +652,7 @@ function Home() {
           )}
 
           <div style={{ marginTop: '8px' }}>
-            <div style={styles.sectionTitle}>Tous les livres</div>
+            <div style={styles.sectionTitle}>{t('home.allBooks')}</div>
 
             {viewMode === 'grid' ? (
               <div style={styles.libraryGrid}>
@@ -678,7 +678,7 @@ function Home() {
                       {(book.uploaderName || book.uploadedAt) && (
                         <div style={{ fontSize: '12px', color: '#777', marginTop: '100px' }}>
                           {book.uploaderName && (
-                            <span>👤 Ajouté par {book.uploaderName}</span>
+                            <span>👤 {t('home.byUploader', { name: book.uploaderName })}</span>
                           )}
                           {book.uploaderName && book.uploadedAt && ' · '}
                           {book.uploadedAt && (
@@ -790,10 +790,7 @@ function Home() {
               </div>
             )}
           </div>
-
-          <div>
-            <Link to={ROUTES.PRESENTATION} style={styles.backButton}>{t('home.back')}</Link>
-          </div>
+          
         </div>
       </div>
     </div>

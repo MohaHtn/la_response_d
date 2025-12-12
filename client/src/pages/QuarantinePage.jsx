@@ -85,6 +85,32 @@ const styles = {
     borderRadius: radii.sm,
     marginBottom: spacing.sm,
   },
+  detailsBox: {
+    fontSize: '12px',
+    backgroundColor: '#f6f8fb',
+    border: '1px solid #e1e7f5',
+    borderRadius: radii.sm,
+    padding: spacing.sm,
+    marginTop: '4px',
+  },
+  detailsTitle: {
+    fontWeight: 700,
+    color: '#0d47a1',
+    marginBottom: '6px',
+  },
+  detailsRow: {
+    marginBottom: '4px',
+    color: '#333',
+  },
+  tag: {
+    display: 'inline-block',
+    padding: '2px 6px',
+    borderRadius: '10px',
+    fontSize: '11px',
+    backgroundColor: '#e8eefb',
+    color: '#0d47a1',
+    marginLeft: '6px',
+  },
   actions: {
     display: 'flex',
     gap: spacing.xs,
@@ -230,6 +256,8 @@ export default function QuarantinePage() {
               const issues = (doc?.compliance_issues && doc.compliance_issues.length)
                 ? doc.compliance_issues.join('; ')
                 : (doc?.moderation?.approval_process?.details || '');
+              const contentAnalysis = doc?.content_analysis || null;
+              const securityAnalysis = doc?.security_analysis || null;
 
               return (
                 <div key={id} style={styles.card}>
@@ -243,18 +271,74 @@ export default function QuarantinePage() {
                     <div style={styles.bookMeta}>{t('quarantine.by')} {author} — id: {id}</div>
                     {preview && <div style={styles.preview}>{preview}</div>}
                     {issues && <div style={styles.issues}>{t('quarantine.issues')} {issues}</div>}
-                    <div style={styles.actions}>
-                      <button
-                        style={styles.btnApprove}
-                        disabled={!id}
-                        onClick={() => navigate(ROUTES.MODERATION(encodeURIComponent(id)))}
-                      >✅ {t('quarantine.approve')}</button>
-                      <button
-                        style={styles.btnReject}
-                        disabled={!id || busyId === id+':reject'}
-                        onClick={() => moderate(id, MODERATION_ACTIONS.REJECT)}
-                      >🗑️ {t('quarantine.reject')}</button>
-                    </div>
+                    {(contentAnalysis || securityAnalysis) && (
+                      <div style={styles.detailsBox}>
+                        <div style={styles.detailsTitle}>{t('quarantine.problemDetails')}</div>
+                        {contentAnalysis && (
+                          <div style={styles.detailsRow}>
+                            <strong>{t('quarantine.contentAnalysis')}:</strong>
+                            {typeof contentAnalysis.severity === 'string' && (
+                              <span style={styles.tag}>{t('quarantine.severity')}: {contentAnalysis.severity}</span>
+                            )}
+                            {typeof contentAnalysis.is_appropriate === 'boolean' && (
+                              <span style={styles.tag}>
+                                {t('quarantine.isAppropriate')}: {contentAnalysis.is_appropriate ? t('quarantine.yes') : t('quarantine.no')}
+                              </span>
+                            )}
+                            {Array.isArray(contentAnalysis.content_warnings) && contentAnalysis.content_warnings.length > 0 && (
+                              <div style={{ marginTop: '4px' }}>
+                                <em>{t('quarantine.warnings')} </em>
+                                {contentAnalysis.content_warnings.join(', ')}
+                              </div>
+                            )}
+                            {contentAnalysis.details && (
+                              <div style={{ marginTop: '2px' }}>
+                                <em>{t('quarantine.details')} </em>
+                                {contentAnalysis.details}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {securityAnalysis && (
+                          <div style={styles.detailsRow}>
+                            <strong>{t('quarantine.securityAnalysis')}:</strong>
+                            {/* Support ancien et nouveau schéma */}
+                            {typeof securityAnalysis.has_prompt_injection === 'boolean' && (
+                              <span style={styles.tag}>
+                                {t('quarantine.promptInjection')}: {securityAnalysis.has_prompt_injection ? t('quarantine.yes') : t('quarantine.no')}
+                              </span>
+                            )}
+                            {typeof securityAnalysis.has_security_prompts === 'boolean' && (
+                              <span style={styles.tag}>
+                                {t('quarantine.promptInjection')}: {securityAnalysis.has_security_prompts ? t('quarantine.yes') : t('quarantine.no')}
+                              </span>
+                            )}
+                            {typeof securityAnalysis.has_jailbreak_attempt === 'boolean' && (
+                              <span style={styles.tag}>
+                                {t('quarantine.jailbreakAttempt')}: {securityAnalysis.has_jailbreak_attempt ? t('quarantine.yes') : t('quarantine.no')}
+                              </span>
+                            )}
+                            {typeof securityAnalysis.risk_level === 'string' && securityAnalysis.risk_level && (
+                              <span style={styles.tag}>
+                                {t('quarantine.riskLevel')}: {securityAnalysis.risk_level}
+                              </span>
+                            )}
+                            {Array.isArray(securityAnalysis.detected_prompts) && securityAnalysis.detected_prompts.length > 0 && (
+                              <div style={{ marginTop: '4px' }}>
+                                <em>{t('quarantine.detectedPrompts')} </em>
+                                {securityAnalysis.detected_prompts.join(', ')}
+                              </div>
+                            )}
+                            {securityAnalysis.details && (
+                              <div style={{ marginTop: '2px' }}>
+                                <em>{t('quarantine.details')} </em>
+                                {securityAnalysis.details}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

@@ -72,7 +72,20 @@
     "issues": "Issues:",
     "approve": "Approve",
     "reject": "Reject",
-    "coverOf": "Cover of {{title}}"
+    "coverOf": "Cover of {{title}}",
+    "problemDetails": "Problem details",
+    "contentAnalysis": "Content analysis",
+    "securityAnalysis": "Security analysis",
+    "severity": "Severity",
+    "isAppropriate": "Appropriate",
+    "yes": "Yes",
+    "no": "No",
+    "warnings": "Warnings:",
+    "details": "Details:",
+    "promptInjection": "Prompt injection",
+    "jailbreakAttempt": "Jailbreak attempt",
+    "riskLevel": "Risk level",
+    "detectedPrompts": "Detected prompts:"
   },
   "admin": {
     "title": "Admin panel",
@@ -142,6 +155,15 @@
         "edit": "Edit",
         "delete": "Delete"
       },
+      "roles": {
+        "admin": "Administrator",
+        "moderator": "Moderator",
+        "user": "User"
+      },
+      "confirmDelete": "Delete user \"{{username}}\"? This action is irreversible.",
+      "deleteError": "Error while deleting the user",
+      "updateGenericError": "Error while updating",
+      "updateError": "Error while updating the user",
       "dialog": {
         "editTitle": "Edit user",
         "username": "Username",
@@ -169,7 +191,14 @@
     "next": "Next →",
     "back": "← Back",
     "allBooks": "All books",
-    "byUploader": "By {{name}}"
+    "byUploader": "By {{name}}",
+    "title": "Library — Home",
+    "view": {
+      "grid": "Grid",
+      "list": "List",
+      "gridTitle": "Grid view",
+      "listTitle": "List view"
+    }
   },
   "presentation": {
     "title": "Biblioteko - Your collaborative digital library",
@@ -194,6 +223,47 @@
     }
   }
   ,
+  "moderator": {
+    "loading": "Loading book data...",
+    "backToLibrary": "Back to library",
+    "backToQuarantine": "Back to quarantine list",
+    "title": "Book moderation",
+    "subtitle": "Approve or reject this book as a moderator.",
+    "warning": "Warning",
+    "bookInfo": "Book information",
+    "fields": {
+      "title": "Title",
+      "author": "Author",
+      "submittedBy": "Submitted by",
+      "submissionDate": "Submission date",
+      "status": "Status",
+      "description": "Description"
+    },
+    "validationState": "Validation status",
+    "documentContent": "Document content",
+    "noContent": "No content available",
+    "image": "Image",
+    "loadError": "Unable to load book data",
+    "undefined": "Undefined",
+    "unknownUser": "Unknown user",
+    "noContentTitle": "Content not available",
+    "noContentText": "The document content could not be loaded.",
+    "bookInModeration": "Book under moderation",
+    "unknownAuthor": "Unknown author",
+    "user": "User",
+    "errorLoading": "Error while loading data...",
+    "status": {
+      "waiting": "Pending",
+      "inQuarantine": "Validated (3/3)",
+      "accepted": "Published",
+      "rejected": "Rejected",
+      "unknown": "Unknown"
+    },
+    "errors": {
+      "notFoundInQuarantine": "Document not found in quarantine"
+    }
+  }
+  ,
   "auth": {
     "title": "Login / Sign up",
     "loginTab": "Login",
@@ -208,5 +278,65 @@
       "login": "Log in",
       "signup": "Create account"
     }
+  }
+  ,
+  "uploadPage": {
+    "backToHome": "Back to home page",
+    "helper": "You can drop a document by dragging and dropping the file into the area below, or click it to select your document.",
+    "processing": "Processing...",
+    "dropHere": "Drop the file here",
+    "dragPDFHere": "Drag and drop a PDF here",
+    "orClickToSelect": "or click to select a file",
+    "uploading": "Uploading file... {{percent}}%",
+    "processingDoc": "Processing document... {{percent}}%",
+    "documentProcessed": "Document processed",
+    "downloadMarkdownAria": "Download markdown",
+    "downloadMd": "Download .md",
+    "sendNewDocument": "Send a new document",
+    "labels": {
+      "title": "Title",
+      "author": "Author",
+      "uploadedBy": "Uploaded by",
+      "unknown": "Unknown",
+      "textSize": "Text size",
+      "chars": "{{count}} characters",
+      "documentId": "Document ID",
+      "notSpecified": "Not specified",
+      "date": "Date",
+      "publisher": "Publisher",
+      "description": "Description"
+    },
+    "metadata": {
+      "title": "Document metadata"
+    },
+    "analysis": {
+      "securityTitle": "Security analysis",
+      "contentTitle": "Inappropriate content analysis",
+      "unknownUpper": "UNKNOWN",
+      "noneUpper": "NONE",
+      "securityPromptsDetected": "Security prompts detected",
+      "detectedPrompts": "Detected prompts",
+      "details": "Details",
+      "appropriateContent": "Appropriate content",
+      "warnings": "Warnings",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "markdown": {
+      "previewTitle": "Markdown document preview"
+    },
+    "imageAlt": "Image",
+    "errors": {
+      "response": "Error while processing the response",
+      "networkUpload": "Network error during upload",
+      "noPdfSelected": "Error: Please select a PDF file.",
+      "networkWhileLoading": "Network error while loading the document",
+      "processing": "Processing error",
+      "unknown": "unknown"
+    },
+    "sse": {
+      "connecting": "Connecting to SSE stream..."
+    },
+    "previewAvailable": "Content preview available"
   }
 }

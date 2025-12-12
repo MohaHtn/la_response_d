@@ -5,6 +5,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import Header from './components/Header';
+import { useTranslation } from 'react-i18next';
 import { API_CONFIG, STORAGE_KEYS, MESSAGES, FILE_CONSTRAINTS } from "./constants/index.js";
 import { ROUTES } from './constants/index.js';
 
@@ -331,6 +332,7 @@ const spinAnimation = `
 `;
 
 function Upload() {
+  const { t } = useTranslation('common');
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   // Images are now displayed inline within the Markdown preview; no separate images state is required.
@@ -481,8 +483,8 @@ function Upload() {
         documentId: result_document?.document_id,
       });
     } catch (err) {
-      console.error('Erreur lors de l\'extraction des données:', err);
-      setMessage('Erreur lors du traitement de la réponse');
+      console.error('Error while extracting data:', err);
+      setMessage(t('uploadPage.errors.response'));
     }
   };
 
@@ -493,7 +495,7 @@ function Upload() {
       });
       if (!resp.ok) {
         const error = await resp.json().catch(() => ({}));
-        setMessage(`Erreur serveur (lecture doc) : ${error.detail || resp.statusText}`);
+        setMessage(`${t('errors.prefix')}: ${error.detail || resp.statusText}`);
         return;
       }
       const json = await resp.json();
@@ -503,7 +505,7 @@ function Upload() {
         hydrateFromDocument(doc, json?.message || '');
       }
     } catch (e) {
-      setMessage(`Erreur réseau lors du chargement du document: ${e}`);
+      setMessage(`${t('uploadPage.errors.networkWhileLoading')}: ${e}`);
     }
   };
 
@@ -538,7 +540,7 @@ function Upload() {
             setContentAnalysis(data.content_analysis);
           }
           // Informer l'utilisateur que le contenu est disponible tout en poursuivant le traitement
-          setMessage((m) => m || 'Prévisualisation du contenu disponible');
+          setMessage((m) => m || t('uploadPage.previewAvailable'));
           setPreviewReady(true);
         }
         if (data?.status === 'done') {
@@ -554,7 +556,7 @@ function Upload() {
           try { es.close(); } catch {}
           sseRef.current = null;
           setIsLoading(false);
-          setMessage(`Erreur de traitement: ${data?.error || 'inconnue'}`);
+          setMessage(`${t('uploadPage.errors.processing')}: ${data?.error || t('uploadPage.errors.unknown')}`);
         }
       } catch (e) {
         // Ignore JSON parse errors from heartbeat lines if any
@@ -564,7 +566,7 @@ function Upload() {
     es.onerror = () => {
       // en cas d'erreur réseau, on laisse EventSource tenter de se reconnecter
       // mais on peut informer l'utilisateur
-      setProcStage((s) => s || 'Connexion au flux SSE...');
+      setProcStage((s) => s || t('uploadPage.sse.connecting'));
     };
   };
 
@@ -710,23 +712,23 @@ function Upload() {
               setIsLoading(false);
             } else {
               const errMsg = json?.error || json?.detail || xhr.statusText;
-              setMessage(`Erreur serveur : ${errMsg}`);
+              setMessage(`${t('errors.prefix')}: ${errMsg}`);
               setIsLoading(false);
             }
           } catch (e) {
-            setMessage('Erreur lors du traitement de la réponse');
+            setMessage(t('uploadPage.errors.response'));
             setIsLoading(false);
           }
         };
 
         xhr.onerror = () => {
-          setMessage('Erreur réseau pendant l\'upload');
+          setMessage(t('uploadPage.errors.networkUpload'));
           setIsLoading(false);
         };
 
         xhr.send(formData);
       } else {
-        setMessage("Erreur : Veuillez sélectionner un fichier PDF.");
+        setMessage(t('uploadPage.errors.noPdfSelected'));
       }
     }
   };
@@ -739,12 +741,11 @@ function Upload() {
 
 
         <div style={{...styles.container, margin: '0 auto'}}>
-        <Link to={ROUTES.HOME} style={{ ...styles.navButton, alignSelf: 'flex-start', display: 'inline-block' }}> ← Retour à la page d'accueil</Link>
-            <h1 style={{ textAlign: 'left', fontSize: '24px', marginTop: '5px', marginBottom: '8px' }}>Envoyer un document</h1>
+        <Link to={ROUTES.HOME} style={{ ...styles.navButton, alignSelf: 'flex-start', display: 'inline-block' }}> ← {t('uploadPage.backToHome')}</Link>
+            <h1 style={{ textAlign: 'left', fontSize: '24px', marginTop: '5px', marginBottom: '8px' }}>{t('nav.uploadDoc')}</h1>
 
           {!mergedMarkdown && (
-            <p style={{ fontSize: '14px', marginTop: '5px', marginBottom: '8px' }}>Vous pouvez déposer un document en glissant-déposant le fichier dans l'espace ci-dessous, ou cliquer dessus
-            pour sélectionner votre document.</p>
+            <p style={{ fontSize: '14px', marginTop: '5px', marginBottom: '8px' }}>{t('uploadPage.helper')}</p>
           )}
 
 
@@ -773,13 +774,13 @@ function Upload() {
               <div style={styles.uploadIcon}>📄</div>
               <div style={styles.dropZoneText}>
                 {isLoading
-                  ? 'Traitement en cours...'
+                  ? t('uploadPage.processing')
                   : isDragging
-                    ? 'Déposez le fichier ici'
-                    : 'Glissez-déposez un PDF ici'}
+                    ? t('uploadPage.dropHere')
+                    : t('uploadPage.dragPDFHere')}
               </div>
               <div style={styles.dropZoneSubtext}>
-                {!isLoading && 'ou cliquez pour sélectionner un fichier'}
+                {!isLoading && t('uploadPage.orClickToSelect')}
               </div>
             </div>
           )}
@@ -790,14 +791,14 @@ function Upload() {
               <div style={styles.loadingText}>
                 {uploadProgress < 100 ? (
                   <>
-                    <div>Envoi du fichier ... {uploadProgress}%</div>
+                    <div>{t('uploadPage.uploading', { percent: uploadProgress })}</div>
                     <div style={{marginTop: 6, height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden'}}>
                       <div style={{width: `${uploadProgress}%`, height: '100%', background: '#2196f3', transition: 'width 0.2s'}}></div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div>Traitement du document ... {procProgress}%</div>
+                    <div>{t('uploadPage.processingDoc', { percent: procProgress })}</div>
                     {procStage && <div style={{fontSize: 12, color: '#555'}}>{procStage}</div>}
                     <div style={{marginTop: 6, height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden'}}>
                       <div style={{width: `${procProgress}%`, height: '100%', background: '#4caf50', transition: 'width 0.2s'}}></div>
@@ -844,7 +845,7 @@ function Upload() {
                               fontSize: 24
                             }}>{documentInfo?.is_compliant === false ? '❌' : '✅'}</div>
                             <div>
-                              <h1 style={{ ...styles.successMessageTitle, color: documentInfo?.is_compliant === false ? '#856404' : styles.successMessageTitle.color }}>Document traité</h1>
+                              <h1 style={{ ...styles.successMessageTitle, color: documentInfo?.is_compliant === false ? '#856404' : styles.successMessageTitle.color }}>{t('uploadPage.documentProcessed')}</h1>
                               <div style={{ fontSize: 11, color: documentInfo?.is_compliant === false ? '#856404' : styles.successMessageTitle.color, marginTop: '2px' }}>{documentInfo.message}</div>
                             </div>
                           </div>
@@ -856,9 +857,9 @@ function Upload() {
                                     style={{ ...styles.downloadButton, padding: '6px 12px', fontSize: 13 }}
                                     onMouseEnter={(e) => e.target.style.backgroundColor = styles.downloadButtonHover.backgroundColor}
                                     onMouseLeave={(e) => e.target.style.backgroundColor = styles.downloadButton.backgroundColor}
-                                    aria-label="Télécharger le markdown"
+                                    aria-label={t('uploadPage.downloadMarkdownAria')}
                                 >
-                                  📥 Télécharger .md
+                                  📥 {t('uploadPage.downloadMd')}
                                 </button>
                             )}
                             <button
@@ -871,36 +872,36 @@ function Upload() {
                               }}
                               onMouseEnter={(e) => (e.target.style.backgroundColor = '#1565c0')}
                               onMouseLeave={(e) => (e.target.style.backgroundColor = '#1976d2')}
-                              aria-label="Renvoyer un nouveau document"
+                              aria-label={t('uploadPage.sendNewDocument')}
                             >
-                              ➕ Renvoyer un nouveau document
+                              ➕ {t('uploadPage.sendNewDocument')}
                             </button>
                           </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', alignItems: 'start' }}>
                           <div style={styles.successMessageItem}>
-                            <div style={{ fontWeight: 600 }}>📄 Titre</div>
-                            <div style={{ marginTop: 3 }}>{documentInfo.title || 'Non spécifié'}</div>
+                            <div style={{ fontWeight: 600 }}>📄 {t('uploadPage.labels.title')}</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.title || t('uploadPage.labels.notSpecified')}</div>
                           </div>
 
                           <div style={styles.successMessageItem}>
-                            <div style={{ fontWeight: 600 }}>✍️ Auteur</div>
-                            <div style={{ marginTop: 3 }}>{documentInfo.author || 'Non spécifié'}</div>
+                            <div style={{ fontWeight: 600 }}>✍️ {t('uploadPage.labels.author')}</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.author || t('uploadPage.labels.notSpecified')}</div>
                           </div>
 
                           <div style={styles.successMessageItem}>
-                            <div style={{ fontWeight: 600 }}>👤 Uploadé par</div>
-                            <div style={{ marginTop: 3 }}>{documentInfo.uploader || 'Inconnu'}</div>
+                            <div style={{ fontWeight: 600 }}>👤 {t('uploadPage.labels.uploadedBy')}</div>
+                            <div style={{ marginTop: 3 }}>{documentInfo.uploader || t('uploadPage.labels.unknown')}</div>
                           </div>
 
                           <div style={styles.successMessageItem}>
-                            <div style={{ fontWeight: 600 }}>📝 Taille du texte</div>
-                            <div style={{ marginTop: 3 }}>{documentInfo.textLength ?? 0} caractères</div>
+                            <div style={{ fontWeight: 600 }}>📝 {t('uploadPage.labels.textSize')}</div>
+                            <div style={{ marginTop: 3 }}>{t('uploadPage.labels.chars', { count: documentInfo.textLength ?? 0 })}</div>
                           </div>
 
                           <div style={{ gridColumn: '1 / -1', ...styles.successMessageItem }}>
-                            <div style={{ fontWeight: 600 }}>🆔 ID du document</div>
+                            <div style={{ fontWeight: 600 }}>🆔 {t('uploadPage.labels.documentId')}</div>
                             <div style={{ marginTop: 3, wordBreak: 'break-all' }}>{documentInfo.documentId || '—'}</div>
                           </div>
                         </div>
@@ -909,26 +910,26 @@ function Upload() {
 
                   {metadata && (
                     <div style={styles.metadataContainer}>
-                      <div style={styles.metadataTitle}>📋 Métadonnées du document</div>
+                      <div style={styles.metadataTitle}>📋 {t('uploadPage.metadata.title')}</div>
                       <div style={styles.metadataItem}>
-                        <span style={styles.metadataLabel}>Titre:</span>
-                        <span style={styles.metadataValue}>{metadata.title || 'Non spécifié'}</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.labels.title')}:</span>
+                        <span style={styles.metadataValue}>{metadata.title || t('uploadPage.labels.notSpecified')}</span>
                       </div>
                       <div style={styles.metadataItem}>
-                        <span style={styles.metadataLabel}>Auteur:</span>
-                        <span style={styles.metadataValue}>{metadata.author || 'Non spécifié'}</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.labels.author')}:</span>
+                        <span style={styles.metadataValue}>{metadata.author || t('uploadPage.labels.notSpecified')}</span>
                       </div>
                       <div style={styles.metadataItem}>
-                        <span style={styles.metadataLabel}>Date:</span>
-                        <span style={styles.metadataValue}>{metadata.date || 'Non spécifiée'}</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.labels.date')}:</span>
+                        <span style={styles.metadataValue}>{metadata.date || t('uploadPage.labels.notSpecified')}</span>
                       </div>
                       <div style={styles.metadataItem}>
-                        <span style={styles.metadataLabel}>Éditeur:</span>
-                        <span style={styles.metadataValue}>{metadata.publisher || 'Non spécifié'}</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.labels.publisher')}:</span>
+                        <span style={styles.metadataValue}>{metadata.publisher || t('uploadPage.labels.notSpecified')}</span>
                       </div>
                       {metadata.description && (
                         <div style={styles.metadataItem}>
-                          <span style={styles.metadataLabel}>Description:</span>
+                          <span style={styles.metadataLabel}>{t('uploadPage.labels.description')}:</span>
                           <span style={styles.metadataValue}>{metadata.description}</span>
                         </div>
                       )}
@@ -941,32 +942,32 @@ function Upload() {
                       ...getAnalysisBoxStyle('security', securityAnalysis.risk_level)
                     }}>
                       <div style={styles.analysisTitle}>
-                        🔒 Analyse de sécurité
+                        🔒 {t('uploadPage.analysis.securityTitle')}
                         <span style={{
                           ...styles.riskBadge,
                           ...(securityAnalysis.risk_level === 'high' ? styles.riskHigh :
                               securityAnalysis.risk_level === 'medium' ? styles.riskMedium :
                               styles.riskLow)
                         }}>
-                          {securityAnalysis.risk_level?.toUpperCase() || 'INCONNU'}
+                          {securityAnalysis.risk_level?.toUpperCase() || t('uploadPage.analysis.unknownUpper')}
                         </span>
                       </div>
                       <div style={styles.analysisDetail}>
-                        <span style={styles.metadataLabel}>Prompts de sécurité détectés:</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.analysis.securityPromptsDetected')}:</span>
                         <span style={styles.metadataValue}>
-                          {securityAnalysis.has_security_prompts ? 'Oui' : 'Non'}
+                          {securityAnalysis.has_security_prompts ? t('uploadPage.analysis.yes') : t('uploadPage.analysis.no')}
                         </span>
                       </div>
                       {securityAnalysis.detected_prompts && securityAnalysis.detected_prompts.length > 0 && (
                         <div style={styles.analysisDetail}>
-                          <span style={styles.metadataLabel}>Prompts détectés:</span>
+                          <span style={styles.metadataLabel}>{t('uploadPage.analysis.detectedPrompts')}:</span>
                           <span style={styles.metadataValue}>
                             {securityAnalysis.detected_prompts.join(', ')}
                           </span>
                         </div>
                       )}
                       <div style={styles.analysisDetail}>
-                        <span style={styles.metadataLabel}>Détails:</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.analysis.details')}:</span>
                         <span style={styles.metadataValue}>{securityAnalysis.details}</span>
                       </div>
                     </div>
@@ -978,32 +979,32 @@ function Upload() {
                       ...getAnalysisBoxStyle('content', contentAnalysis.severity)
                     }}>
                       <div style={styles.analysisTitle}>
-                        📖 Analyse de contenu inapproprié
+                        📖 {t('uploadPage.analysis.contentTitle')}
                         <span style={{
                           ...styles.riskBadge,
                           ...(contentAnalysis.severity === 'high' ? styles.riskHigh :
                               contentAnalysis.severity === 'medium' ? styles.riskMedium :
                               styles.riskLow)
                         }}>
-                          {contentAnalysis.severity?.toUpperCase() || 'NONE'}
+                          {contentAnalysis.severity?.toUpperCase() || t('uploadPage.analysis.noneUpper')}
                         </span>
                       </div>
                       <div style={styles.analysisDetail}>
-                        <span style={styles.metadataLabel}>Contenu approprié:</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.analysis.appropriateContent')}:</span>
                         <span style={styles.metadataValue}>
-                          {contentAnalysis.is_appropriate ? 'Oui' : 'Non'}
+                          {contentAnalysis.is_appropriate ? t('uploadPage.analysis.yes') : t('uploadPage.analysis.no')}
                         </span>
                       </div>
                       {contentAnalysis.content_warnings && contentAnalysis.content_warnings.length > 0 && (
                         <div style={styles.analysisDetail}>
-                          <span style={styles.metadataLabel}>Avertissements:</span>
+                          <span style={styles.metadataLabel}>{t('uploadPage.analysis.warnings')}:</span>
                           <span style={styles.metadataValue}>
                             {contentAnalysis.content_warnings.join(', ')}
                           </span>
                         </div>
                       )}
                       <div style={styles.analysisDetail}>
-                        <span style={styles.metadataLabel}>Détails:</span>
+                        <span style={styles.metadataLabel}>{t('uploadPage.analysis.details')}:</span>
                         <span style={styles.metadataValue}>{contentAnalysis.details}</span>
                       </div>
                     </div>
@@ -1016,7 +1017,7 @@ function Upload() {
                 <div style={styles.rightColumn}>
                   <div style={styles.markdownContainer}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <h2 style={{ fontSize: '18px', margin: 0 }}>Aperçu du document en Markdown</h2>
+                      <h2 style={{ fontSize: '18px', margin: 0 }}>{t('uploadPage.markdown.previewTitle')}</h2>
                     </div>
                     <div style={styles.markdownDocument}>
                       <div style={styles.markdownContent}>
@@ -1039,7 +1040,7 @@ function Upload() {
                                       borderRadius: '4px',
                                       margin: '10px 0'
                                     }}
-                                    alt={props.alt || 'Image'}
+                                    alt={props.alt || t('uploadPage.imageAlt')}
                                 />
                             )
                           }}

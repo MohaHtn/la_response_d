@@ -106,6 +106,14 @@ function ModeratorValidationTable({ bookId }) {
   const [form, setForm] = useState({ title: '', author: '', tags: '', content: '' });
   const username = (typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEYS.USERNAME)) || '';
 
+  const mapErrorMessage = (rawMessage) => {
+    if (!rawMessage) return '';
+    if (rawMessage.includes('Document introuvable en quarantaine')) {
+      return t('moderator.errors.notFoundInQuarantine');
+    }
+    return rawMessage;
+  };
+
   // Exposé au scope du composant pour pouvoir être réutilisé dans `refresh()`
   const fetchModerationData = async () => {
     try {
@@ -124,7 +132,7 @@ function ModeratorValidationTable({ bookId }) {
       setError(null);
     } catch (err) {
       console.error('Erreur lors du chargement de la modération:', err);
-      setError(err.message);
+      setError(mapErrorMessage(err?.message));
       // Données de secours
       setModerationData({
         status: 'WAITING',
@@ -190,7 +198,7 @@ function ModeratorValidationTable({ bookId }) {
     try {
       await fetchModerationData();
     } catch (e) {
-      setError(e.message);
+      setError(mapErrorMessage(e?.message));
     }
   };
 
@@ -200,7 +208,7 @@ function ModeratorValidationTable({ bookId }) {
       await moderationService.validateQuarantine(bookId);
       await refresh();
     } catch (e) {
-      setError(e.message);
+      setError(mapErrorMessage(e?.message));
     } finally {
       setValidating(false);
     }
@@ -213,7 +221,7 @@ function ModeratorValidationTable({ bookId }) {
       // Après publication, on peut afficher un message et/ou laisser le parent rediriger
       await refresh();
     } catch (e) {
-      setError(e.message);
+      setError(mapErrorMessage(e?.message));
     } finally {
       setPublishing(false);
     }
@@ -248,7 +256,7 @@ function ModeratorValidationTable({ bookId }) {
       setEditOpen(false);
       await refresh();
     } catch (e) {
-      setError(e.message);
+      setError(mapErrorMessage(e?.message));
     } finally {
       setSaving(false);
     }

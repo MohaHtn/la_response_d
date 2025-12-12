@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import { useTranslation } from 'react-i18next';
 
 const styles = {
     root: {
@@ -84,6 +85,7 @@ const styles = {
 function ModeratorPage() {
     const { bookId } = useParams();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [bookData, setBookData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -97,33 +99,37 @@ function ModeratorPage() {
 
                 const transformedData = {
                     id: document.document_id || bookId,
-                    title: document.metadata?.title || 'Titre non défini',
-                    author: document.metadata?.author || 'Auteur non défini',
-                    submittedBy: document.uploader?.username || 'Utilisateur inconnu',
+                    title: document.metadata?.title || t('moderator.undefined'),
+                    author: document.metadata?.author || t('moderator.undefined'),
+                    submittedBy: document.uploader?.username || t('moderator.unknownUser'),
                     submissionDate: document.uploader?.upload_date || new Date().toISOString(),
                     status: document.moderation?.approval_process?.status || 'WAITING',
                     description: document.metadata?.description || '',
                     publisher: document.metadata?.publisher || '',
                     date: document.metadata?.parution_date || '',
                     totalPages: document.processing_info?.total_pages || 0,
-                    markdownContent: document.markdown?.content || document.content || document.preview || '# Contenu non disponible\n\nLe contenu du document n\'a pas pu être chargé.',
+                    markdownContent: document.markdown?.content || document.content || document.preview || `# ${t('moderator.noContentTitle')}\n\n${t('moderator.noContentText')}`,
                 };
 
                 setBookData(transformedData);
                 setError(null);
             } catch (err) {
                 console.error('Erreur lors du chargement du livre:', err);
-                setError(err.message);
+                const raw = err?.message || '';
+                const mapped = raw.includes('Document introuvable en quarantaine')
+                  ? t('moderator.errors.notFoundInQuarantine')
+                  : raw;
+                setError(mapped);
 
                 // Données de secours pour continuer à afficher la page
                 const fallbackData = {
                     id: bookId,
-                    title: 'Livre en modération',
-                    author: 'Auteur inconnu',
-                    submittedBy: 'Utilisateur',
+                    title: t('moderator.bookInModeration'),
+                    author: t('moderator.unknownAuthor'),
+                    submittedBy: t('moderator.user'),
                     submissionDate: new Date().toISOString(),
                     status: 'WAITING',
-                    description: 'Erreur lors du chargement des données...',
+                    description: t('moderator.errorLoading'),
                     publisher: '',
                     date: '',
                     totalPages: 0,
@@ -135,7 +141,7 @@ function ModeratorPage() {
         };
         if (bookId) fetchBookData();
         else setLoading(false);
-    }, [bookId]);
+    }, [bookId, t]);
 
     if (loading) {
         return (
@@ -144,7 +150,7 @@ function ModeratorPage() {
                 <Container maxWidth="lg">
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
                         <CircularProgress />
-                        <Typography sx={{ marginLeft: 2 }}>Chargement des données du livre...</Typography>
+                        <Typography sx={{ marginLeft: 2 }}>{t('moderator.loading')}</Typography>
                     </Box>
                 </Container>
             </Box>
@@ -162,30 +168,30 @@ function ModeratorPage() {
                         onClick={() => navigate(ROUTES.HOME)}
                         startIcon={<span>←</span>}
                     >
-                        Retour à la bibliothèque
+                        {t('moderator.backToLibrary')}
                     </Button>
                     <Button
                         variant="outlined"
                         onClick={() => navigate(ROUTES.ADMIN_QUARANTINE)}
                         startIcon={<span>←</span>}
                     >
-                        Retour à la liste des documents en quarantaine
+                        {t('moderator.backToQuarantine')}
                     </Button>
                 </Box>
 
                 {/* En-tête de la page */}
                 <Box sx={styles.section}>
                     <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        Modération du livre
+                        {t('moderator.title')}
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Validez ou rejetez ce livre en tant que modérateur.
+                        {t('moderator.subtitle')}
                     </Typography>
                 </Box>
 
                 {error && (
                     <Alert severity="warning" sx={{ marginBottom: 2 }}>
-                        Attention: {error}
+                        {t('moderator.warning')}: {error}
                     </Alert>
                 )}
 
@@ -197,60 +203,60 @@ function ModeratorPage() {
                             {/* Informations du livre */}
                             <Paper sx={styles.paper}>
                                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                                    Informations du livre
+                                    {t('moderator.bookInfo')}
                                 </Typography>
                                 <Divider sx={{ marginBottom: 2 }} />
 
                                 <Grid container spacing={2}>
                                     <Grid item xs={12}>
                                         <Typography variant="body2" color="text.secondary">
-                                            Titre
+                                            {t('moderator.fields.title')}
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                                            {bookData.title || 'Non défini'}
+                                            {bookData.title || t('moderator.undefined')}
                                         </Typography>
                                     </Grid>
 
                                     <Grid item xs={12}>
                                         <Typography variant="body2" color="text.secondary">
-                                            Auteur
+                                            {t('moderator.fields.author')}
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                                            {bookData.author || 'Non défini'}
+                                            {bookData.author || t('moderator.undefined')}
                                         </Typography>
                                     </Grid>
 
                                     <Grid item xs={12}>
                                         <Typography variant="body2" color="text.secondary">
-                                            Soumis par
+                                            {t('moderator.fields.submittedBy')}
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 'bold', marginBottom: 2 }}>
-                                            {bookData.submittedBy || 'Non défini'}
+                                            {bookData.submittedBy || t('moderator.undefined')}
                                         </Typography>
                                     </Grid>
 
                                     <Grid item xs={12}>
                                         <Typography variant="body2" color="text.secondary">
-                                            Date de soumission
+                                            {t('moderator.fields.submissionDate')}
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 'bold', marginBottom: 2 }}>
                                             {bookData.submissionDate
-                                                ? new Date(bookData.submissionDate).toLocaleDateString('fr-FR')
-                                                : 'Non défini'}
+                                                ? new Date(bookData.submissionDate).toLocaleDateString(undefined)
+                                                : t('moderator.undefined')}
                                         </Typography>
                                     </Grid>
 
                                     <Grid item xs={12}>
                                         <Typography variant="body2" color="text.secondary">
-                                            Statut
+                                            {t('moderator.fields.status')}
                                         </Typography>
                                         <Chip
                                             label={
-                                                bookData.status === 'WAITING' ? 'En attente' :
-                                                bookData.status === 'IN_QUARANTINE' ? 'Validé (3/3)' :
-                                                bookData.status === 'ACCEPTED' ? 'Publié' :
-                                                bookData.status === 'REJECTED' ? 'Rejeté' :
-                                                bookData.status || 'Inconnu'
+                                                bookData.status === 'WAITING' ? t('moderator.status.waiting') :
+                                                bookData.status === 'IN_QUARANTINE' ? t('moderator.status.inQuarantine') :
+                                                bookData.status === 'ACCEPTED' ? t('moderator.status.accepted') :
+                                                bookData.status === 'REJECTED' ? t('moderator.status.rejected') :
+                                                bookData.status || t('moderator.status.unknown')
                                             }
                                             color={
                                                 bookData.status === 'WAITING' ? 'warning' :
@@ -266,7 +272,7 @@ function ModeratorPage() {
                                     {bookData.description && (
                                         <Grid item xs={12}>
                                             <Typography variant="body2" color="text.secondary">
-                                                Description
+                                                {t('moderator.fields.description')}
                                             </Typography>
                                             <Typography variant="body1" sx={{ marginTop: 1 }}>
                                                 {bookData.description}
@@ -279,7 +285,7 @@ function ModeratorPage() {
                             {/* Tableau de validation */}
                             <Paper sx={styles.paper}>
                                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                                    État de la validation
+                                    {t('moderator.validationState')}
                                 </Typography>
                                 <Divider sx={{ marginBottom: 2 }} />
                                 <ModeratorValidationTable bookId={bookId} />
@@ -290,12 +296,12 @@ function ModeratorPage() {
                         <Box sx={styles.rightColumn}>
                             <Paper sx={{ ...styles.paper, minHeight: '80vh' }}>
                                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', marginBottom: 3 }}>
-                                    📖 Contenu du document
+                                    📖 {t('moderator.documentContent')}
                                 </Typography>
                                 <Divider sx={{ marginBottom: 3 }} />
                                 <Box sx={styles.markdownContent}>
                                     <ReactMarkdown
-                                        children={bookData?.markdownContent || 'Aucun contenu disponible'}
+                                        children={bookData?.markdownContent || t('moderator.noContent')}
                                         remarkPlugins={[remarkMath]}
                                         rehypePlugins={[rehypeKatex]}
                                         urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
@@ -313,7 +319,7 @@ function ModeratorPage() {
                                                     borderRadius: '4px',
                                                     margin: '10px 0'
                                                   }}
-                                                  alt={props.alt || 'Image'}
+                                                  alt={props.alt || t('moderator.image')}
                                               />
                                           )
                                         }}
@@ -326,7 +332,7 @@ function ModeratorPage() {
 
                 {!bookData && (
                     <Alert severity="error">
-                        Impossible de charger les données du livre
+                        {t('moderator.loadError')}
                     </Alert>
                 )}
             </Container>

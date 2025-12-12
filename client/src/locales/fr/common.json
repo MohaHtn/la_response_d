@@ -73,7 +73,20 @@
     "issues": "Motifs:",
     "approve": "Approuver",
     "reject": "Rejeter",
-    "coverOf": "Couverture de {{title}}"
+    "coverOf": "Couverture de {{title}}",
+    "problemDetails": "Détails du problème",
+    "contentAnalysis": "Analyse de contenu",
+    "securityAnalysis": "Analyse de sécurité",
+    "severity": "Sévérité",
+    "isAppropriate": "Approprié",
+    "yes": "Oui",
+    "no": "Non",
+    "warnings": "Avertissements:",
+    "details": "Détails:",
+    "promptInjection": "Injection de prompt",
+    "jailbreakAttempt": "Tentative de contournement (jailbreak)",
+    "riskLevel": "Niveau de risque",
+    "detectedPrompts": "Prompts détectés:"
   }
   ,
   "admin": {
@@ -144,6 +157,13 @@
         "edit": "Modifier",
         "delete": "Supprimer"
       },
+      "roles": {
+        "admin": "Administrateur",
+        "moderator": "Modérateur",
+        "user": "Utilisateur"
+      },
+      "confirmDelete": "Supprimer l’utilisateur \"{{username}}\" ? Cette action est irréversible.",
+      "deleteError": "Erreur lors de la suppression de l’utilisateur",
       "dialog": {
         "editTitle": "Modifier l’utilisateur",
         "username": "Nom d’utilisateur",
@@ -158,6 +178,65 @@
     }
   }
   ,
+  "uploadPage": {
+    "backToHome": "Retour à la page d'accueil",
+    "helper": "Vous pouvez déposer un document en glissant-déposant le fichier dans l'espace ci-dessous, ou cliquer dessus pour sélectionner votre document.",
+    "processing": "Traitement en cours...",
+    "dropHere": "Déposez le fichier ici",
+    "dragPDFHere": "Glissez-déposez un PDF ici",
+    "orClickToSelect": "ou cliquez pour sélectionner un fichier",
+    "uploading": "Envoi du fichier... {{percent}}%",
+    "processingDoc": "Traitement du document... {{percent}}%",
+    "documentProcessed": "Document traité",
+    "downloadMarkdownAria": "Télécharger le markdown",
+    "downloadMd": "Télécharger .md",
+    "sendNewDocument": "Renvoyer un nouveau document",
+    "labels": {
+      "title": "Titre",
+      "author": "Auteur",
+      "uploadedBy": "Uploadé par",
+      "unknown": "Inconnu",
+      "textSize": "Taille du texte",
+      "chars": "{{count}} caractères",
+      "documentId": "ID du document",
+      "notSpecified": "Non spécifié",
+      "date": "Date",
+      "publisher": "Éditeur",
+      "description": "Description"
+    },
+    "metadata": {
+      "title": "Métadonnées du document"
+    },
+    "analysis": {
+      "securityTitle": "Analyse de sécurité",
+      "contentTitle": "Analyse de contenu inapproprié",
+      "unknownUpper": "INCONNU",
+      "noneUpper": "AUCUN",
+      "securityPromptsDetected": "Prompts de sécurité détectés",
+      "detectedPrompts": "Prompts détectés",
+      "details": "Détails",
+      "appropriateContent": "Contenu approprié",
+      "warnings": "Avertissements",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "markdown": {
+      "previewTitle": "Aperçu du document en Markdown"
+    },
+    "imageAlt": "Image",
+    "errors": {
+      "response": "Erreur lors du traitement de la réponse",
+      "networkUpload": "Erreur réseau pendant l'upload",
+      "noPdfSelected": "Erreur : Veuillez sélectionner un fichier PDF.",
+      "networkWhileLoading": "Erreur réseau lors du chargement du document",
+      "processing": "Erreur de traitement",
+      "unknown": "inconnue"
+    },
+    "sse": {
+      "connecting": "Connexion au flux SSE..."
+    },
+    "previewAvailable": "Prévisualisation du contenu disponible"
+  },
   "home": {
     "loadingDocuments": "Chargement des documents...",
     "myUploads": {
@@ -167,7 +246,19 @@
     "moderate": "Modérer",
     "coverOf": "Couverture de {{title}}",
     "uploadedOn": "Uploadé le {{date}}",
-    "pagination": "Page {{page}} / {{total}} — {{count}} élément(s)"
+    "pagination": "Page {{page}} / {{total}} — {{count}} élément(s)",
+    "prev": "← Précédent",
+    "next": "Suivant →",
+    "back": "← Retour",
+    "allBooks": "Tous les livres",
+    "byUploader": "Ajouté par {{name}}",
+    "title": "Bibliothèque — Accueil",
+    "view": {
+      "grid": "Grille",
+      "list": "Liste",
+      "gridTitle": "Vue en grille",
+      "listTitle": "Vue en liste"
+    }
   }
   ,
   "presentation": {
@@ -205,6 +296,47 @@
       "loading": "En cours...",
       "login": "Se connecter",
       "signup": "S'inscrire"
+    }
+  }
+  ,
+  "moderator": {
+    "loading": "Chargement des données du livre...",
+    "backToLibrary": "Retour à la bibliothèque",
+    "backToQuarantine": "Retour à la liste des documents en quarantaine",
+    "title": "Modération du livre",
+    "subtitle": "Validez ou rejetez ce livre en tant que modérateur.",
+    "warning": "Attention",
+    "bookInfo": "Informations du livre",
+    "fields": {
+      "title": "Titre",
+      "author": "Auteur",
+      "submittedBy": "Soumis par",
+      "submissionDate": "Date de soumission",
+      "status": "Statut",
+      "description": "Description"
+    },
+    "validationState": "État de la validation",
+    "documentContent": "Contenu du document",
+    "noContent": "Aucun contenu disponible",
+    "image": "Image",
+    "loadError": "Impossible de charger les données du livre",
+    "undefined": "Non défini",
+    "unknownUser": "Utilisateur inconnu",
+    "noContentTitle": "Contenu non disponible",
+    "noContentText": "Le contenu du document n'a pas pu être chargé.",
+    "bookInModeration": "Livre en modération",
+    "unknownAuthor": "Auteur inconnu",
+    "user": "Utilisateur",
+    "errorLoading": "Erreur lors du chargement des données...",
+    "status": {
+      "waiting": "En attente",
+      "inQuarantine": "Validé (3/3)",
+      "accepted": "Publié",
+      "rejected": "Rejeté",
+      "unknown": "Inconnu"
+    },
+    "errors": {
+      "notFoundInQuarantine": "Document introuvable en quarantaine"
     }
   }
 }
