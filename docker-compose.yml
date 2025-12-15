@@ -32,8 +32,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    ports:
-      - "8000:8000"
+    # Pas d'exposition de port côté hôte: le client proxy /api -> server:8000
     restart: unless-stopped
 
   client:
@@ -42,10 +41,10 @@ services:
       dockerfile: Dockerfile
     container_name: la_response_d-client
     environment:
-      # Expose API base URL to client build if needed by your code via import.meta.env
-      - VITE_API_BASE=http://localhost:8000
+      # Le front appellera l'API via le proxy Nginx local (/api)
+      - VITE_API_BASE=/api
     ports:
-      - "5173:80"
+      - "5187:80"
     depends_on:
       - server
     restart: unless-stopped
