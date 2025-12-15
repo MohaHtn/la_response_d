@@ -4,9 +4,11 @@ FROM node:20-bookworm AS build
 WORKDIR /app
 COPY package*.json ./
 ENV ROLLUP_SKIP_NODE_NATIVE=true
-RUN npm ci --no-audit --no-fund --no-optional
+# Installer pnpm et utiliser un lockfile pnpm si présent, sinon convertir automatiquement
+RUN corepack enable && corepack prepare pnpm@9.12.2 --activate
+RUN pnpm install --no-frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm build
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
