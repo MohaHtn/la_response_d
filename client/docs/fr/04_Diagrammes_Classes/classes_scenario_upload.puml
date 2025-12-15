@@ -1,0 +1,17 @@
+@startuml
+class UploadPage
+class UploadForm {
+  +file
+  +metadata
+}
+class UploadService {
+  +upload(file, metadata)
+}
+class ProgressBar {
+  +percent: number
+}
+
+UploadPage *-- UploadForm
+UploadPage o-- ProgressBar
+UploadPage --> UploadService : envoie la requête
+@enduml

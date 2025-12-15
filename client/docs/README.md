@@ -1,14 +1,16 @@
-# Documentation Client
+# Documentation Client (Frontend)
 
-Ce répertoire centralise la documentation dédiée au client (frontend).
+Ce répertoire centralise TOUTE la documentation dédiée au client (frontend), de manière autonome et complète, sans renvoi au dossier `docs` à la racine.
 
-- 01_Glossaire.md — Liens vers les glossaires métier et technique existants.
-- 02_UseCases/ — Cas d’utilisation et scénarios pertinents pour le frontend.
-- 03_Sequences/ — Diagrammes de séquence côté client (squelettes/à compléter si nécessaire).
-- 04_Classes/ — Diagrammes de classes utiles pour le frontend (références).
-- 05_Architecture_Design.md — Choix d’architecture et design patterns (frontend).
-- 06_Guide_Nommage.md — Conventions de nommage (React, CSS, composants, fichiers).
-- 07_Git_Arborescence.md — Rappels sur l’arborescence Git et où placer les docs.
-- 08_Scripts/ — Scripts de démonstration/indépendants et instructions.
+Contenu (FR):
+- fr/01_Glossaire.md — Glossaire métier et technique (frontend)
+- fr/02_Use_Cases/ — Cas d’utilisation et scénarios détaillés (+ PlantUML)
+- fr/03_Diagrammes_Sequence/ — Diagrammes de séquence (PlantUML)
+- fr/04_Diagrammes_Classes/ — Diagrammes de classes (scénarios et global)
+- fr/05_Architecture_Design_Patterns.md — Justification des choix d’architecture et patterns
+- fr/06_Guide_Nommage.md — Conventions de nommage (React, CSS, fichiers)
+- fr/07_Arborescence_Depot.md — Arborescence Git recommandée (côté client)
+- fr/08_Parametrage_Env.md — Variables d’environnement (.env) pour le frontend
+- fr/08_Scripts/ — Scripts indépendants de démonstration (avec .env)
 
-Voir également l’index général: ../../docs/README.md
+Remarque: Tous les diagrammes PlantUML sont fournis au format texte (`.puml`) afin d’être facilement modifiables et versionnés.

@@ -1,0 +1,32 @@
+@startuml
+class HomePage
+class ModeratorPage
+class SearchService {
+  +search(query, filters, page)
+}
+class UploadService {
+  +upload(file, metadata)
+}
+class AuthService {
+  +login(email, pwd)
+  +logout()
+}
+class OeuvreUI {
+  id: string
+  titre: string
+  auteurs: string[]
+  statut: string
+}
+class UserUI {
+  id: string
+  role: string
+}
+
+HomePage --> SearchService
+ModeratorPage --> SearchService
+HomePage --> AuthService
+ModeratorPage --> AuthService
+HomePage --> UploadService
+
+SearchService --> OeuvreUI
+@enduml

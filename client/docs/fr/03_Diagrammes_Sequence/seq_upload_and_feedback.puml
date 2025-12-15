@@ -1,0 +1,13 @@
+@startuml
+actor Membre as M
+boundary UI as UI
+control UploadService as US
+database API as API
+
+M -> UI : Ouvre « Proposer une œuvre »
+UI -> US : upload(file, metadata)
+US -> API : POST /works {file, metadata}
+API --> US : 202 {status:"a_moderer", id}
+US -> UI : showConfirmation(id, status)
+UI -> M : Affichage statut et suivi
+@enduml

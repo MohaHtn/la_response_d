@@ -1,0 +1,13 @@
+@startuml
+actor Utilisateur as U
+boundary UI as UI
+control SearchService as SS
+database API as API
+
+U -> UI : Tape requête + filtres
+UI -> SS : search(query, filters, page)
+SS -> API : GET /works?q=...&filters=...&page=...
+API --> SS : 200 {items[], total}
+SS -> UI : renderResults(items, total)
+UI -> U : Affiche liste + pagination
+@enduml
