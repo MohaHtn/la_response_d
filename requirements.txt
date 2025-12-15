@@ -12,3 +12,4 @@ redis>=7.1.0
 Pillow
 pydantic
 email-validator
+pydantic[email]
