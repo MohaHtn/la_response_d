@@ -17,8 +17,8 @@ services:
 
   server:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/Dockerfile
     container_name: la_response_d-server
     env_file:
       - server/.env
