@@ -1,7 +1,7 @@
 {
-  "name": "la_reponse_d",
+  "name": "test_react",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +15,6 @@
     "@fontsource/roboto": "^5.2.8",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
-    "katex": "^0.16.11",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "i18next": "^24.0.2",

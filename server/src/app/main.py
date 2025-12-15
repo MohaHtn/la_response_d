@@ -21,8 +21,6 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         "http://localhost:8080",  # In case you use another port
-        "http://localhost:5187",  # Nginx client container mapped port
-        "http://127.0.0.1:5187",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

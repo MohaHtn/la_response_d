@@ -1,7 +1,6 @@
 """
 Redis connection and management
 """
-import os
 import redis
 from typing import Optional
 
@@ -19,19 +18,10 @@ class RedisManager:
             db: Redis database number
             password: Redis password (optional)
         """
-        # Allow configuration via environment variables when available
-        # Defaults preserve local dev behavior.
-        self.host = os.getenv('REDIS_HOST', host)
-        try:
-            self.port = int(os.getenv('REDIS_PORT', str(port)))
-        except ValueError:
-            self.port = port
-        try:
-            self.db = int(os.getenv('REDIS_DB', str(db)))
-        except ValueError:
-            self.db = db
-        env_password = os.getenv('REDIS_PASSWORD')
-        self.password = env_password if env_password is not None else password
+        self.host = host
+        self.port = port
+        self.db = db
+        self.password = password
         self._client: Optional[redis.Redis] = None
 
     def get_client(self) -> redis.Redis:

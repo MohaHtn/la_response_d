@@ -11,5 +11,3 @@ pyjwt
 redis>=7.1.0
 Pillow
 pydantic
-email-validator
-dotenv
