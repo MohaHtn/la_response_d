@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Container, Typography, Paper, CircularProgress, Alert, Button } from '@mui/material';
-import MarkdownRenderer from '../components/MarkdownRenderer';
+import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
+import 'katex/dist/katex.min.css';
 import Header from '../components/Header';
 import { API_CONFIG, STORAGE_KEYS, MESSAGES } from '../constants';
 import { getCommonHeaders } from '../utils/http';
-import { mapDocumentToBook } from '../utils/mappers';
 
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
 const styles = {
@@ -164,8 +166,29 @@ function ReadBookPage() {
             </Typography>
           )}
           <Box sx={styles.content}>
-            <MarkdownRenderer
-              content={book?.content || 'Aucun contenu disponible'}
+            <ReactMarkdown
+                children={book?.content || 'Aucun contenu disponible'}
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
+                components={{
+                  img: ({node, ...props}) => (
+                      <img
+                          {...props}
+                          style={{
+                            maxWidth: '100%',
+                            height: 'auto',
+                            display: 'block',
+                            maxHeight: '500px',
+                            objectFit: 'contain',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            margin: '10px 0'
+                          }}
+                          alt={props.alt || 'Image'}
+                      />
+                  )
+                }}
             />
           </Box>
         </Paper>

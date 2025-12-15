@@ -17,6 +17,11 @@ export const moderationService = {
     return unwrap(resp);
   },
 
+  async getBook(bookId){
+    const resp = await api.get(API_CONFIG.ENDPOINTS.DOCUMENT_DETAILS(bookId));
+    return unwrap(resp);
+  },
+
   // Détails d'un document en quarantaine
   async getQuarantineDocument(id) {
     const resp = await api.get(API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_DOCUMENT(id));
@@ -39,6 +44,12 @@ export const moderationService = {
   async moderateQuarantine(id, action) {
     const endpoint = `${API_CONFIG.ENDPOINTS.MODERATION_QUARANTINE_MODERATE(id)}?action=${encodeURIComponent(action)}`;
     const resp = await apiRequest(endpoint, { method: 'POST' });
+    return unwrap(resp);
+  },
+
+  // Rejet (suppression) d'un document (contexte général)
+  async rejectDocument(id) {
+    const resp = await apiRequest(API_CONFIG.ENDPOINTS.MODERATION_REJECT(id), { method: 'POST' });
     return unwrap(resp);
   },
 };

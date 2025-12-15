@@ -90,6 +90,9 @@
   "admin": {
     "title": "Admin panel",
     "subtitle": "Manage users, books, and moderation",
+    "search": {
+    "placeholder": "Search..."
+    },
     "stats": {
       "users": "Users",
       "totalBooks": "Total books",
@@ -212,7 +215,7 @@
       "rights": "🔐 Access rights management and moderation"
     },
     "gettingStarted": "Getting started with Biblioteko",
-    "gettingStartedText": "To take full advantage of all features, create an account or sign in:",
+    "gettingStartedText": "To take full advantage of all features, create an account or sign in.",
     "why": "Why use Biblioteko?",
     "whyText": "Our platform offers a unique approach to preserving and sharing knowledge:",
     "whyList": {
@@ -227,6 +230,7 @@
     "loading": "Loading book data...",
     "backToLibrary": "Back to library",
     "backToQuarantine": "Back to quarantine list",
+    "backToAdminPanel": "Back to admin panel",
     "title": "Book moderation",
     "subtitle": "Approve or reject this book as a moderator.",
     "warning": "Warning",

@@ -267,7 +267,7 @@ export default function QuarantinePage() {
                     <div role="img" aria-label={t('quarantine.coverOf', { title })} style={styles.cover} />
                   )}
                   <div style={styles.content}>
-                    <Link to={ROUTES.MODERATION(encodeURIComponent(id))} style={styles.bookTitle}>{title}</Link>
+                    <Link to={ROUTES.MODERATION(encodeURIComponent(id), true)} style={styles.bookTitle}>{title}</Link>
                     <div style={styles.bookMeta}>{t('quarantine.by')} {author} — id: {id}</div>
                     {preview && <div style={styles.preview}>{preview}</div>}
                     {issues && <div style={styles.issues}>{t('quarantine.issues')} {issues}</div>}

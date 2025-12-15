@@ -78,6 +78,44 @@ class DocumentRepository:
 
         return json.loads(document_json)
 
+    async def delete_document(self, document_id: str) -> bool:
+        """
+        Delete a document (approved/normal storage).
+
+        Args:
+            document_id: The document ID to delete
+
+        Returns:
+            True if document was deleted, False otherwise
+        """
+        # Load existing document to clean up indexes (status/uploader)
+        existing = await self.get_document(document_id)
+        if not existing:
+            return False
+
+        key = self._get_document_key(document_id)
+        result = self.redis_client.delete(key)
+
+        if result > 0:
+            # Remove from main index
+            self.redis_client.srem(self.DOCUMENT_INDEX, document_id)
+
+            # Remove from status index if present
+            status = existing.get("moderation", {}).get("approval_process", {}).get("status")
+            if status:
+                status_key = f"{self.DOCUMENT_BY_STATUS_INDEX}{status}"
+                self.redis_client.srem(status_key, document_id)
+
+            # Remove from uploader index if present
+            uploader = existing.get("uploader", {}).get("username")
+            if uploader:
+                uploader_key = f"{self.DOCUMENT_BY_UPLOADER_INDEX}{uploader}"
+                self.redis_client.srem(uploader_key, document_id)
+
+            return True
+
+        return False
+
     async def add_document(self, document_data: Dict) -> str:
         """
         Add a new document record

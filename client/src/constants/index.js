@@ -29,7 +29,12 @@ export const ROUTES = {
   BOOK: (id) => `/book/${id}`,
 
   // Pages de modération
-  MODERATION: (id) => `/moderation/${id}`,
+  // Accepte un second argument optionnel is_quarantine pour transmettre l'origine
+  // Exemple: ROUTES.MODERATION(id, true) -> /moderation/:id?is_quarantine=1
+  MODERATION: (id, is_quarantine) =>
+    typeof is_quarantine === 'undefined'
+      ? `/moderation/${id}`
+      : `/moderation/${id}?is_quarantine=${is_quarantine ? '1' : '0'}`,
   MODERATOR_PAGE: '/moderator',
 
   // Pages d'administration

@@ -23,7 +23,6 @@ import { AdminRoute, ModeratorRoute, ProtectedRoute } from './components/Protect
 import { ROUTES } from './constants';
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
@@ -65,31 +64,36 @@ createRoot(document.getElementById('root')).render(
           <Route
             path="/moderation/:bookId"
             element={
+              <ProtectedRoute>
               <ModeratorRoute>
                 <ModeratorPage />
               </ModeratorRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path={ROUTES.ADMIN}
             element={
+              <ProtectedRoute>
               <AdminRoute>
-                <AdminPage />
+                <AdminPage/>
               </AdminRoute>
+                  </ProtectedRoute>
             }
           />
           <Route
             path={ROUTES.ADMIN_QUARANTINE}
             element={
+              <ProtectedRoute>
               <AdminRoute>
                 <QuarantinePage />
               </AdminRoute>
+              </ProtectedRoute>
             }
           />
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
-  </StrictMode>,
+    </ThemeProvider>,
 )
 
 // Keep <html lang> in sync with current language

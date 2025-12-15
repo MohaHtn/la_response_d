@@ -79,17 +79,6 @@ export default function Header() {
           {t('nav.upload')}
         </Button>
       )}
-      {isAuthenticated && userType === USER_TYPES.ADMIN && (
-        <Button
-          color="inherit"
-          startIcon={<ShieldIcon />}
-          component={RouterLink}
-          to={ROUTES.ADMIN_QUARANTINE}
-          sx={{ display: { xs: 'none', md: 'inline-flex' } }}
-        >
-          {t('nav.quarantine')}
-        </Button>
-      )}
       {isAuthenticated && (userType === USER_TYPES.ADMIN || userType === 'ADMIN') && (
         <Button
           variant="contained"

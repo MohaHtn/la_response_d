@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link } from "react-router-dom";
-import MarkdownRenderer from './components/MarkdownRenderer';
+import React, { useState, useRef, useEffect } from 'react';
+import {Link, useNavigate} from "react-router-dom";
 import 'katex/dist/katex.min.css';
 import Header from './components/Header';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +8,10 @@ import { ROUTES } from './constants/index.js';
 import { getCommonHeaders } from './utils/http';
 
 import remarkGfm from 'remark-gfm'
+import ReactMarkdown, {defaultUrlTransform} from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import {Button} from "@mui/material";
 
 const styles = {
   root: {
@@ -353,6 +356,8 @@ function Upload() {
   const [currentJobId, setCurrentJobId] = useState(null);
   const sseRef = useRef(null);
   const [previewReady, setPreviewReady] = useState(false); // permet d'afficher le markdown pendant que le serveur continue
+
+  const navigate = useNavigate();
 
   // Fonction pour déclencher l'ouverture du gestionnaire de fichiers
   const handleButtonClick = () => {
@@ -741,8 +746,16 @@ function Upload() {
 
 
         <div style={{...styles.container, margin: '0 auto'}}>
-        <Link to={ROUTES.HOME} style={{ ...styles.navButton, alignSelf: 'flex-start', display: 'inline-block' }}> ← {t('uploadPage.backToHome')}</Link>
-            <h1 style={{ textAlign: 'left', fontSize: '24px', marginTop: '5px', marginBottom: '8px' }}>{t('nav.uploadDoc')}</h1>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate(ROUTES.HOME)}
+            style={{ width: '30%', marginTop: '16px', marginBottom: '16px' }}
+          >
+            ← {t('uploadPage.backToHome')}
+          </Button>
+
+          <h1 style={{ textAlign: 'left', fontSize: '24px', marginTop: '5px', marginBottom: '8px' }}>{t('nav.uploadDoc')}</h1>
 
           {!mergedMarkdown && (
             <p style={{ fontSize: '14px', marginTop: '5px', marginBottom: '8px' }}>{t('uploadPage.helper')}</p>
@@ -1021,7 +1034,30 @@ function Upload() {
                     </div>
                     <div style={styles.markdownDocument}>
                       <div style={styles.markdownContent}>
-                        <MarkdownRenderer content={mergedMarkdown} />
+                          <ReactMarkdown
+                              children={mergedMarkdown || t('moderator.noContent')}
+                              remarkPlugins={[remarkMath]}
+                              rehypePlugins={[rehypeKatex]}
+                              urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
+                              components={{
+                                img: ({node, ...props}) => (
+                                    <img
+                                        {...props}
+                                        style={{
+                                          maxWidth: '100%',
+                                          height: 'auto',
+                                          display: 'block',
+                                          maxHeight: '500px',
+                                          objectFit: 'contain',
+                                          border: '1px solid #ddd',
+                                          borderRadius: '4px',
+                                          margin: '10px 0'
+                                        }}
+                                        alt={props.alt || t('moderator.image')}
+                                    />
+                                )
+                              }}
+                          />
                       </div>
                     </div>
                   </div>

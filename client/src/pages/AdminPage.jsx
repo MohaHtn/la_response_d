@@ -29,6 +29,7 @@ import {
   MenuItem,
   Stack,
 } from '@mui/material';
+import TablePagination from '@mui/material/TablePagination';
 import PeopleIcon from '@mui/icons-material/People';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
@@ -205,6 +206,19 @@ function AdminPage() {
   const [sortBy, setSortBy] = useState('date'); // 'date', 'title', 'author'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
 
+  // Recherche par onglet
+  const [pendingQuery, setPendingQuery] = useState('');
+  const [allQuery, setAllQuery] = useState('');
+  const [usersQuery, setUsersQuery] = useState('');
+
+  // Pagination par onglet
+  const [pendingPage, setPendingPage] = useState(0);
+  const [allPage, setAllPage] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const [pendingRowsPerPage, setPendingRowsPerPage] = useState(10);
+  const [allRowsPerPage, setAllRowsPerPage] = useState(10);
+  const [usersRowsPerPage, setUsersRowsPerPage] = useState(10);
+
   useEffect(() => {
     const userType = localStorage.getItem(STORAGE_KEYS.USER_TYPE);
     if (userType === USER_TYPES.USER) {
@@ -328,8 +342,48 @@ function AdminPage() {
     return sortBooks(allBooks, sortBy, sortOrder);
   };
 
-  const handleModerateBook = (bookId) => {
-    navigate(ROUTES.MODERATION(bookId));
+  // Filtrage et pagination (client)
+  const filterBooks = (arr, q) => {
+    const query = (q || '').trim().toLowerCase();
+    if (!query) return arr;
+    return arr.filter(b => [b.title, b.author, b.submittedBy, b.status]
+      .some(v => (v || '').toString().toLowerCase().includes(query)));
+  };
+
+  const filterUsers = (arr, q) => {
+    const query = (q || '').trim().toLowerCase();
+    if (!query) return arr;
+    return arr.filter(u => [u.username, u.email, u.accountType]
+      .some(v => (v || '').toString().toLowerCase().includes(query)));
+  };
+
+  const pendingFiltered = filterBooks(getSortedPendingBooks(), pendingQuery);
+  const allFiltered = filterBooks(getSortedAllBooks(), allQuery);
+  const usersFiltered = filterUsers(users, usersQuery);
+
+  const pendingPaged = pendingFiltered.slice(
+    pendingPage * pendingRowsPerPage,
+    pendingPage * pendingRowsPerPage + pendingRowsPerPage
+  );
+  const allPaged = allFiltered.slice(
+    allPage * allRowsPerPage,
+    allPage * allRowsPerPage + allRowsPerPage
+  );
+  const usersPaged = usersFiltered.slice(
+    usersPage * usersRowsPerPage,
+    usersPage * usersRowsPerPage + usersRowsPerPage
+  );
+
+  const handleChangePendingPage = (event, newPage) => setPendingPage(newPage);
+  const handleChangeAllPage = (event, newPage) => setAllPage(newPage);
+  const handleChangeUsersPage = (event, newPage) => setUsersPage(newPage);
+  const handleChangePendingRpp = (event) => { setPendingRowsPerPage(parseInt(event.target.value, 10)); setPendingPage(0); };
+  const handleChangeAllRpp = (event) => { setAllRowsPerPage(parseInt(event.target.value, 10)); setAllPage(0); };
+  const handleChangeUsersRpp = (event) => { setUsersRowsPerPage(parseInt(event.target.value, 10)); setUsersPage(0); };
+
+  const handleModerateBook = (bookId, is_quarantine) => {
+    // Depuis l'admin (hors quarantaine), on indique is_quarantine = false
+    navigate(ROUTES.MODERATION(bookId, is_quarantine));
   };
 
   const handleViewBook = (bookId) => {
@@ -541,7 +595,7 @@ function AdminPage() {
                       {t('admin.pending.info')}
                     </Alert>
 
-                    {/* Boutons de tri */}
+                    {/* Boutons de tri + recherche */}
                     <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
                       <Typography variant="body2" sx={{ mr: 1 }}>{t('admin.pending.sortLabel')}</Typography>
                       <Button
@@ -565,6 +619,13 @@ function AdminPage() {
                       >
                         {t('admin.pending.sort.author')} {sortBy === 'author' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </Button>
+                      <Box sx={{ flex: 1 }} />
+                      <TextField
+                        size="small"
+                        value={pendingQuery}
+                        onChange={(e) => { setPendingQuery(e.target.value); setPendingPage(0); }}
+                        placeholder={t('admin.search.placeholder', { defaultValue: 'Rechercher…' })}
+                      />
                     </Box>
 
                     <TableContainer>
@@ -580,7 +641,7 @@ function AdminPage() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {getSortedPendingBooks().map((book) => (
+                          {pendingPaged.map((book) => (
                             <TableRow key={book.id}>
                               <TableCell>{book.title}</TableCell>
                               <TableCell>{book.author}</TableCell>
@@ -599,7 +660,7 @@ function AdminPage() {
                                 <Button
                                   size="small"
                                   variant="outlined"
-                                  onClick={() => handleModerateBook(book.id)}
+                                  onClick={() => handleModerateBook(book.id, true)}
                                   sx={{ mr: 1 }}
                                 >
                                   {t('admin.pending.buttons.moderate')}
@@ -617,6 +678,15 @@ function AdminPage() {
                         </TableBody>
                       </Table>
                     </TableContainer>
+                    <TablePagination
+                      component="div"
+                      count={pendingFiltered.length}
+                      page={pendingPage}
+                      onPageChange={handleChangePendingPage}
+                      rowsPerPage={pendingRowsPerPage}
+                      onRowsPerPageChange={handleChangePendingRpp}
+                      rowsPerPageOptions={[5, 10, 25, 50]}
+                    />
                   </Box>
                 )}
 
@@ -626,62 +696,75 @@ function AdminPage() {
                     <Alert severity="info" sx={{ mb: 2 }}>
                       {t('admin.all.info')}
                     </Alert>
-                    {allBooks.length === 0 ? (
+                    {/* Barre de recherche toujours visible */}
+                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                      <TextField
+                        size="small"
+                        value={allQuery}
+                        onChange={(e) => { setAllQuery(e.target.value); setAllPage(0); }}
+                        placeholder={t('admin.search.placeholder', { defaultValue: 'Rechercher…' })}
+                      />
+                    </Box>
+                    {allFiltered.length === 0 ? (
                       <Typography variant="body1" color="text.secondary">
                         {t('admin.all.none')}
                       </Typography>
                     ) : (
-                      <TableContainer>
-                        <Table>
-                          <TableHead>
-                            <TableRow>
-                              <TableCell><strong>{t('admin.all.table.title')}</strong></TableCell>
-                              <TableCell><strong>{t('admin.all.table.author')}</strong></TableCell>
-                              <TableCell><strong>{t('admin.all.table.submittedBy')}</strong></TableCell>
-                              <TableCell><strong>{t('admin.all.table.date')}</strong></TableCell>
-                              <TableCell><strong>{t('admin.all.table.status')}</strong></TableCell>
-                              <TableCell><strong>{t('admin.all.table.actions')}</strong></TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {allBooks.map((book) => (
-                              <TableRow key={book.id}>
-                                <TableCell>{book.title}</TableCell>
-                                <TableCell>{book.author}</TableCell>
-                                <TableCell>{book.submittedBy}</TableCell>
-                                <TableCell>
-                                  {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString(undefined) : ''}
-                                </TableCell>
-                                <TableCell>
-                                  <Chip
-                                    label={book.status === 'OK' ? t('admin.all.status.ok') : book.status === 'WAITING' ? t('admin.all.status.waiting') : book.status}
-                                    color={book.status === 'OK' ? 'success' : book.status === 'WAITING' ? 'warning' : 'default'}
-                                    size="small"
-                                  />
-                                </TableCell>
-
-                                <TableCell>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={() => handleModerateBook(book.id)}
-                                    sx={{ mr: 1 }}
-                                  >
-                                    {t('admin.all.buttons.moderate')}
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    variant="text"
-                                    onClick={() => handleViewBook(book.id)}
-                                  >
-                                    {t('admin.all.buttons.view')}
-                                  </Button>
-                                </TableCell>
+                      <>
+                        <TableContainer>
+                          <Table>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell><strong>{t('admin.all.table.title')}</strong></TableCell>
+                                <TableCell><strong>{t('admin.all.table.author')}</strong></TableCell>
+                                <TableCell><strong>{t('admin.all.table.submittedBy')}</strong></TableCell>
+                                <TableCell><strong>{t('admin.all.table.date')}</strong></TableCell>
+                                <TableCell><strong>{t('admin.all.table.status')}</strong></TableCell>
+                                <TableCell><strong>{t('admin.all.table.actions')}</strong></TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                              {allPaged.map((book) => (
+                                <TableRow key={book.id}>
+                                  <TableCell>{book.title}</TableCell>
+                                  <TableCell>{book.author}</TableCell>
+                                  <TableCell>{book.submittedBy}</TableCell>
+                                  <TableCell>
+                                    {book.submissionDate ? new Date(book.submissionDate).toLocaleDateString(undefined) : ''}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={book.status === 'OK' ? t('admin.all.status.ok') : book.status === 'WAITING' ? t('admin.all.status.waiting') : book.status}
+                                      color={book.status === 'OK' ? 'success' : book.status === 'WAITING' ? 'warning' : 'default'}
+                                      size="small"
+                                    />
+                                  </TableCell>
+
+                                  <TableCell>
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      onClick={() => handleModerateBook(book.id, false)}
+                                      sx={{ mr: 1 }}
+                                    >
+                                      {t('admin.all.buttons.moderate')}
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                        <TablePagination
+                          component="div"
+                          count={allFiltered.length}
+                          page={allPage}
+                          onPageChange={handleChangeAllPage}
+                          rowsPerPage={allRowsPerPage}
+                          onRowsPerPageChange={handleChangeAllRpp}
+                          rowsPerPageOptions={[5, 10, 25, 50]}
+                        />
+                      </>
                     )}
                   </Box>
                 )}
@@ -689,6 +772,14 @@ function AdminPage() {
                 {/* Onglet 3: Utilisateurs */}
                 {activeTab === 2 && (
                   <Box>
+                    <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                      <TextField
+                        size="small"
+                        value={usersQuery}
+                        onChange={(e) => { setUsersQuery(e.target.value); setUsersPage(0); }}
+                        placeholder={t('admin.search.placeholder', { defaultValue: 'Rechercher…' })}
+                      />
+                    </Box>
                     <TableContainer>
                       <Table>
                         <TableHead>
@@ -701,7 +792,7 @@ function AdminPage() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {users.map((user) => (
+                          {usersPaged.map((user) => (
                             <TableRow key={user.username}>
                               <TableCell>{user.username}</TableCell>
                               <TableCell>{user.email}</TableCell>
@@ -724,6 +815,15 @@ function AdminPage() {
                         </TableBody>
                       </Table>
                     </TableContainer>
+                    <TablePagination
+                      component="div"
+                      count={usersFiltered.length}
+                      page={usersPage}
+                      onPageChange={handleChangeUsersPage}
+                      rowsPerPage={usersRowsPerPage}
+                      onRowsPerPageChange={handleChangeUsersRpp}
+                      rowsPerPageOptions={[5, 10, 25, 50]}
+                    />
                   </Box>
                 )}
               </Box>

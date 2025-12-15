@@ -91,7 +91,10 @@
   ,
   "admin": {
     "title": "Panneau d'administration",
-    "subtitle": "Gérez les utilisateurs, les livres et la modération",
+    "subtitle": "Gérez les utilisateurs, les livres et la modération.",
+    "search": {
+      "placeholder": "Rechercher par titre, auteur ou utilisateur..."
+    },
     "stats": {
       "users": "Utilisateurs",
       "totalBooks": "Livres au total",
@@ -273,7 +276,7 @@
       "rights": "🔐 Gestion des droits d'accès et modération"
     },
     "gettingStarted": "Commencer à utiliser Bibliothéko",
-    "gettingStartedText": "Pour profiter pleinement de toutes les fonctionnalités, créez un compte ou connectez-vous :",
+    "gettingStartedText": "Pour profiter pleinement de toutes les fonctionnalités, créez un compte ou connectez-vous.",
     "why": "Pourquoi utiliser Bibliothéko ?",
     "whyText": "Notre plateforme offre une approche unique pour la préservation et le partage du savoir :",
     "whyList": {
@@ -303,6 +306,7 @@
     "loading": "Chargement des données du livre...",
     "backToLibrary": "Retour à la bibliothèque",
     "backToQuarantine": "Retour à la liste des documents en quarantaine",
+    "backToAdminPanel": "Retour au panneau d'administration",
     "title": "Modération du livre",
     "subtitle": "Validez ou rejetez ce livre en tant que modérateur.",
     "warning": "Attention",

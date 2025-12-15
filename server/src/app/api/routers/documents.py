@@ -39,6 +39,28 @@ def _set_progress(job_id: str, **payload) -> None:
     client.rpush(_JOB_HISTORY_KEY.format(job_id=job_id), json_data)
     client.expire(_JOB_HISTORY_KEY.format(job_id=job_id), 60 * 60)
 
+
+def _push_progress(job_id: str, lang: str, **payload) -> None:
+    """Ajoute les libellés traduits à la progression puis stocke.
+
+    Conserve les champs techniques `status` et `stage` pour compatibilité
+    et ajoute `status_label`, `stage_label` ainsi que `lang`.
+    """
+    try:
+        if "status" in payload:
+            payload["status_label"] = translate(
+                lang, f"sse.status.{payload['status']}", default=str(payload["status"]) or ""
+            )
+        if "stage" in payload:
+            payload["stage_label"] = translate(
+                lang, f"sse.stage.{payload['stage']}", default=str(payload["stage"]) or ""
+            )
+    except Exception:
+        # En cas d'erreur de traduction, ne pas bloquer l'émission
+        pass
+    payload["lang"] = lang
+    _set_progress(job_id, **payload)
+
 def _clear_job(job_id: str) -> None:
     """Supprime les clés Redis associées à un job donné."""
     client = redis_manager.get_client()
@@ -127,7 +149,7 @@ async def upload_document(
 
     # Create a job and start an async task
     job_id = str(uuid4())
-    _set_progress(job_id, status="queued", stage="init", progress=0)
+    _push_progress(job_id, lang, status="queued", stage="init", progress=0)
 
     filename = file.filename or "uploaded.pdf"
 
@@ -140,6 +162,7 @@ async def upload_document(
             title=title,
             author=author,
             username=current_user["username"],
+            lang=lang,
         )
     )
 
@@ -158,9 +181,10 @@ async def _process_document_job_async(
     title: Optional[str],
     author: Optional[str],
     username: str,
+    lang: str,
 ):
     try:
-        _set_progress(job_id, status="processing", stage="ocr:start", progress=5)
+        _push_progress(job_id, lang, status="processing", stage="ocr:start", progress=5)
 
         # Callback to relay internal progress from process_pdf to SSE
         def _on_progress(stage: str, progress: int | None = None, **kwargs):
@@ -168,7 +192,7 @@ async def _process_document_job_async(
             if progress is not None:
                 payload["progress"] = progress
             payload.update(kwargs)
-            _set_progress(job_id, **payload)
+            _push_progress(job_id, lang, **payload)
 
         # OCR step (potentially long) - run out of the event loop
         ocr_result = await asyncio.to_thread(
@@ -180,15 +204,15 @@ async def _process_document_job_async(
             include_image_base64=True,
         )
 
-        _set_progress(job_id, status="processing", stage="ocr:done", progress=40)
+        _push_progress(job_id, lang, status="processing", stage="ocr:done", progress=40)
 
         # Extract data from OCR output
-        _set_progress(job_id, status="processing", stage="extraction:start", progress=45)
+        _push_progress(job_id, lang, status="processing", stage="extraction:start", progress=45)
         extracted_metadata = ocr_result.get("metadata", {})
         security_analysis = ocr_result.get("security_analysis", {})
         content_analysis = ocr_result.get("content_analysis", {})
         markdown_content = ocr_result.get("markdown", "")
-        _set_progress(job_id, status="processing", stage="extraction:done", progress=50)
+        _push_progress(job_id, lang, status="processing", stage="extraction:done", progress=50)
 
         current_date = datetime.now().isoformat()
 
@@ -206,18 +230,19 @@ async def _process_document_job_async(
         doc_author = author or metadata_author
 
         # Détection d'indices d'injection de prompt (sécurité)
-        _set_progress(job_id, status="processing", stage="security:start", progress=52)
+        _push_progress(job_id, lang, status="processing", stage="security:start", progress=52)
         has_security_prompts = bool(security_analysis.get("has_security_prompts", False))
-        _set_progress(job_id, status="processing", stage="security:done", progress=55, has_security_prompts=has_security_prompts)
+        _push_progress(job_id, lang, status="processing", stage="security:done", progress=55, has_security_prompts=has_security_prompts)
 
         # Vérification du caractère approprié du contenu
-        _set_progress(job_id, status="processing", stage="appropriateness:start", progress=57)
+        _push_progress(job_id, lang, status="processing", stage="appropriateness:start", progress=57)
         is_appropriate = content_analysis.get("is_appropriate", True)
-        _set_progress(job_id, status="processing", stage="appropriateness:done", progress=60, is_appropriate=is_appropriate)
+        _push_progress(job_id, lang, status="processing", stage="appropriateness:done", progress=60, is_appropriate=is_appropriate)
 
         # Diffuser une mise à jour légère (sans gros contenus)
-        _set_progress(
+        _push_progress(
             job_id,
+            lang,
             status="processing",
             stage="deliver:markdown",
             progress=65,
@@ -230,7 +255,7 @@ async def _process_document_job_async(
             is_appropriate=content_analysis.get("is_appropriate", True),
         )
 
-        _set_progress(job_id, status="processing", stage="preview", progress=75)
+        _push_progress(job_id, lang, status="processing", stage="preview", progress=75)
         # Générer l'image de prévisualisation
         preview_text, cover_image = PreviewImageGenerator.generate_from_markdown(
             markdown_content=markdown_content,
@@ -239,7 +264,7 @@ async def _process_document_job_async(
         )
 
         # Vérifier la conformité
-        _set_progress(job_id, status="processing", stage="compliance", progress=80)
+        _push_progress(job_id, lang, status="processing", stage="compliance", progress=80)
         is_compliant = True
         compliance_issues = []
 
@@ -284,15 +309,16 @@ async def _process_document_job_async(
         document_data["compliance_issues"] = compliance_issues
 
         # Sauvegarder le document
-        _set_progress(job_id, status="processing", stage="persist", progress=90)
+        _push_progress(job_id, lang, status="processing", stage="persist", progress=90)
         if not is_compliant:
             document_id = await document_repository.add_document_to_quarantine(document_data)
         else:
             document_id = await document_repository.add_document(document_data)
 
         # New final step: send final response to client before completion
-        _set_progress(
+        _push_progress(
             job_id,
+            lang,
             status="processing",
             stage="deliver:final",
             progress=98,
@@ -300,11 +326,11 @@ async def _process_document_job_async(
         )
 
         # Événement terminal (sans message utilisateur spécifique)
-        _set_progress(job_id, status="done", stage="complete", progress=100, document_id=document_id)
+        _push_progress(job_id, lang, status="done", stage="complete", progress=100, document_id=document_id)
         # Schedule job cleanup in Redis after a short delay
         asyncio.create_task(_cleanup_job_later(job_id))
     except Exception as e:
-        _set_progress(job_id, status="error", stage="failed", progress=100, error=str(e))
+        _push_progress(job_id, lang, status="error", stage="failed", progress=100, error=str(e))
         # Cleanup also on error
         asyncio.create_task(_cleanup_job_later(job_id))
     finally:

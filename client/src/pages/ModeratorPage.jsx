@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import MarkdownRenderer from '../components/MarkdownRenderer';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import ReactMarkdown, {defaultUrlTransform} from 'react-markdown';
 import ModeratorValidationTable from '../components/ModeratorValidationTable';
 import Header from '../components/Header';
-import { ROUTES, MESSAGES } from '../constants';
+import { ROUTES, MESSAGES, USER_TYPES } from '../constants';
 import { moderationService } from '../services/moderation.service';
+import { getAuthData } from '../services/auth.service';
 import {
     Box,
     Container,
@@ -16,7 +17,13 @@ import {
     Alert,
     Divider,
     Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { useTranslation } from 'react-i18next';
 
 const styles = {
@@ -83,17 +90,27 @@ const styles = {
 function ModeratorPage() {
     const { bookId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { t } = useTranslation();
     const [bookData, setBookData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const { userType } = getAuthData();
 
     useEffect(() => {
         // Charger les données du livre depuis l'API (service centralisé)
         const fetchBookData = async () => {
             try {
                 setLoading(true);
-                const document = await moderationService.getQuarantineDocument(bookId);
+                const isQuarantine = ['1', 'true', 'yes'].includes(
+                  String(searchParams.get('is_quarantine') || '').toLowerCase()
+                );
+                let document = isQuarantine
+                  ? await moderationService.getQuarantineDocument(bookId)
+                  : await moderationService.getBook(bookId);
 
                 const transformedData = {
                     id: document.document_id || bookId,
@@ -114,9 +131,16 @@ function ModeratorPage() {
             } catch (err) {
                 console.error('Erreur lors du chargement du livre:', err);
                 const raw = err?.message || '';
-                const mapped = raw.includes('Document introuvable en quarantaine')
-                  ? t('moderator.errors.notFoundInQuarantine')
-                  : raw;
+                const isQuarantine = ['1', 'true', 'yes'].includes(
+                  String(searchParams.get('is_quarantine') || '').toLowerCase()
+                );
+                const mapped = isQuarantine
+                  ? (raw.includes('Document introuvable en quarantaine')
+                      ? t('moderator.errors.notFoundInQuarantine')
+                      : raw)
+                  : (raw.includes('Document introuvable')
+                      ? t('moderator.errors.notFound')
+                      : raw);
                 setError(mapped);
 
                 // Données de secours pour continuer à afficher la page
@@ -139,7 +163,7 @@ function ModeratorPage() {
         };
         if (bookId) fetchBookData();
         else setLoading(false);
-    }, [bookId, t]);
+    }, [bookId, t, searchParams]);
 
     if (loading) {
         return (
@@ -161,20 +185,37 @@ function ModeratorPage() {
             <Container maxWidth="xl">
                 {/* Bouton retour */}
                 <Box sx={{ marginBottom: 2 }}>
+                    {userType === USER_TYPES.ADMIN && (
+                        <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => navigate(ROUTES.ADMIN)}
+                        startIcon={<span>←</span>}
+                        >
+                            {t('moderator.backToAdminPanel')}
+                        </Button>
+                    )}
                     <Button
                         variant="outlined"
+                        style={{ marginLeft: '20px' }}
                         onClick={() => navigate(ROUTES.HOME)}
                         startIcon={<span>←</span>}
                     >
                         {t('moderator.backToLibrary')}
                     </Button>
-                    <Button
-                        variant="outlined"
-                        onClick={() => navigate(ROUTES.ADMIN_QUARANTINE)}
-                        startIcon={<span>←</span>}
-                    >
-                        {t('moderator.backToQuarantine')}
-                    </Button>
+
+                    {(userType === USER_TYPES.ADMIN || userType === USER_TYPES.MODERATOR) && (
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => setConfirmOpen(true)}
+                        style={{ marginLeft: '20px' }}
+                        disabled={deleting}
+                      >
+                        {deleting ? t('loading.generic') : 'Supprimer le livre'}
+                      </Button>
+                    )}
+
                 </Box>
 
                 {/* En-tête de la page */}
@@ -281,13 +322,16 @@ function ModeratorPage() {
                             </Paper>
 
                             {/* Tableau de validation */}
-                            <Paper sx={styles.paper}>
-                                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                                    {t('moderator.validationState')}
-                                </Typography>
-                                <Divider sx={{ marginBottom: 2 }} />
-                                <ModeratorValidationTable bookId={bookId} />
-                            </Paper>
+
+                            {(['1','true','yes'].includes(String(searchParams.get('is_quarantine') || '').toLowerCase())) && (
+                              <Paper sx={styles.paper}>
+                                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                                      {t('moderator.validationState')}
+                                  </Typography>
+                                  <Divider sx={{ marginBottom: 2 }} />
+                                  <ModeratorValidationTable bookId={bookId} />
+                              </Paper>
+                            )}
                         </Box>
 
                         {/* Colonne droite : Contenu du document */}
@@ -298,8 +342,29 @@ function ModeratorPage() {
                                 </Typography>
                                 <Divider sx={{ marginBottom: 3 }} />
                                 <Box sx={styles.markdownContent}>
-                                    <MarkdownRenderer
-                                      content={bookData?.markdownContent || t('moderator.noContent')}
+                                    <ReactMarkdown
+                                        children={bookData?.markdownContent || t('moderator.noContent')}
+                                        remarkPlugins={[remarkMath]}
+                                        rehypePlugins={[rehypeKatex]}
+                                        urlTransform={(url) =>url.startsWith('data:') ? url : defaultUrlTransform(url)}
+                                        components={{
+                                          img: ({node, ...props}) => (
+                                              <img
+                                                  {...props}
+                                                  style={{
+                                                    maxWidth: '100%',
+                                                    height: 'auto',
+                                                    display: 'block',
+                                                    maxHeight: '500px',
+                                                    objectFit: 'contain',
+                                                    border: '1px solid #ddd',
+                                                    borderRadius: '4px',
+                                                    margin: '10px 0'
+                                                  }}
+                                                  alt={props.alt || t('moderator.image')}
+                                              />
+                                          )
+                                        }}
                                     />
                                 </Box>
                             </Paper>
@@ -312,6 +377,45 @@ function ModeratorPage() {
                         {t('moderator.loadError')}
                     </Alert>
                 )}
+
+                {/* Boîte de confirmation suppression */}
+                <Dialog open={confirmOpen} onClose={() => (!deleting && setConfirmOpen(false))}>
+                  <DialogTitle>
+                    {"Êtes-vous sûr de supprimer ce document ?"}
+                  </DialogTitle>
+                  <DialogContent>
+                    <Typography variant="body2" color="text.secondary">
+                      {bookData?.title ? `"${bookData.title}"` : ''}
+                    </Typography>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)} disabled={deleting}>
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          setDeleting(true);
+                          await moderationService.rejectDocument(bookId);
+                          // Succès: message et redirection
+                          // Option: on pourrait afficher un toast; ici on redirige directement
+                          navigate(ROUTES.ADMIN, { replace: true, state: { info: MESSAGES.MODERATION_REJECTED } });
+                        } catch (e) {
+                          console.error('Erreur suppression', e);
+                          setError(e?.message || MESSAGES.MODERATION_ERROR);
+                        } finally {
+                          setDeleting(false);
+                          setConfirmOpen(false);
+                        }
+                      }}
+                      color="error"
+                      variant="contained"
+                      disabled={deleting}
+                    >
+                      Supprimer
+                    </Button>
+                  </DialogActions>
+                </Dialog>
             </Container>
         </Box>
     );

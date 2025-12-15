@@ -217,14 +217,14 @@ async def reject_document(
     request: Request = None,
 ):
     """
-    Reject a document (moderator/admin)
+    Reject a document (moderator/admin) and delete it
 
     Args:
         document_id: Document ID
         moderator_user: Moderator/Admin user (injected)
 
     Returns:
-        Rejection confirmation
+        Rejection confirmation (deleted)
     """
     document = await document_repository.get_document(document_id)
 
@@ -235,21 +235,19 @@ async def reject_document(
             status_code=404
         )
 
-    # Update status
-    document["moderation"]["approval_process"]["status"] = BookStatus.NOK.value
-
-    success = await document_repository.update_document(document_id, document)
+    # Delete the document from normal storage
+    success = await document_repository.delete_document(document_id)
 
     if not success:
         lang = get_lang(request) if request else "en"
         return APIResponse.error(
-            message=translate(lang, "moderation.error_rejection", default="Error during rejection"),
-            status_code=500
+            message=translate(lang, "moderation.not_found_or_delete_failed", default="Document not found or deletion failed"),
+            status_code=404
         )
 
     lang = get_lang(request) if request else "en"
     return APIResponse.success(
-        message=translate(lang, "moderation.rejected", default="Document rejected"),
+        message=translate(lang, "moderation.rejected_deleted", default="Document rejected and deleted"),
         data={
             "document_id": document_id,
             "rejected_by": moderator_user["username"]

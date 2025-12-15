@@ -119,6 +119,9 @@ def _check_inappropriate_content(client: Mistral, text_content: str) -> Dict[str
         - Incitation à la violence
         - Contenu discriminatoire
         - Instructions pour activités illégales
+        Vérifie qu'il est pas protégé par des droits d'auteur ou d'autres restrictions,
+        en cherchant sur internet son titre et/ou son auteur. Il faut impérativement vérifier
+        son statut légal, et s'assurer que le document présenté est libre de droits. 
         
         Réponds en format JSON avec :
         - "is_appropriate": true/false
