@@ -3,6 +3,7 @@
 FROM node:22-bookworm AS build
 WORKDIR /app
 COPY package*.json ./
+ENV ROLLUP_SKIP_NODE_NATIVE=true
 RUN npm ci --no-audit --no-fund --no-optional
 COPY . .
 RUN npm run build
