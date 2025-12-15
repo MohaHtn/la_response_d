@@ -1,33 +1,17 @@
-# Glossaire métier et technique — Frontend
+# Glossaire — Côté Client (Frontend)
 
-Ce glossaire couvre les termes et objets manipulés côté client (application web).
+Ce glossaire est autonome et couvre le vocabulaire utilisé dans l’interface utilisateur et la logique front.
 
-## Métiers
-- Œuvre: Ressource documentaire (PDF, audio, vidéo, article) consultable dans l’UI.
-- Membre: Utilisateur authentifié ayant accès à des fonctions avancées.
-- Bibliothécaire (Modérateur): Rôle habilité à valider/rejeter des œuvres proposées.
-- Fond commun: Œuvres libres disponibles à tous.
-- Séquestre: Espace restreint pour les œuvres sous droits en attente ou en litige.
-- À modérer: File d’œuvres proposées en attente de décision.
-- Emprunt: Mise à disposition temporaire (ex.: 14 jours) d’une œuvre sous droits.
-
-## Techniques (Frontend)
-- Composant: Unité UI (React) encapsulant un rendu et une logique locale.
-- Page: Composant de haut niveau lié à une route (ex.: `Home`, `ModeratorPage`).
-- Service API: Module JS centralisant les appels HTTP à l’API serveur.
-- State/Store: État applicatif (filtres, pagination, statut d’opération).
-- Loader/Skeleton: Indicateur visuel lors du chargement de données.
-- Toast/Notification: Message éphémère (succès/erreur/avertissement).
-- Environment Variables: Variables injectées au build via `VITE_*`.
-
-## Objets principaux côté UI
-- Work (OeuvreUI): { id, titre, auteurs, statut, vignettes, droits }
-- User (UtilisateurUI): { id, rôle, nomAffiché }
-- Filter (FiltreRecherche): { texte, facettes[], tri }
-- UploadRequest (PropositionOeuvre): { fichier, métadonnées, progression, statut }
-
-## Statuts d’une œuvre (vue client)
-- "proposée" → visible en attente côté modérateur
-- "validée" → apparaît dans le fond commun
-- "rejetée" → notifiée au proposeur avec motif
-- "séquestre" → non exposée publiquement, accès restreint
+- Œuvre: document numérique (PDF, audio, vidéo, article) géré par l’application.
+- Métadonnées: informations structurées décrivant une œuvre (titre, auteur, date, droits, tags).
+- Membre: utilisateur authentifié pouvant proposer, emprunter et consulter des œuvres.
+- Bibliothécaire: rôle de modération (validation, enrichissement des métadonnées, rejet).
+- Fond commun: œuvres libres de droit accessibles directement.
+- Séquestre: zone restreinte pour œuvres sous droit en attente ou empruntées.
+- À modérer: zone où les œuvres proposées attendent la modération.
+- Emprunt: accès temporaire à une œuvre sous droit (ex.: 14 jours).
+- Quarantaine: statut intermédiaire pour œuvres nécessitant une vérification approfondie.
+- Upload: action de proposer une œuvre via l’UI (drag & drop, sélection de fichier).
+- Feedback: messages de confirmation/erreur affichés à l’utilisateur.
+- Token: jeton d’authentification émis par l’API, stocké côté client (mémoire/stockage sécurisé).
+- Session: contexte de navigation utilisateur (authentifiée ou non).
