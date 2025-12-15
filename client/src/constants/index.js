@@ -35,12 +35,10 @@ export const ROUTES = {
     typeof is_quarantine === 'undefined'
       ? `/moderation/${id}`
       : `/moderation/${id}?is_quarantine=${is_quarantine ? '1' : '0'}`,
-  MODERATOR_PAGE: '/moderator',
 
   // Pages d'administration
   ADMIN: '/admin',
   ADMIN_QUARANTINE: '/admin/quarantine',
-  QUARANTINE_PAGE: '/quarantine',
 
   // Configuration
   SETUP: '/setup',

@@ -1,0 +1,54 @@
+name: la_response_d
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: la_response_d-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: la_response_d-server
+    env_file:
+      - server/.env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=
+      - UVICORN_WORKERS=2
+      - PYTHONPATH=/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: la_response_d-client
+    environment:
+      # Expose API base URL to client build if needed by your code via import.meta.env
+      - VITE_API_BASE=http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  redis-data:
