@@ -1,6 +1,6 @@
 ← [Accueil des scénarios](_Scenarios.md)
 
-# Scénario 12 : Rechercher une œuvre
+# Scénario 8: Rechercher une œuvre
 
 ## Nom du Scénario
 Rechercher une œuvre

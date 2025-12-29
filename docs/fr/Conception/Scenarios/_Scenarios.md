@@ -10,12 +10,7 @@
 5. **[Consulter une œuvre](05_Consulter_oeuvre.md)**
 6. **[Modérer une œuvre](06_Moderer_oeuvre.md)**
 7. **[Exporter une œuvre au format Markdown](07_Exporter_Markdown.md)**
-
-
-### Scénarios alternatifs
-8. **[Rechercher une œuvre](09_Rechercher_oeuvre.md)**
-9. **[En tant qu'admin, gérer les métadonnées (titre et auteur) d'une œuvre](10_Gerer_metadonnees.md)**
-
-### Scénarios d'erreur
-10. **[Échec de l'OCR](11_Echec_OCR.md)**
-11. **[Œuvre rejetée par la modération](13_Oeuvre_rejetee_moderation.md)**
+8. **[Rechercher une œuvre](08_Rechercher_oeuvre.md)**
+9. **[En tant qu'admin, gérer les métadonnées (titre et auteur) d'une œuvre](09_Gerer_metadonnees.md)**
+10. **[Échec de l'OCR](10_Echec_OCR.md)**
+11. **[Œuvre rejetée par la modération](11_Oeuvre_rejetee_moderation.md)**

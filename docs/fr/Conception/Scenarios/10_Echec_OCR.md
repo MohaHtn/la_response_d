@@ -1,6 +1,6 @@
 ← [Accueil des scénarios](_Scenarios.md)
 
-# Scénario 16 : Échec de l'OCR
+# Scénario 10 : Échec de l'OCR
 
 ## Nom du Scénario
 Échec de l'OCR

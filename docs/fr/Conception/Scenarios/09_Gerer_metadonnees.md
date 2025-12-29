@@ -1,6 +1,6 @@
 ← [Accueil des scénarios](_Scenarios.md)
 
-# Scénario 14 : Gérer les métadonnées d'une œuvre
+# Scénario 9 : Gérer les métadonnées d'une œuvre
 
 ## Nom du Scénario
 Gérer les métadonnées d'une œuvre via l'application web et l'IA
