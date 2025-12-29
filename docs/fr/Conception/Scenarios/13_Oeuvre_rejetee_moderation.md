@@ -21,7 +21,7 @@ Un bibliothécaire rejette une œuvre proposée par un membre lors du processus 
 ## Étapes
 1. Le bibliothécaire examine une œuvre en attente de modération
 2. Le bibliothécaire identifie un problème bloquant (violation de droits, contenu illégal)
-3. Le bibliothécaire sélectionne "Rejeter l'œuvre"
+3. Le bibliothécaire sélectionne "Supprimer le livre"
 4. Le système demande de spécifier le motif de rejet dans une liste prédéfinie
 5. Le bibliothécaire sélectionne le motif et ajoute des commentaires détaillés
 6. Le système supprime l'œuvre du répertoire "a_moderer"
