@@ -85,11 +85,19 @@ async def login_user(login_credentials: LoginCredentials, request: Request):
 
     # Decrypt auth data
     try:
+        if "encrypted_auth" not in user_record or not user_record["encrypted_auth"]:
+             raise ValueError("Missing authentication data for this user.")
+             
         auth_data = AuthService.decrypt_auth_data(user_record["encrypted_auth"])
-    except Exception:
+    except Exception as e:
+        # Log the error for debugging
+        import logging
+        logging.getLogger(__name__).error(f"Authentication error for user {login_credentials.username}: {str(e)}")
+        
         return APIResponse.error(
             message=translate(lang, "auth.verify_error", default="Error while verifying credentials"),
-            status_code=500
+            status_code=500,
+            detail=str(e) if config.DEBUG else None
         )
 
     # Verify password

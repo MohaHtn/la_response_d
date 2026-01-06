@@ -27,20 +27,44 @@ async def test_get_setup_status_needs_setup(client, mock_user_repo):
 
 @pytest.mark.asyncio
 async def test_get_setup_status_no_setup_needed(client, mock_user_repo):
-    # Simuler qu'il y a déjà 3 admins
+    # Simuler qu'il y a déjà 3 admins avec des données d'auth valides (simulées)
     mock_user_repo.get_all_users = AsyncMock(return_value=[
-        {"username": "admin1", "account_type": "ADMIN"},
-        {"username": "admin2", "account_type": "ADMIN"},
-        {"username": "admin3", "account_type": "ADMIN"},
+        {"username": "admin1", "account_type": "ADMIN", "encrypted_auth": "valid1"},
+        {"username": "admin2", "account_type": "ADMIN", "encrypted_auth": "valid2"},
+        {"username": "admin3", "account_type": "ADMIN", "encrypted_auth": "valid3"},
     ])
     
-    response = client.get("/setup/status")
+    with patch('app.api.routers.setup.AuthService.decrypt_auth_data') as mock_decrypt:
+        mock_decrypt.return_value = {"password_hash": b"h", "salt": b"s"}
+        
+        response = client.get("/setup/status")
     
     assert response.status_code == 200
     data = response.json()
     assert data["needs_setup"] is False
     assert data["admins_count"] == 3
+    assert data["readable_admins_count"] == 3
     assert data["remaining"] == 0
+
+@pytest.mark.asyncio
+async def test_get_setup_status_needs_recovery(client, mock_user_repo):
+    # Simuler qu'il y a 3 admins mais leurs données sont illisibles
+    mock_user_repo.get_all_users = AsyncMock(return_value=[
+        {"username": "admin1", "account_type": "ADMIN", "encrypted_auth": "broken1"},
+        {"username": "admin2", "account_type": "ADMIN", "encrypted_auth": "broken2"},
+        {"username": "admin3", "account_type": "ADMIN", "encrypted_auth": "broken3"},
+    ])
+    
+    with patch('app.api.routers.setup.AuthService.decrypt_auth_data') as mock_decrypt:
+        mock_decrypt.side_effect = ValueError("Decryption failed")
+        
+        response = client.get("/setup/status")
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["needs_setup"] is True  # Doit être True car aucun admin lisible
+    assert data["readable_admins_count"] == 0
+    assert data["remaining"] == 0 # remaining est basé sur admins_count physique
 
 @pytest.mark.asyncio
 async def test_create_admins_success(client, mock_user_repo):
@@ -57,6 +81,8 @@ async def test_create_admins_success(client, mock_user_repo):
     with patch('app.api.routers.setup.AuthService') as mock_auth:
         mock_auth.hash_password.return_value = ("hash", "salt")
         mock_auth.encrypt_auth_data.return_value = "encrypted"
+        # Mock decrypt_auth_data pour la boucle de vérification
+        mock_auth.decrypt_auth_data.side_effect = ValueError("None exists")
         
         response = client.post("/setup/admins", json=admin_data)
     
@@ -68,22 +94,26 @@ async def test_create_admins_success(client, mock_user_repo):
 
 @pytest.mark.asyncio
 async def test_create_admins_limit_reached(client, mock_user_repo):
-    # Simuler qu'il y a déjà 3 admins
+    # Simuler qu'il y a déjà 3 admins lisibles
     mock_user_repo.get_all_users = AsyncMock(return_value=[
-        {"username": "admin1", "account_type": "ADMIN"},
-        {"username": "admin2", "account_type": "ADMIN"},
-        {"username": "admin3", "account_type": "ADMIN"},
+        {"username": "admin1", "account_type": "ADMIN", "encrypted_auth": "v1"},
+        {"username": "admin2", "account_type": "ADMIN", "encrypted_auth": "v2"},
+        {"username": "admin3", "account_type": "ADMIN", "encrypted_auth": "v3"},
     ])
+    mock_user_repo.user_exists = AsyncMock(return_value=True)
     mock_user_repo.add_user = AsyncMock()
     
     admin_data = [
         {"username": "admin4", "email": "admin4@example.com", "password": "password123"}
     ]
     
-    response = client.post("/setup/admins", json=admin_data)
+    with patch('app.api.routers.setup.AuthService.decrypt_auth_data') as mock_decrypt:
+        mock_decrypt.return_value = {"ok": True}
+        
+        response = client.post("/setup/admins", json=admin_data)
     
     assert response.status_code == 200
     data = response.json()
     assert data["created"] == 0
-    assert "maximum de 3 admins" in data["message"]
+    assert "maximum de 3 admins valides" in data["message"]
     assert mock_user_repo.add_user.call_count == 0

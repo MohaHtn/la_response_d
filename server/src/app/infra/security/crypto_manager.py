@@ -31,10 +31,19 @@ class CryptoManager:
         """Load existing key or generate a new one"""
         try:
             with open(self.key_file, 'rb') as file:
-                return file.read()
-        except FileNotFoundError:
+                key = file.read()
+                if not key:
+                    raise ValueError("Empty key file")
+                return key
+        except (FileNotFoundError, ValueError):
             # Generate and save a new key if it doesn't exist
+            import logging
+            logging.getLogger(__name__).warning(f"Encryption key not found or empty at {self.key_file}. Generating a new one. Existing encrypted data will be unreadable!")
             key = Fernet.generate_key()
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(self.key_file)), exist_ok=True)
+            
             with open(self.key_file, 'wb') as file:
                 file.write(key)
             return key

@@ -86,13 +86,26 @@ class AuthService:
 
         Returns:
             Dictionary with 'password_hash' and 'salt' as bytes
-        """
-        encrypted_bytes = base64.urlsafe_b64decode(encrypted_auth)
-        decrypted = crypto_manager.decrypt(encrypted_bytes)
-        auth_data = json.loads(decrypted.decode())
 
-        return {
-            "password_hash": base64.urlsafe_b64decode(auth_data["password_hash"]),
-            "salt": base64.urlsafe_b64decode(auth_data["salt"])
-        }
+        Raises:
+            ValueError: If decryption fails (e.g., invalid key or corrupted data)
+        """
+        if not encrypted_auth:
+            raise ValueError("Empty encrypted authentication data")
+
+        try:
+            encrypted_bytes = base64.urlsafe_b64decode(encrypted_auth)
+            decrypted = crypto_manager.decrypt(encrypted_bytes)
+            auth_data = json.loads(decrypted.decode())
+
+            return {
+                "password_hash": base64.urlsafe_b64decode(auth_data["password_hash"]),
+                "salt": base64.urlsafe_b64decode(auth_data["salt"])
+            }
+        except Exception as e:
+            # Handle decryption failures (e.g., InvalidToken if the key changed)
+            import logging
+            error_msg = str(e) or e.__class__.__name__
+            logging.getLogger(__name__).error(f"Failed to decrypt auth data: {error_msg}")
+            raise ValueError(f"Decryption failed: {error_msg}. This may happen if the encryption key has changed.")
 

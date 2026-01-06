@@ -27,18 +27,24 @@ def _is_admin(user: Dict[str, Any]) -> bool:
 @router.get("/status")
 async def get_setup_status():
     users = await user_repository.get_all_users()
-    admins_count = sum(1 for u in users if _is_admin(u))
-    needs_setup = admins_count < 3
-
-    # Si le setup est fini, on pourrait renvoyer moins d'infos
-    if not needs_setup:
-        return {
-            "needs_setup": False,
-            # "admins_count": 3
-        }
+    admins = [u for u in users if _is_admin(u)]
+    admins_count = len(admins)
+    
+    # Vérifier si les admins existants sont "valides" (déchiffrables)
+    readable_admins_count = 0
+    for admin in admins:
+        try:
+            if "encrypted_auth" in admin and admin["encrypted_auth"]:
+                AuthService.decrypt_auth_data(admin["encrypted_auth"])
+                readable_admins_count += 1
+        except Exception:
+            pass
+            
+    needs_setup = readable_admins_count == 0 or admins_count < 3
 
     return {
         "admins_count": admins_count,
+        "readable_admins_count": readable_admins_count,
         "needs_setup": needs_setup,
         "remaining": max(0, 3 - admins_count),
     }
@@ -51,13 +57,24 @@ async def create_admins(admins: List[AdminCreate]):
     """
     # État actuel
     users = await user_repository.get_all_users()
-    admins_count = sum(1 for u in users if _is_admin(u))
-    remaining = max(0, 3 - admins_count)
+    admins_list = [u for u in users if _is_admin(u)]
+    
+    readable_admins_count = 0
+    for admin in admins_list:
+        try:
+            if "encrypted_auth" in admin and admin["encrypted_auth"]:
+                AuthService.decrypt_auth_data(admin["encrypted_auth"])
+                readable_admins_count += 1
+        except Exception:
+            pass
 
-    if remaining <= 0:
-        return {"status": "ok", "created": 0, "message": "Le maximum de 3 admins est déjà atteint."}
+    # Si on a déjà 3 admins lisibles, on bloque
+    if readable_admins_count >= 3:
+        return {"status": "ok", "created": 0, "message": "Le maximum de 3 admins valides est déjà atteint."}
 
-    # Ne pas autoriser d'envoyer plus que nécessaire
+    # On autorise à créer jusqu'à 3 admins en tout, 
+    # ou à mettre à jour les admins existants (notamment s'ils sont illisibles)
+    remaining = max(0, 3 - readable_admins_count)
     payload = admins[:remaining]
 
     created = []
