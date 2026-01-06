@@ -7,14 +7,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copie tous les fichiers nécessaires en une seule fois pour éviter les problèmes
-COPY . ./
+# Copier explicitement les fichiers critiques
+COPY index.html ./
+COPY vite.config.js ./
+COPY eslint.config.js ./
 
-# Nettoyage des fichiers non nécessaires après copie (SAUF node_modules)
-RUN rm -rf .git .pytest_cache dist 2>/dev/null || true
-
-# Réinstaller les dépendances pour s'assurer qu'elles sont présentes
-RUN npm install
+# Copier les répertoires
+COPY src/ ./src/
+COPY public/ ./public/
 
 # Vérification que les fichiers critiques sont présents
 RUN echo "=== DIAGNOSTIC POST-COPIE ===" && \

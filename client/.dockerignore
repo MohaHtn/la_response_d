@@ -1,3 +1,4 @@
+# Exclusions Docker
 node_modules
 .git
 .gitignore
@@ -10,7 +11,16 @@ coverage
 *.log
 dist
 .pytest_cache
+Dockerfile*
 
-# Ne pas ignorer les fichiers critiques pour le build
-# index.html, vite.config.js, eslint.config.js, src/, public/ doivent être inclus
+# Inclure explicitement les fichiers critiques pour le build
+!index.html
+!vite.config.js
+!eslint.config.js
+!src
+!src/**
+!public
+!public/**
+!package.json
+!package-lock.json
 
