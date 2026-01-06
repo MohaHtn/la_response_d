@@ -73,6 +73,7 @@ export default function Header() {
           color="inherit"
           startIcon={<UploadFileIcon />}
           component={RouterLink}
+          style={{ color: 'white' }}
           to={ROUTES.UPLOAD}
           sx={{ display: { xs: 'none', md: 'inline-flex' } }}
         >
@@ -82,9 +83,10 @@ export default function Header() {
       {isAuthenticated && (userType === USER_TYPES.ADMIN || userType === 'ADMIN') && (
         <Button
           variant="contained"
-          color="secondary"
+          color="blue"
           startIcon={<AdminPanelSettingsIcon />}
           component={RouterLink}
+          style={{ color: 'white' }}
           to={ROUTES.ADMIN}
           sx={{ display: { xs: 'none', md: 'inline-flex' } }}
         >
@@ -104,7 +106,7 @@ export default function Header() {
       <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.75, ml: 1 }}>
         <Button
           size="small"
-          color="secondary"
+          color="white"
           disabled={isSwitching}
           variant={i18n.language?.startsWith('fr') ? 'contained' : 'outlined'}
           onClick={() => switchLang('fr')}
@@ -122,7 +124,7 @@ export default function Header() {
         </Button>
         <Button
           size="small"
-          color="secondary"
+          color="white"
           disabled={isSwitching}
           variant={i18n.language?.startsWith('en') ? 'contained' : 'outlined'}
           onClick={() => switchLang('en')}
