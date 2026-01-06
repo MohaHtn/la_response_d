@@ -10,8 +10,11 @@ RUN npm install
 # Copie tous les fichiers nécessaires en une seule fois pour éviter les problèmes
 COPY . ./
 
-# Nettoyage des fichiers non nécessaires après copie
-RUN rm -rf node_modules .git .pytest_cache dist 2>/dev/null || true
+# Nettoyage des fichiers non nécessaires après copie (SAUF node_modules)
+RUN rm -rf .git .pytest_cache dist 2>/dev/null || true
+
+# Réinstaller les dépendances pour s'assurer qu'elles sont présentes
+RUN npm install
 
 # Vérification que les fichiers critiques sont présents
 RUN echo "=== DIAGNOSTIC POST-COPIE ===" && \
