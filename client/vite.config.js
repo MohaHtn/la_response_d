@@ -42,7 +42,8 @@ export default defineConfig({
     }
   },
   define: {
-    // Rendre les variables d'environnement disponibles
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'http://localhost:8000'),
+    // En production Docker, VITE_API_URL doit être vide pour utiliser des chemins relatifs via Nginx
+    // En développement local avec Vite, le proxy ci-dessus gère les requêtes
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || ''),
   }
 })

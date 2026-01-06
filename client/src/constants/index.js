@@ -110,8 +110,10 @@ export const MESSAGES = {
 };
 
 // Configuration de l'API
+// En production Docker, VITE_API_URL doit être vide ('') pour utiliser des requêtes relatives via Nginx
+// En développement local, VITE_API_URL peut être 'http://localhost:8000' pour accéder directement au serveur
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  BASE_URL: import.meta.env.VITE_API_URL ?? '',
   TIMEOUT: 30000,
   ENDPOINTS: {
     // Health & Root
