@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 
 WORKDIR /app
 
@@ -9,8 +9,17 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copie le code source
-COPY . .
+# Copie la configuration Vite et autres fichiers de config
+COPY vite.config.js ./
+COPY index.html ./
+COPY eslint.config.js ./
+
+# Copie le code source et les assets
+COPY src/ ./src/
+COPY public/ ./public/
+
+# Debug: lister les fichiers pour vérifier
+RUN ls -la
 
 # Build l'application
 RUN npm run build
