@@ -28,6 +28,7 @@ jobs:
             export GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
             export PIXTRAL_API_KEY="${{ secrets.PIXTRAL_API_KEY }}"
             export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
+            export JWT_EXPIRATION_HOURS="${{ secrets.JWT_EXPIRATION_HOURS }}"
             
             # Utiliser le script de déploiement (adapté pour Linux si besoin ou docker-compose direct)
             docker compose up -d --build
