@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from .api.routers import auth_router, documents_router, moderation_router, setup_router, admin_router
 from .api.middleware import error_handler_middleware, logging_middleware
@@ -12,17 +13,33 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# Configuration CORS
+# Configuration CORS - Origines autorisées
+# En production Docker, le client passe par Nginx qui proxy vers le serveur
+# donc les requêtes viennent de la même origine ou de l'origine du client
+cors_origins = [
+    "http://localhost:3000",      # React dev server
+    "http://localhost:5173",      # Vite dev server
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://localhost:8080",
+    "http://localhost:5187",      # Docker client (production)
+    "http://127.0.0.1:5187",
+    "http://localhost:80",
+    "http://localhost",
+]
+
+# Ajouter des origines personnalisées depuis les variables d'environnement
+extra_origins = os.getenv("CORS_ORIGINS", "")
+if extra_origins:
+    cors_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
+
+# En mode développement ou si explicitement configuré, autoriser toutes les origines
+allow_all_origins = os.getenv("CORS_ALLOW_ALL", "false").lower() == "true"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React dev server
-        "http://localhost:5173",  # Vite dev server
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://localhost:8080",  # In case you use another port
-    ],
-    allow_credentials=True,
+    allow_origins=["*"] if allow_all_origins else cors_origins,
+    allow_credentials=not allow_all_origins,  # credentials ne fonctionne pas avec "*"
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
         "Authorization",

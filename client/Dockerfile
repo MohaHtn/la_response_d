@@ -39,22 +39,60 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Configuration Nginx
+# Configuration Nginx avec support CORS
 RUN echo 'server { \
     listen 80; \
     server_name localhost; \
+    \
+    # Fichiers statiques du frontend \
     location / { \
         root /usr/share/nginx/html; \
         index index.html; \
         try_files $uri $uri/ /index.html; \
     } \
+    \
+    # Proxy API avec headers CORS \
     location /api/ { \
         proxy_pass http://la_response_d-server:8000/; \
+        proxy_http_version 1.1; \
         proxy_set_header Host $host; \
         proxy_set_header X-Real-IP $remote_addr; \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        \
+        # Headers CORS pour les requetes preflight \
+        if ($request_method = OPTIONS) { \
+            add_header Access-Control-Allow-Origin $http_origin always; \
+            add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH" always; \
+            add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, Origin, X-Requested-With, Username" always; \
+            add_header Access-Control-Allow-Credentials true always; \
+            add_header Access-Control-Max-Age 86400 always; \
+            add_header Content-Length 0; \
+            add_header Content-Type text/plain; \
+            return 204; \
+        } \
     } \
+    \
+    # Endpoints directs vers le serveur \
+    location ~ ^/(auth|documents|moderation|setup|health|admin)(/|$) { \
+        proxy_pass http://la_response_d-server:8000; \
+        proxy_http_version 1.1; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        \
+        if ($request_method = OPTIONS) { \
+            add_header Access-Control-Allow-Origin $http_origin always; \
+            add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH" always; \
+            add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, Origin, X-Requested-With, Username" always; \
+            add_header Access-Control-Allow-Credentials true always; \
+            return 204; \
+        } \
+    } \
+    \
     client_max_body_size 50M; \
 }' > /etc/nginx/conf.d/default.conf
 
