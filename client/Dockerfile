@@ -3,29 +3,52 @@ FROM node:20-alpine as build
 
 WORKDIR /app
 
-# Diagnostic du contexte AVANT toute copie
-COPY . /tmp/context_check/
-RUN echo "=== CONTENU DU CONTEXTE DOCKER ===" && \
-    ls -la /tmp/context_check/ && \
-    echo "=== FIN CONTEXTE ===" && \
-    rm -rf /tmp/context_check/
-
 # Copie package.json et install des dépendances
 COPY package*.json ./
 RUN npm install
 
-# Copier tout le reste (en excluant ce qui est dans .dockerignore)
+# Copier tout le contexte disponible
 COPY . .
 
-# Créer le dossier public s'il n'existe pas (pour éviter les erreurs de build)
+# Créer le dossier public s'il n'existe pas
 RUN mkdir -p public
 
+# Créer index.html s'il n'existe pas
+RUN if [ ! -f index.html ]; then \
+    echo '<!doctype html>' > index.html && \
+    echo '<html lang="en">' >> index.html && \
+    echo '  <head>' >> index.html && \
+    echo '    <meta charset="UTF-8" />' >> index.html && \
+    echo '    <link rel="icon" type="image/svg+xml" href="/book.svg" />' >> index.html && \
+    echo '    <meta name="viewport" content="width=device-width, initial-scale=1.0" />' >> index.html && \
+    echo '    <title>La Réponse D | Biblioteko</title>' >> index.html && \
+    echo '  </head>' >> index.html && \
+    echo '  <body>' >> index.html && \
+    echo '    <div id="root"></div>' >> index.html && \
+    echo '    <script type="module" src="/src/main.jsx"></script>' >> index.html && \
+    echo '  </body>' >> index.html && \
+    echo '</html>' >> index.html && \
+    echo "✅ index.html créé"; \
+    else echo "✅ index.html existant"; fi
+
+# Créer vite.config.js s'il n'existe pas
+RUN if [ ! -f vite.config.js ]; then \
+    echo "import { defineConfig } from 'vite'" > vite.config.js && \
+    echo "import react from '@vitejs/plugin-react'" >> vite.config.js && \
+    echo "" >> vite.config.js && \
+    echo "export default defineConfig({" >> vite.config.js && \
+    echo "  plugins: [react()]," >> vite.config.js && \
+    echo "  server: {" >> vite.config.js && \
+    echo "    port: 5173," >> vite.config.js && \
+    echo "    host: true" >> vite.config.js && \
+    echo "  }" >> vite.config.js && \
+    echo "})" >> vite.config.js && \
+    echo "✅ vite.config.js créé"; \
+    else echo "✅ vite.config.js existant"; fi
+
 # Vérification que les fichiers critiques sont présents
-RUN echo "=== DIAGNOSTIC POST-COPIE ===" && \
-    pwd && \
-    echo "Contenu du répertoire de travail:" && \
+RUN echo "=== DIAGNOSTIC POST-CRÉATION ===" && \
     ls -la && \
-    echo "Vérification des fichiers critiques:" && \
     test -f index.html && echo "✅ index.html OK" || echo "❌ index.html MANQUANT" && \
     test -f vite.config.js && echo "✅ vite.config.js OK" || echo "❌ vite.config.js MANQUANT" && \
     test -d src && echo "✅ src/ OK" || echo "❌ src/ MANQUANT" && \
