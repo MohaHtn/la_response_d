@@ -3,6 +3,13 @@ FROM node:20-alpine as build
 
 WORKDIR /app
 
+# Diagnostic du contexte AVANT toute copie
+COPY . /tmp/context_check/
+RUN echo "=== CONTENU DU CONTEXTE DOCKER ===" && \
+    ls -la /tmp/context_check/ && \
+    echo "=== FIN CONTEXTE ===" && \
+    rm -rf /tmp/context_check/
+
 # Copie package.json et install des dépendances
 COPY package*.json ./
 RUN npm install
