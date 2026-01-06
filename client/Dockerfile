@@ -1,72 +1,34 @@
 # Build stage
 FROM node:20-alpine as build
 
+# Installer git
+RUN apk add --no-cache git
+
 WORKDIR /app
 
-# Copie package.json et install des dépendances
-COPY package*.json ./
-RUN npm install
+# Cloner le dépôt Git directement pour avoir tous les fichiers
+ARG GIT_REPO=https://github.com/MohaHtn/la_response_d.git
+ARG GIT_BRANCH=main
 
-# Copier tout le contexte disponible
-COPY . .
+RUN git clone --depth 1 --branch ${GIT_BRANCH} ${GIT_REPO} /tmp/repo && \
+    cp -r /tmp/repo/client/* . && \
+    rm -rf /tmp/repo && \
+    echo "✅ Fichiers clonés depuis Git"
+
+# Installer les dépendances
+RUN npm install
 
 # Créer le dossier public s'il n'existe pas
 RUN mkdir -p public
 
-# Créer index.html s'il n'existe pas
-RUN if [ ! -f index.html ]; then \
-    echo '<!doctype html>' > index.html && \
-    echo '<html lang="en">' >> index.html && \
-    echo '  <head>' >> index.html && \
-    echo '    <meta charset="UTF-8" />' >> index.html && \
-    echo '    <link rel="icon" type="image/svg+xml" href="/book.svg" />' >> index.html && \
-    echo '    <meta name="viewport" content="width=device-width, initial-scale=1.0" />' >> index.html && \
-    echo '    <title>La Réponse D | Biblioteko</title>' >> index.html && \
-    echo '  </head>' >> index.html && \
-    echo '  <body>' >> index.html && \
-    echo '    <div id="root"></div>' >> index.html && \
-    echo '    <script type="module" src="/src/main.jsx"></script>' >> index.html && \
-    echo '  </body>' >> index.html && \
-    echo '</html>' >> index.html && \
-    echo "✅ index.html créé"; \
-    else echo "✅ index.html existant"; fi
-
-# Créer vite.config.js s'il n'existe pas
-RUN if [ ! -f vite.config.js ]; then \
-    echo "import { defineConfig } from 'vite'" > vite.config.js && \
-    echo "import react from '@vitejs/plugin-react'" >> vite.config.js && \
-    echo "" >> vite.config.js && \
-    echo "export default defineConfig({" >> vite.config.js && \
-    echo "  plugins: [react()]," >> vite.config.js && \
-    echo "  server: {" >> vite.config.js && \
-    echo "    port: 5173," >> vite.config.js && \
-    echo "    host: true" >> vite.config.js && \
-    echo "  }" >> vite.config.js && \
-    echo "})" >> vite.config.js && \
-    echo "✅ vite.config.js créé"; \
-    else echo "✅ vite.config.js existant"; fi
-
-# Créer src/index.css s'il n'existe pas
-RUN if [ ! -f src/index.css ]; then \
-    echo ":root {" > src/index.css && \
-    echo "  font-family: Roboto, system-ui, Avenir, Helvetica, Arial, sans-serif;" >> src/index.css && \
-    echo "  line-height: 1.5;" >> src/index.css && \
-    echo "  font-weight: 400;" >> src/index.css && \
-    echo "}" >> src/index.css && \
-    echo "body {" >> src/index.css && \
-    echo "  margin: 0;" >> src/index.css && \
-    echo "  min-width: 320px;" >> src/index.css && \
-    echo "  min-height: 100vh;" >> src/index.css && \
-    echo "}" >> src/index.css && \
-    echo "✅ src/index.css créé"; \
-    else echo "✅ src/index.css existant"; fi
-
 # Vérification que les fichiers critiques sont présents
-RUN echo "=== DIAGNOSTIC POST-CRÉATION ===" && \
+RUN echo "=== DIAGNOSTIC POST-CLONE ===" && \
     ls -la && \
+    ls -la src/ && \
     test -f index.html && echo "✅ index.html OK" || echo "❌ index.html MANQUANT" && \
     test -f vite.config.js && echo "✅ vite.config.js OK" || echo "❌ vite.config.js MANQUANT" && \
     test -d src && echo "✅ src/ OK" || echo "❌ src/ MANQUANT" && \
+    test -d src/i18n && echo "✅ src/i18n/ OK" || echo "❌ src/i18n/ MANQUANT" && \
     test -d public && echo "✅ public/ OK" || echo "❌ public/ MANQUANT"
 
 # Build
