@@ -19,17 +19,13 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/your/app/la_response_d
+            cd /home/mohahtn/la_reponse_d
             git pull origin main
             
-            # Créer le fichier .env si nécessaire ou s'assurer qu'il existe
-            # Les variables sont gérées par docker-compose via l'environnement du shell
+            # Créer ou mettre à jour le fichier .env pour docker-compose
+            echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > .env
+            echo "PIXTRAL_API_KEY=${{ secrets.PIXTRAL_API_KEY }}" >> .env
+            echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
             
-            export GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
-            export PIXTRAL_API_KEY="${{ secrets.PIXTRAL_API_KEY }}"
-            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
-            export JWT_EXPIRATION_HOURS="${{ secrets.JWT_EXPIRATION_HOURS }}"
-            
-            # Utiliser le script de déploiement (adapté pour Linux si besoin ou docker-compose direct)
             docker compose up -d --build
             docker system prune -f
