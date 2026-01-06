@@ -15,8 +15,11 @@ RUN git clone --depth 1 --branch ${GIT_BRANCH} ${GIT_REPO} /tmp/repo && \
     rm -rf /tmp/repo && \
     echo "✅ Fichiers clonés depuis Git"
 
-# Installer les dépendances
-RUN npm install
+# Supprimer package-lock.json et node_modules pour éviter le bug npm avec rollup
+# Puis réinstaller proprement les dépendances natives pour cette architecture
+RUN rm -rf node_modules package-lock.json && \
+    npm install --prefer-offline=false && \
+    npm install @rollup/rollup-linux-x64-musl --save-optional || true
 
 # Créer le dossier public s'il n'existe pas
 RUN mkdir -p public
@@ -24,7 +27,6 @@ RUN mkdir -p public
 # Vérification que les fichiers critiques sont présents
 RUN echo "=== DIAGNOSTIC POST-CLONE ===" && \
     ls -la && \
-    ls -la src/ && \
     test -f index.html && echo "✅ index.html OK" || echo "❌ index.html MANQUANT" && \
     test -f vite.config.js && echo "✅ vite.config.js OK" || echo "❌ vite.config.js MANQUANT" && \
     test -d src && echo "✅ src/ OK" || echo "❌ src/ MANQUANT" && \
