@@ -9,17 +9,14 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copie la configuration Vite et autres fichiers de config
-COPY vite.config.js ./
-COPY index.html ./
-COPY eslint.config.js ./
+# Copie tous les fichiers du projet (sauf ceux exclus par .dockerignore)
+COPY . .
 
-# Copie le code source et les assets
-COPY src/ ./src/
-COPY public/ ./public/
-
-# Debug: lister les fichiers pour vérifier
-RUN ls -la
+# Debug: vérifier que les fichiers essentiels sont présents
+RUN echo "Vérification des fichiers critiques:" && \
+    ls -la index.html && \
+    ls -la vite.config.js && \
+    ls -la src/main.jsx
 
 # Build l'application
 RUN npm run build
