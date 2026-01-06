@@ -3,13 +3,14 @@
  */
 
 import { Navigate } from 'react-router-dom';
-import { getAuthData } from '../services/auth.service';
+import { getAuthData, isTokenExpired, clearAuthData } from '../services/auth.service';
 import { ROUTES, USER_TYPES } from '../constants';
 
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { token, userType } = getAuthData();
 
-  if (!token) {
+  if (!token || isTokenExpired(token)) {
+    if (token) clearAuthData(); // Nettoyer si expiré
     return <Navigate to={ROUTES.PRESENTATION} replace />;
   }
 

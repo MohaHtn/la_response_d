@@ -1,6 +1,6 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import './index.css'
 import i18n from './i18n/index.js'
 import { ThemeProvider } from '@mui/material/styles'
@@ -21,70 +21,90 @@ import QuarantinePage from "./pages/QuarantinePage.jsx";
 import SetupPage from "./pages/SetupPage.jsx";
 import { AdminRoute, ModeratorRoute, ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { ROUTES } from './constants';
+import { getAuthData, isTokenExpired, clearAuthData } from './services/auth.service';
+
+/**
+ * Composant pour surveiller la validité du token sur chaque changement de route
+ */
+const AuthWatcher = ({ children }) => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const { token } = getAuthData();
+    if (token && isTokenExpired(token)) {
+      clearAuthData();
+      window.location.replace(ROUTES.PRESENTATION);
+    }
+  }, [location]);
+
+  return children;
+};
 
 createRoot(document.getElementById('root')).render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <Routes>
-          <Route path={ROUTES.PRESENTATION} element={<Presentation />} />
-          <Route path={ROUTES.AUTH} element={<Auth />} />
-          <Route
-            path={ROUTES.HOME}
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route path={ROUTES.SETUP} element={<SetupPage />} />
-          <Route
-            path={ROUTES.UPLOAD}
-            element={
-              <ProtectedRoute>
-                <Upload />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/book/:bookId"
-            element={
-              <ProtectedRoute>
-                <ReadBookPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/moderation/:bookId"
-            element={
-              <ProtectedRoute>
-              <ModeratorRoute>
-                <ModeratorPage />
-              </ModeratorRoute>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path={ROUTES.ADMIN}
-            element={
-              <ProtectedRoute>
-              <AdminRoute>
-                <AdminPage/>
-              </AdminRoute>
-                  </ProtectedRoute>
-            }
-          />
-          <Route
-            path={ROUTES.ADMIN_QUARANTINE}
-            element={
-              <ProtectedRoute>
-              <AdminRoute>
-                <QuarantinePage />
-              </AdminRoute>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <AuthWatcher>
+          <Routes>
+            <Route path={ROUTES.PRESENTATION} element={<Presentation />} />
+            <Route path={ROUTES.AUTH} element={<Auth />} />
+            <Route
+              path={ROUTES.HOME}
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route path={ROUTES.SETUP} element={<SetupPage />} />
+            <Route
+              path={ROUTES.UPLOAD}
+              element={
+                <ProtectedRoute>
+                  <Upload />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/book/:bookId"
+              element={
+                <ProtectedRoute>
+                  <ReadBookPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/moderation/:bookId"
+              element={
+                <ProtectedRoute>
+                <ModeratorRoute>
+                  <ModeratorPage />
+                </ModeratorRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={ROUTES.ADMIN}
+              element={
+                <ProtectedRoute>
+                <AdminRoute>
+                  <AdminPage/>
+                </AdminRoute>
+                    </ProtectedRoute>
+              }
+            />
+            <Route
+              path={ROUTES.ADMIN_QUARANTINE}
+              element={
+                <ProtectedRoute>
+                <AdminRoute>
+                  <QuarantinePage />
+                </AdminRoute>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthWatcher>
       </BrowserRouter>
     </ThemeProvider>,
 )

@@ -48,10 +48,34 @@ export const getAuthData = () => {
 };
 
 /**
- * Vérifie si l'utilisateur est authentifié
+ * Vérifie si le token est expiré
+ */
+export const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    const { exp } = JSON.parse(jsonPayload);
+    if (!exp) return false; // Si pas d'exp, on considère qu'il n'expire pas (rare pour JWT)
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    return exp < currentTime;
+  } catch (error) {
+    console.error('Erreur lors du décodage du token:', error);
+    return true; // En cas d'erreur de décodage, on considère le token comme invalide/expiré
+  }
+};
+
+/**
+ * Vérifie si l'utilisateur est authentifié et que son token est valide
  */
 export const isAuthenticated = () => {
-  return !!getAuthData().token;
+  const { token } = getAuthData();
+  return !!token && !isTokenExpired(token);
 };
 
 /**

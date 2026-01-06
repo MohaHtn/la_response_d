@@ -4,6 +4,7 @@
 
 import { API_CONFIG, STORAGE_KEYS, ROUTES } from '../constants';
 import i18n from '../i18n';
+import { clearAuthData } from './auth.service';
 
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
@@ -13,13 +14,7 @@ const API_BASE_URL = API_CONFIG.BASE_URL;
 const handleApiError = async (response) => {
   // Gestion spécifique 401: token invalide/expiré -> retour à la présentation
   if (response.status === 401) {
-    try {
-      // Nettoyage minimal local
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER_TYPE);
-      localStorage.removeItem(STORAGE_KEYS.USERNAME);
-      window.dispatchEvent(new Event('authChange'));
-    } catch {}
+    clearAuthData();
     // Rediriger vers la page de présentation
     if (typeof window !== 'undefined') {
       window.location.replace(ROUTES.PRESENTATION);
