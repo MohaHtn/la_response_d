@@ -1,16 +1,15 @@
-node_modules
-.git
-.gitignore
-README.md
-.env
-.env.local
-.nyc_output
-coverage
-.vscode
-.DS_Store
-*.log
-dist
-.pytest_cache
-Dockerfile
-Dockerfile.*
+# Exclure tout par défaut
+*
+
+# Inclure explicitement les fichiers/dossiers nécessaires
+!package.json
+!package-lock.json
+!index.html
+!vite.config.js
+!eslint.config.js
+!src
+!src/**
+!public
+!public/**
+!.env.example
 
