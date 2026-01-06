@@ -7,14 +7,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copier explicitement les fichiers critiques
-COPY index.html ./
-COPY vite.config.js ./
-COPY eslint.config.js ./
+# Copier tout le reste (en excluant ce qui est dans .dockerignore)
+COPY . .
 
-# Copier les répertoires
-COPY src/ ./src/
-COPY public/ ./public/
+# Créer le dossier public s'il n'existe pas (pour éviter les erreurs de build)
+RUN mkdir -p public
 
 # Vérification que les fichiers critiques sont présents
 RUN echo "=== DIAGNOSTIC POST-COPIE ===" && \

@@ -1,9 +1,9 @@
-# Exclusions Docker
 node_modules
 .git
 .gitignore
 README.md
 .env
+.env.local
 .nyc_output
 coverage
 .vscode
@@ -11,16 +11,6 @@ coverage
 *.log
 dist
 .pytest_cache
-Dockerfile*
-
-# Inclure explicitement les fichiers critiques pour le build
-!index.html
-!vite.config.js
-!eslint.config.js
-!src
-!src/**
-!public
-!public/**
-!package.json
-!package-lock.json
+Dockerfile
+Dockerfile.*
 
