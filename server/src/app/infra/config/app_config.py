@@ -37,9 +37,8 @@ class Config:
 
     # File paths
     BASE_DIR = Path(__file__).parent.parent.parent
-    KEY_FILE = BASE_DIR / "key.key"
-    USERS_FILE = BASE_DIR / "users.json"
-    OCR_RESULT_FILE = BASE_DIR / "ocr_result.txt"
+    KEY_FILE = BASE_DIR
+    USERS_FILE = BASE_DIR
 
     # Security settings - UTILISER DES VARIABLES D'ENVIRONNEMENT
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGEZ_MOI_EN_PRODUCTION")

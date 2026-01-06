@@ -26,19 +26,22 @@ def _is_admin(user: Dict[str, Any]) -> bool:
 
 @router.get("/status")
 async def get_setup_status():
-    """
-    Retourne l'état de configuration: nombre d'admins existants et si la configuration est requise.
-    La configuration est considérée nécessaire tant que moins de 3 admins existent.
-    """
     users = await user_repository.get_all_users()
     admins_count = sum(1 for u in users if _is_admin(u))
     needs_setup = admins_count < 3
+
+    # Si le setup est fini, on pourrait renvoyer moins d'infos
+    if not needs_setup:
+        return {
+            "needs_setup": False,
+            # "admins_count": 3
+        }
+
     return {
         "admins_count": admins_count,
         "needs_setup": needs_setup,
         "remaining": max(0, 3 - admins_count),
     }
-
 
 @router.post("/admins")
 async def create_admins(admins: List[AdminCreate]):
