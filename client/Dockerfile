@@ -46,6 +46,21 @@ RUN if [ ! -f vite.config.js ]; then \
     echo "✅ vite.config.js créé"; \
     else echo "✅ vite.config.js existant"; fi
 
+# Créer src/index.css s'il n'existe pas
+RUN if [ ! -f src/index.css ]; then \
+    echo ":root {" > src/index.css && \
+    echo "  font-family: Roboto, system-ui, Avenir, Helvetica, Arial, sans-serif;" >> src/index.css && \
+    echo "  line-height: 1.5;" >> src/index.css && \
+    echo "  font-weight: 400;" >> src/index.css && \
+    echo "}" >> src/index.css && \
+    echo "body {" >> src/index.css && \
+    echo "  margin: 0;" >> src/index.css && \
+    echo "  min-width: 320px;" >> src/index.css && \
+    echo "  min-height: 100vh;" >> src/index.css && \
+    echo "}" >> src/index.css && \
+    echo "✅ src/index.css créé"; \
+    else echo "✅ src/index.css existant"; fi
+
 # Vérification que les fichiers critiques sont présents
 RUN echo "=== DIAGNOSTIC POST-CRÉATION ===" && \
     ls -la && \
