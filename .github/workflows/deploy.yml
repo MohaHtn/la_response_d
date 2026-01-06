@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main
+      - main  # Ou la branche de votre choix
 
 jobs:
   deploy:
@@ -19,30 +19,17 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -e
-            # Essayer les deux variantes de nom (reponse vs response)
-            if [ -d "/home/mohahtn/la_reponse_d" ]; then
-              cd "/home/mohahtn/la_reponse_d"
-            elif [ -d "/home/mohahtn/la_response_d" ]; then
-              cd "/home/mohahtn/la_response_d"
-            else
-              echo "Repertoire non trouvé, tentative de clonage..."
-              cd /home/mohahtn
-              git clone https://github.com/${{ github.repository }}.git la_response_d
-              cd la_response_d
-            fi
-
+            cd /path/to/your/app/la_response_d
             git pull origin main
             
-            # Créer ou mettre à jour le fichier .env pour le service server
-            # Note: docker-compose.yml pointe vers server/.env
-            mkdir -p server
-            echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > server/.env
-            echo "PIXTRAL_API_KEY=${{ secrets.PIXTRAL_API_KEY }}" >> server/.env
-            echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> server/.env
+            # Créer le fichier .env si nécessaire ou s'assurer qu'il existe
+            # Les variables sont gérées par docker-compose via l'environnement du shell
             
-            # Stopper les anciens conteneurs pour éviter les conflits de noms
-            docker compose down
+            export GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+            export PIXTRAL_API_KEY="${{ secrets.PIXTRAL_API_KEY }}"
+            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
+            export JWT_EXPIRATION_HOURS="${{ secrets.JWT_EXPIRATION_HOURS }}"
             
+            # Utiliser le script de déploiement (adapté pour Linux si besoin ou docker-compose direct)
             docker compose up -d --build
             docker system prune -f
