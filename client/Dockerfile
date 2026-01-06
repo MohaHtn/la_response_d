@@ -3,25 +3,33 @@ FROM node:20-alpine as build
 
 WORKDIR /app
 
-# Copie package.json et package-lock.json (si présent)
+# Copie package.json et install des dépendances
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copie tous les fichiers du projet (sauf ceux exclus par .dockerignore)
-COPY . .
+# Copie TOUS les fichiers critiques un par un pour éviter les problèmes
+COPY index.html ./index.html
+COPY vite.config.js ./vite.config.js
+COPY eslint.config.js ./eslint.config.js
 
-# Debug: vérifier que les fichiers essentiels sont présents
-RUN echo "Vérification des fichiers critiques:" && \
-    ls -la index.html && \
-    ls -la vite.config.js && \
-    ls -la src/main.jsx
+# Copie les répertoires critiques
+COPY src ./src
+COPY public ./public
 
-# Build l'application
+# Vérification que les fichiers ont bien été copiés
+RUN echo "=== DIAGNOSTIC POST-COPIE ===" && \
+    pwd && \
+    echo "Contenu du répertoire de travail:" && \
+    ls -la && \
+    echo "Test spécifique index.html:" && \
+    test -f index.html && echo "✅ index.html OK" || echo "❌ index.html MANQUANT" && \
+    test -f vite.config.js && echo "✅ vite.config.js OK" || echo "❌ vite.config.js MANQUANT" && \
+    test -d src && echo "✅ src/ OK" || echo "❌ src/ MANQUANT"
+
+# Build
 RUN npm run build
 
-# Production stage avec Nginx
+# Production stage
 FROM nginx:alpine
 
 # Configuration Nginx
@@ -43,8 +51,11 @@ RUN echo 'server { \
     client_max_body_size 50M; \
 }' > /etc/nginx/conf.d/default.conf
 
-# Copy built app
+# Copy built files
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# Check what was copied
+RUN echo "Files in nginx html:" && ls -la /usr/share/nginx/html/
 
 EXPOSE 80
 
