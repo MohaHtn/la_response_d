@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/your/app/la_response_d
+            cd /home/mohahtn/la_response_d
             git pull origin main
             
             # Créer le fichier .env si nécessaire ou s'assurer qu'il existe
