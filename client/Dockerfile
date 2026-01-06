@@ -7,24 +7,22 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copie TOUS les fichiers critiques un par un pour éviter les problèmes
-COPY index.html ./index.html
-COPY vite.config.js ./vite.config.js
-COPY eslint.config.js ./eslint.config.js
+# Copie tous les fichiers nécessaires en une seule fois pour éviter les problèmes
+COPY . ./
 
-# Copie les répertoires critiques
-COPY src ./src
-COPY public ./public
+# Nettoyage des fichiers non nécessaires après copie
+RUN rm -rf node_modules .git .pytest_cache dist 2>/dev/null || true
 
-# Vérification que les fichiers ont bien été copiés
+# Vérification que les fichiers critiques sont présents
 RUN echo "=== DIAGNOSTIC POST-COPIE ===" && \
     pwd && \
     echo "Contenu du répertoire de travail:" && \
     ls -la && \
-    echo "Test spécifique index.html:" && \
+    echo "Vérification des fichiers critiques:" && \
     test -f index.html && echo "✅ index.html OK" || echo "❌ index.html MANQUANT" && \
     test -f vite.config.js && echo "✅ vite.config.js OK" || echo "❌ vite.config.js MANQUANT" && \
-    test -d src && echo "✅ src/ OK" || echo "❌ src/ MANQUANT"
+    test -d src && echo "✅ src/ OK" || echo "❌ src/ MANQUANT" && \
+    test -d public && echo "✅ public/ OK" || echo "❌ public/ MANQUANT"
 
 # Build
 RUN npm run build
