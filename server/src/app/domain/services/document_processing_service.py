@@ -91,8 +91,9 @@ class DocumentProcessingService:
                 title=title,
                 author=author,
                 parution_date=parution_date,
-                is_appropriate=str(content_analysis.get("is_appropriate", True)),
-                is_harmful=not content_analysis.get("is_appropriate", True)
+                is_appropriate=content_analysis.get("is_appropriate", True),
+                is_harmful=not content_analysis.get("is_appropriate", True),
+                is_compliant=is_compliant
             ),
             uploader=DocumentUploader(
                 username=username or "anonymous",
