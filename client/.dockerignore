@@ -5,10 +5,12 @@ README.md
 .env
 .nyc_output
 coverage
-.nyc_output
 .vscode
 .DS_Store
 *.log
 dist
 .pytest_cache
+
+# Ne pas ignorer les fichiers critiques pour le build
+# index.html, vite.config.js, eslint.config.js, src/, public/ doivent être inclus
 
