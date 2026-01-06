@@ -3,25 +3,26 @@ Redis connection and management
 """
 import redis
 from typing import Optional
+from ..config import config
 
 
 class RedisManager:
     """Manager for Redis connections and operations"""
 
-    def __init__(self, host: str = 'localhost', port: int = 6379, db: int = 0, password: Optional[str] = None):
+    def __init__(self, host: str = None, port: int = None, db: int = None, password: Optional[str] = None):
         """
         Initialize Redis connection
 
         Args:
-            host: Redis server host
-            port: Redis server port
-            db: Redis database number
-            password: Redis password (optional)
+            host: Redis server host (defaults to config)
+            port: Redis server port (defaults to config)
+            db: Redis database number (defaults to config)
+            password: Redis password (optional, defaults to config)
         """
-        self.host = host
-        self.port = port
-        self.db = db
-        self.password = password
+        self.host = host or config.REDIS_HOST
+        self.port = port or config.REDIS_PORT
+        self.db = db or config.REDIS_DB
+        self.password = password or config.REDIS_PASSWORD
         self._client: Optional[redis.Redis] = None
 
     def get_client(self) -> redis.Redis:

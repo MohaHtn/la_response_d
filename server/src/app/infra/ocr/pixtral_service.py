@@ -7,8 +7,7 @@ import base64
 from typing import Dict, Any, Optional, Callable
 from mistralai import Mistral
 
-from .. import Config
-from ..config import config
+from ..config import Config, config
 
 MODEL = "pixtral-large-latest"
 OCR_MODEL = "mistral-ocr-latest"

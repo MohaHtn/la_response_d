@@ -54,7 +54,11 @@ class Config:
     HASH_ALGORITHM = 'sha256'
     SALT_LENGTH = 16
 
-
+    # Redis settings
+    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
 
     # File upload settings
     MAX_FILE_SIZE_BYTES = int(os.getenv("MAX_FILE_SIZE_MB", "200")) * 1024 * 1024
@@ -66,7 +70,6 @@ class Config:
     API_PREFIX = "/api"
     API_TITLE = "La Réponse D"
 
-    JWT_EXPIRATION_HOURS = 1
 
     # Environment
     ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
