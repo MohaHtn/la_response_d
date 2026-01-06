@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Typography, Paper, Container, Box } from '@mui/material';
 import Header from './components/Header';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { getSetupStatus } from './services/setup.service';
+import { ROUTES } from './constants';
 
 const styles = {
   root: {
@@ -46,6 +49,21 @@ const styles = {
 
 function Presentation() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSetup = async () => {
+      try {
+        const status = await getSetupStatus();
+        if (status && status.needs_setup) {
+          navigate(ROUTES.SETUP);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du setup:', error);
+      }
+    };
+    checkSetup();
+  }, [navigate]);
   return (
     <Box sx={styles.root}>
       <Header />

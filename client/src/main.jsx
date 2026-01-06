@@ -37,14 +37,7 @@ createRoot(document.getElementById('root')).render(
               </ProtectedRoute>
             }
           />
-          <Route
-            path={ROUTES.SETUP}
-            element={
-              <ProtectedRoute>
-                <SetupPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path={ROUTES.SETUP} element={<SetupPage />} />
           <Route
             path={ROUTES.UPLOAD}
             element={

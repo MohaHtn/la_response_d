@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 import { Alert } from './components/Alert';
 import { login, register, getRedirectPath } from './services/auth.service';
+import { getSetupStatus } from './services/setup.service';
 import { colors, spacing } from './styles/commonStyles';
 import { ROUTES, MESSAGES, ALERT_TYPES } from './constants';
 import { useTranslation } from 'react-i18next';
@@ -60,6 +61,20 @@ function Auth() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('info');
+
+  useEffect(() => {
+    const checkSetup = async () => {
+      try {
+        const status = await getSetupStatus();
+        if (status && status.needs_setup) {
+          navigate(ROUTES.SETUP);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du setup:', error);
+      }
+    };
+    checkSetup();
+  }, [navigate]);
 
   const handleLogin = async (username, password) => {
     setMessage(null);

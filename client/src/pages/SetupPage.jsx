@@ -82,19 +82,30 @@ export default function SetupPage() {
     setError('');
     setLoading(true);
     try {
-      // Validation simple
-      for (const a of admins) {
-        if (!a.username || !a.email || !a.password) {
-          throw new Error('Veuillez remplir tous les champs pour les 3 administrateurs.');
-        }
+      // Filtrer les admins vides
+      const adminsToCreate = admins.filter(a => a.username && a.email && a.password);
+      
+      if (adminsToCreate.length === 0) {
+        throw new Error('Veuillez remplir au moins un formulaire d\'administrateur.');
       }
-      await createAdmins(admins);
+      
+      if (status && adminsToCreate.length > status.remaining) {
+         throw new Error(`Vous ne pouvez créer que ${status.remaining} administrateurs supplémentaires.`);
+      }
+
+      await createAdmins(adminsToCreate);
       // Vérifier le statut après création
       const s = await getSetupStatus();
       if (!s.needs_setup) {
         navigate(ROUTES.AUTH, { replace: true });
       } else {
         setStatus(s);
+        // Réinitialiser le formulaire ou afficher un message de succès partiel
+        setAdmins([
+          { username: '', email: '', password: '' },
+          { username: '', email: '', password: '' },
+          { username: '', email: '', password: '' },
+        ]);
       }
     } catch (e) {
       setError(e.message || 'Erreur lors de la création des administrateurs');
@@ -119,11 +130,11 @@ export default function SetupPage() {
             <div style={{ color: 'red', marginBottom: '12px' }}>{error}</div>
           )}
           <form onSubmit={handleSubmit}>
-            {admins.map((admin, idx) => (
+            {status && admins.slice(0, status.remaining).map((admin, idx) => (
               <AdminFormCard key={idx} index={idx} value={admin} onChange={updateAdmin} />
             ))}
             <button type="submit" disabled={loading}>
-              {loading ? 'Création en cours…' : 'Créer les 3 administrateurs'}
+              {loading ? 'Création en cours…' : (status && status.admins_count > 0 ? 'Ajouter les administrateurs' : 'Créer les administrateurs')}
             </button>
           </form>
         </div>
