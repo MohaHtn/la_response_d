@@ -5,10 +5,10 @@ FROM node:18-alpine as build
 WORKDIR /app
 
 # Copie les fichiers de configuration des dépendances
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-# Installe les dépendances
-RUN npm ci --only=production
+# Installe les dépendances (fallback vers npm install si npm ci échoue)
+RUN npm ci --omit=dev || npm install --omit=dev
 
 # Copie le code source
 COPY . .
