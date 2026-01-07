@@ -31,8 +31,18 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Vérification rapide des imports (optionnel - commentez si ça ralentit le build)
-RUN python -c "from app.api.routers import auth_router; print('✓ Imports OK')" || \
-    (echo "✗ Erreur d'import détectée" && exit 1)
+RUN python -c "\
+import sys; \
+sys.path.insert(0, '/app'); \
+try: \
+    from app.api.routers import auth_router; \
+    print('✓ Imports OK'); \
+except Exception as e: \
+    import traceback; \
+    traceback.print_exc(); \
+    print(f'✗ Erreur: {e}'); \
+    sys.exit(1) \
+"
 
 # Commande pour démarrer l'application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
