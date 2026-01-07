@@ -19,7 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copie le code source
 COPY server/src/ ./
 
-# Nettoie les fichiers __pycache__ qui auraien²t pu être copiés
+# DEBUG: Affiche la structure complète
+RUN echo "=== Structure /app ===" && find /app -type f -name "*.py" | head -50
+
+# Nettoie les fichiers __pycache__ qui auraient pu être copiés
 RUN find /app -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /app -name "*.pyc" -delete 2>/dev/null || true
 
