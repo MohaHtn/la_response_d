@@ -14,7 +14,14 @@ class UserRepository:
 
     def __init__(self):
         """Initialize the user repository with Redis"""
-        self.redis_client = redis_manager.get_client()
+        self._redis_client = None
+
+    @property
+    def redis_client(self):
+        """Lazy initialization of Redis client"""
+        if self._redis_client is None:
+            self._redis_client = redis_manager.get_client()
+        return self._redis_client
 
     def _get_user_key(self, username: str) -> str:
         """

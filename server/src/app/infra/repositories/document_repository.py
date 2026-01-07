@@ -22,7 +22,14 @@ class DocumentRepository:
 
     def __init__(self):
         """Initialize the document repository with Redis"""
-        self.redis_client = redis_manager.get_client()
+        self._redis_client = None
+
+    @property
+    def redis_client(self):
+        """Lazy initialization of Redis client"""
+        if self._redis_client is None:
+            self._redis_client = redis_manager.get_client()
+        return self._redis_client
 
     def _get_document_key(self, document_id: str) -> str:
         """
