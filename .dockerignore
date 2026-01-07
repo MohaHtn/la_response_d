@@ -11,6 +11,11 @@ dist/
 build/
 *.egg
 
+# Git (force Docker à copier tous les fichiers sans filtrage Git)
+.git/
+.gitignore
+.gitattributes
+
 # Environnement
 .env
 .venv

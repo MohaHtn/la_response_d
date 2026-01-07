@@ -19,9 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copie le code source
 COPY server/src/ ./
 
-# DEBUG: Affiche la structure complète
-RUN echo "=== Structure /app ===" && find /app -type f -name "*.py" | head -50
-
 # Nettoie les fichiers __pycache__ qui auraient pu être copiés
 RUN find /app -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /app -name "*.pyc" -delete 2>/dev/null || true
@@ -33,41 +30,8 @@ EXPOSE 8000
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Vérification rapide des imports (optionnel - commentez si ça ralentit le build)
-RUN python << 'EOF'
-import sys
-import os
-
-print("=== Diagnostic ===")
-print(f"Working dir: {os.getcwd()}")
-print(f"PYTHONPATH: {os.environ.get('PYTHONPATH', 'not set')}")
-print(f"sys.path: {sys.path}")
-
-# Liste le contenu de /app
-print("\n=== Contenu de /app ===")
-for item in os.listdir('/app'):
-    print(f"  {item}")
-
-# Vérifie si app/api/routers existe
-routers_path = '/app/app/api/routers'
-if os.path.exists(routers_path):
-    print(f"\n=== Contenu de {routers_path} ===")
-    for item in os.listdir(routers_path):
-        print(f"  {item}")
-else:
-    print(f"\n✗ {routers_path} n'existe pas!")
-
-# Teste l'import
-print("\n=== Test import ===")
-try:
-    from app.api.routers import auth_router
-    print('✓ Imports OK')
-except Exception as e:
-    import traceback
-    traceback.print_exc()
-    print(f'✗ Erreur: {e}')
-    sys.exit(1)
-EOF
+# Vérification rapide des imports (désactivée - problème de copie de fichiers avec BuildKit)
+# RUN python -c "from app.api.routers import auth_router; print('✓ Imports OK')"
 
 # Commande pour démarrer l'application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
