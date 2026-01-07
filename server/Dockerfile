@@ -33,7 +33,29 @@ ENV PYTHONUNBUFFERED=1
 # Vérification rapide des imports (optionnel - commentez si ça ralentit le build)
 RUN python << 'EOF'
 import sys
-sys.path.insert(0, '/app')
+import os
+
+print("=== Diagnostic ===")
+print(f"Working dir: {os.getcwd()}")
+print(f"PYTHONPATH: {os.environ.get('PYTHONPATH', 'not set')}")
+print(f"sys.path: {sys.path}")
+
+# Liste le contenu de /app
+print("\n=== Contenu de /app ===")
+for item in os.listdir('/app'):
+    print(f"  {item}")
+
+# Vérifie si app/api/routers existe
+routers_path = '/app/app/api/routers'
+if os.path.exists(routers_path):
+    print(f"\n=== Contenu de {routers_path} ===")
+    for item in os.listdir(routers_path):
+        print(f"  {item}")
+else:
+    print(f"\n✗ {routers_path} n'existe pas!")
+
+# Teste l'import
+print("\n=== Test import ===")
 try:
     from app.api.routers import auth_router
     print('✓ Imports OK')
