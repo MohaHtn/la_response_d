@@ -19,12 +19,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copie le code source
 COPY server/src/ ./
 
+# Nettoie les fichiers __pycache__ qui auraien²t pu être copiés
+RUN find /app -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find /app -name "*.pyc" -delete 2>/dev/null || true
+
 # Expose le port 8000
 EXPOSE 8000
 
 # Variables d'environnement
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+
+# Vérification rapide des imports (optionnel - commentez si ça ralentit le build)
+RUN python -c "from app.api.routers import auth_router; print('✓ Imports OK')" || \
+    (echo "✗ Erreur d'import détectée" && exit 1)
 
 # Commande pour démarrer l'application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

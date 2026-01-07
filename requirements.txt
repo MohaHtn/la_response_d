@@ -3,11 +3,10 @@ cryptography
 fastapi
 uvicorn
 mistralai
-PyPDF2
+pypdf>=4.0.0
 protobuf
 python-multipart
-
 pyjwt
 redis>=7.1.0
 Pillow
-pydantic
+python-dotenv
