@@ -4,7 +4,7 @@
 1. [Prérequis](#prérequis)
 2. [Développement local](#développement-local)
 3. [Configuration initiale (Admins)](#configuration-initiale-admins)
-4. [Déploiement production avec GitHub Actions](#déploiement-production)
+4. [Déploiement production avec GitHub Actions (pas dispo pour le MVP)](#déploiement-production)
 5. [Résolution des problèmes](#résolution-des-problèmes)
 
 ---
@@ -130,7 +130,7 @@ Si vous préférez utiliser la ligne de commande :
 
 ## Déploiement production
 
-### Configuration GitHub Actions
+### Configuration GitHub Actions (pas dispo pour le MVP)
 
 Le déploiement en production se fait automatiquement via GitHub Actions lors d'un push sur la branche `main`.
 
@@ -228,13 +228,3 @@ python test_imports.py
 curl http://localhost:8000/health
 curl http://localhost:8000/api/
 ```
-
----
-
-## Support
-
-Pour plus d'informations :
-- Documentation technique : `docs/fr/`
-- Problèmes d'import : `docs/fr/RESOLUTION_IMPORT_ERROR.md`
-- Issues GitHub : https://github.com/votre-username/la_response_d/issues
-
