@@ -28,6 +28,59 @@ L'interface client de "La Réponse D | Biblioteko" est une application web moder
 - **TypeScript** - Types pour React et React DOM
 - **Vite Plugin React** - Plugin Vite pour le support React
 
+### Architecture des Composants
+
+```mermaid
+graph TD
+    subgraph "Couche Routage (main.jsx)"
+        BR[BrowserRouter] --> AW[AuthWatcher]
+        AW --> Routes[Routes]
+    end
+
+    subgraph "Pages (Composants Principaux)"
+        Routes --> Pres[Presentation.jsx]
+        Routes --> AuthP[Auth.jsx]
+        Routes --> Setup[SetupPage.jsx]
+        
+        Routes --> PR[ProtectedRoute]
+        PR --> Home[Home.jsx]
+        PR --> Up[Upload.jsx]
+        PR --> Read[ReadBookPage.jsx]
+        
+        PR --> MR[ModeratorRoute]
+        MR --> Mod[ModeratorPage.jsx]
+        
+        PR --> AR[AdminRoute]
+        AR --> Admin[AdminPage.jsx]
+        AR --> Quar[QuarantinePage.jsx]
+    end
+
+    subgraph "Composants Partagés"
+        Up --> Header[Header.jsx]
+        Home --> Header
+        Mod --> Header
+        Admin --> Header
+        Read --> Header
+        
+        AuthP --> LF[LoginForm.jsx]
+        AuthP --> RF[RegisterForm.jsx]
+        Mod --> MVT[ModeratorValidationTable.jsx]
+    end
+
+    subgraph "Services & API"
+        Up --> AS[auth.service.js]
+        Up --> API[api.js]
+        Mod --> MS[moderation.service.js]
+        Admin --> MS
+        Setup --> SS[setup.service.js]
+        MS --> API
+        AS --> API
+        SS --> API
+    end
+
+    API --> Backend[Backend FastAPI]
+```
+
 ### Structure des Fichiers
 
 ```
@@ -92,7 +145,6 @@ client/
 ### Composant Principal (Upload.jsx)
 
 **État de l'Application :**
-```javascript
 - message: string                    // Messages de statut
 - selectedFile: File                 // Fichier PDF sélectionné
 - images: Array<{id, src}>          // Images OCR extraites
@@ -101,7 +153,6 @@ client/
 - securityAnalysis: Object          // Résultats d'analyse de sécurité
 - contentAnalysis: Object           // Résultats d'analyse de contenu
 - isLoading: boolean               // État de chargement
-```
 
 **Fonctions Principales :**
 - `handleFileChange()` - Gestion de la sélection de fichier et envoi API
@@ -138,12 +189,10 @@ client/
 - Gestion des variables non utilisées
 
 ### Scripts NPM
-```json
-"dev": "vite"           // Serveur de développement
-"build": "vite build"   // Build de production
-"lint": "eslint ."      // Vérification du code
-"preview": "vite preview" // Prévisualisation du build
-```
+- `dev`: `vite` - Serveur de développement
+- `build`: `vite build` - Build de production
+- `lint`: `eslint .` - Vérification du code
+- `preview`: `vite preview` - Prévisualisation du build
 
 ## Points d'Amélioration Identifiés
 
