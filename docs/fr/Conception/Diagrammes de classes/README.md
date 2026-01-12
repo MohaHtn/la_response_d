@@ -1,4 +1,4 @@
-# Diagramme de Classes - Bibliotheko
+# Diagramme de Classes - La Réponse D
 
 ## Diagramme de Classes
 
