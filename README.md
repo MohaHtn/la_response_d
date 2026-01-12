@@ -16,7 +16,7 @@ La Réponse D permet aux utilisateurs de :
 ### Prérequis
 - **Python** : 3.12 ou supérieur
 - **Node.js** : 18 ou supérieur
-- **Redis** : Optionnel pour le développement local
+- **Redis** : Requis pour le stockage en base
 
 ### Configuration du Backend (Serveur)
 
