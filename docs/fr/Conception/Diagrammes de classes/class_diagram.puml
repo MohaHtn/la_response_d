@@ -1,5 +1,4 @@
-@startuml DiagrammeDeClasses_LaResponseD
-
+@startuml DiagrammeDeClasses_Bibliotheko
 ' Configuration
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
@@ -23,242 +22,181 @@ package "Models" <<Rectangle>> {
         + password: str
     }
 
-    class UserRecord {
-        + username: str
-        + email: str
-        + encrypted_auth: str
-    }
-
-    class SensitiveData {
-        + password_hash: str
-        + salt: str
-    }
-
-    class Metadata {
-        + title: str | None
-        + author: str | None
-        + date: str | None
-        + publisher: str | None
-        + description: str | None
-    }
-
-    class SecurityAnalysis {
-        + has_security_prompts: bool
-        + detected_prompts: list[str]
-        + risk_level: str
-        + details: str
-    }
-
-    class ContentAnalysis {
+    class DocumentMetadata {
+        + title: str
+        + author: str
+        + parution_date: str
         + is_appropriate: bool
-        + content_warnings: list[str]
-        + severity: str
+        + is_harmful: bool
+        + is_compliant: bool
+    }
+
+    class DocumentUploader {
+        + username: str
+        + upload_date: str
+    }
+
+    class ApprovalProcess {
+        + status: BookStatus
+        + date: str
         + details: str
     }
 
-    class ProcessingInfo {
-        + file_name: str
-        + total_pages: int
-        + total_text_length: int
+    class DocumentModeration {
+        + approval_process: ApprovalProcess
+        + approved_by: list[str]
     }
 
-    class OCRResult {
-        + pages: list[Page]
-        + model: str
-        + document_id: str
+    class DocumentMarkdown {
+        + content: str
     }
 
-    class Page {
-        + markdown: str
-        + images: list[Image]
-        + page_number: int
+    class Document {
+        + metadata: DocumentMetadata
+        + uploader: DocumentUploader
+        + moderation: DocumentModeration
+        + markdown: DocumentMarkdown
+        + document_id: str | None
+        + preview: str | None
+        + cover_image: str | None
     }
 
-    class Image {
-        + id: str
-        + image_base64: str
+    enum BookStatus {
+        WAITING
+        IN_APPROVAL
+        IN_QUARANTINE
+        OK
+        NOK
     }
 }
 
 ' ==================== Services et API ====================
 
 package "API Layer" <<Rectangle>> {
-    class APIRouter {
-        - prefix: str = "/api"
-        - tags: list[str]
-        + send_book(file: UploadFile): JSONResponse
-        + register_user(userCredentials: UserCredentials): JSONResponse
-        + login_user(loginCredentials: LoginCredentials): JSONResponse
-    }
-
     class FastAPIApp {
-        - title: str = "la_response_d API"
+        - title: str = "Bibliotheko API"
         - routers: list[APIRouter]
         + health(): dict
         + add_middleware(CORSMiddleware)
     }
+
+    class "Routers" as Routers {
+        + auth_router
+        + documents_router
+        + moderation_router
+        + setup_router
+        + admin_router
+        + legacy_router
+    }
 }
 
-' ==================== Services de Traitement ====================
+' ==================== Services de Domaine ====================
 
-package "Services" <<Rectangle>> {
-    class PixtralService {
+package "Domain Services" <<Rectangle>> {
+    class DocumentProcessingService {
+        + {static} normalize_metadata(extracted_metadata: dict): tuple
+        + {static} determine_compliance(security_analysis: dict, content_analysis: dict): tuple
+        + {static} create_document_model(...): Document
+        + {static} enrich_document_data(...): dict
+        + {static} prepare_response_metadata(...): dict
+        + {static} build_success_response(...): dict
+    }
+
+    class AuthService {
+        + {static} hash_password(password: str, salt: bytes): tuple
+        + {static} verify_password(password: str, stored_hash: bytes, salt: bytes): bool
+        + {static} encrypt_auth_data(password_hash: bytes, salt: bytes): str
+        + {static} decrypt_auth_data(encrypted_auth: str): dict
+    }
+
+    class FileValidationService {
+        + {static} validate_file_type(content_type: str, allowed_types: list)
+        + {static} validate_file_size(data: bytes, max_size: int)
+        + {static} validate_and_read_file(file, ...): tuple
+    }
+}
+
+' ==================== Infrastructure ====================
+
+package "Infrastructure" <<Rectangle>> {
+    class PixtralService << (S,#FF7700) Service >> {
         - MODEL: str = "pixtral-large-latest"
         - OCR_MODEL: str = "mistral-ocr-latest"
-        + process_pdf(file_name: str, content: bytes, ...): dict
-        - _extract_metadata(client: Mistral, text_content: str): Metadata
-        - _detect_security_prompts(client: Mistral, text_content: str): SecurityAnalysis
-        - _check_inappropriate_content(client: Mistral, text_content: str): ContentAnalysis
-        - _load_api_key(): str
+        + process_pdf(file_name: str, ...): dict
+        - _extract_metadata(client: Mistral, text: str): dict
+        - _detect_security_prompts(client: Mistral, text: str): dict
+        - _check_inappropriate_content(client: Mistral, text: str): dict
         + get_client(): Mistral
     }
 
-    class AuthenticationService {
-        - fernet: Fernet
-        - key: bytes
+    class CryptoManager {
+        - key_file: str
+        - _fernet: Fernet
+        + encrypt(data: bytes): bytes
+        + decrypt(data: bytes): bytes
+    }
+
+    class RedisManager {
+        - _client: Redis
+        + get_client(): Redis
+    }
+}
+
+' ==================== Repositories ====================
+
+package "Repositories" <<Rectangle>> {
+    class UserRepository {
+        - redis_client: Redis
         + user_exists(username: str): bool
-        + get_user_record(username: str): UserRecord | None
-        + load_users(): list[UserRecord]
-        + save_users(users: list[UserRecord]): void
-        + hash_password(password: str, salt: bytes): bytes
-        + verify_password(password: str, stored_hash: bytes, salt: bytes): bool
+        + get_user_record(username: str): dict
+        + add_user(user_record: dict)
+        + get_all_users(): list
     }
 
-    class EncryptionService {
-        - fernet: Fernet
-        - key: bytes
-        + generate_key(): bytes
-        + load_key(): bytes
-        + save_key(key: bytes): void
-        + encrypt(data: str): str
-        + decrypt(encrypted_data: str): str
-    }
-
-    class FileService {
-        - MAX_SIZE_BYTES: int = 200MB
-        + validate_file_type(file: UploadFile): bool
-        + validate_file_size(content: bytes): bool
-        + read_file(path: str): bytes
-        + write_file(path: str, content: bytes): void
+    class DocumentRepository {
+        - redis_client: Redis
+        + get_document(doc_id: str): dict
+        + add_document(doc_data: dict): str
+        + add_document_to_quarantine(doc_data: dict): str
+        + move_from_quarantine_to_approved(doc_id: str): bool
     }
 }
 
 ' ==================== Clients Externes ====================
 
-package "External Services" <<Rectangle>> {
-    class Mistral <<External>> {
-        - api_key: str
-        + chat.complete(model: str, messages: list): Response
-        + files.upload(file: dict, purpose: str): UploadedFile
-        + files.get_signed_url(file_id: str): SignedURL
-        + ocr.process(model: str, document: dict, ...): OCRResult
-    }
-
-    class Fernet <<External>> {
-        - key: bytes
-        + generate_key(): bytes
-        + encrypt(data: bytes): bytes
-        + decrypt(token: bytes): bytes
-    }
-}
-
-' ==================== Stockage ====================
-
-package "Storage" <<Rectangle>> {
-    class UsersRepository {
-        - file_path: str = "users.json"
-        + find_by_username(username: str): UserRecord | None
-        + save(user: UserRecord): void
-        + find_all(): list[UserRecord]
-        + exists(username: str): bool
-    }
-
-    class FileRepository {
-        - key_file: str = "key.key"
-        - users_file: str = "users.json"
-        + read_json(path: str): dict
-        + write_json(path: str, data: dict): void
-        + read_bytes(path: str): bytes
-        + write_bytes(path: str, data: bytes): void
-    }
+package "External" <<Rectangle>> {
+    class Mistral <<External>>
+    class Fernet <<External>>
+    class Redis <<External>>
 }
 
 ' ==================== Relations ====================
 
-' API utilise les modèles
-APIRouter ..> UserCredentials : uses
-APIRouter ..> LoginCredentials : uses
-APIRouter ..> OCRResult : returns
-APIRouter ..> Metadata : returns
-APIRouter ..> SecurityAnalysis : returns
-APIRouter ..> ContentAnalysis : returns
+FastAPIApp *-- Routers
+Routers ..> Document : uses
+Routers ..> UserCredentials : uses
 
-' FastAPI contient les routeurs
-FastAPIApp *-- APIRouter : contains
+DocumentProcessingService ..> Document : creates
+DocumentProcessingService ..> DocumentMetadata : creates
+Document *-- DocumentMetadata
+Document *-- DocumentUploader
+Document *-- DocumentModeration
+Document *-- DocumentMarkdown
+DocumentModeration *-- ApprovalProcess
+ApprovalProcess o-- BookStatus
 
-' APIRouter utilise les services
-APIRouter --> PixtralService : uses
-APIRouter --> AuthenticationService : uses
-APIRouter --> FileService : uses
+AuthService ..> CryptoManager : uses
+DocumentProcessingService ..> PixtralService : uses
 
-' Services utilisent des clients externes
+UserRepository --> RedisManager : uses
+DocumentRepository --> RedisManager : uses
+RedisManager --> Redis : uses
+
 PixtralService --> Mistral : uses
-AuthenticationService --> EncryptionService : uses
-EncryptionService --> Fernet : uses
+CryptoManager --> Fernet : uses
 
-' Services utilisent les repositories
-AuthenticationService --> UsersRepository : uses
-UsersRepository --> FileRepository : uses
-
-' PixtralService crée des objets
-PixtralService ..> Metadata : creates
-PixtralService ..> SecurityAnalysis : creates
-PixtralService ..> ContentAnalysis : creates
-PixtralService ..> ProcessingInfo : creates
-PixtralService ..> OCRResult : uses
-
-' OCRResult composition
-OCRResult *-- Page : contains
-Page *-- Image : contains
-
-' AuthenticationService manipule les données utilisateur
-AuthenticationService ..> UserRecord : manipulates
-AuthenticationService ..> SensitiveData : manipulates
-UserRecord ..> SensitiveData : encrypts
-
-' Héritage/Dépendances de modèles
-UserCredentials ..> UserRecord : creates
-LoginCredentials ..> UserRecord : validates
-
-' Notes explicatives
-note right of PixtralService
-  Service principal pour le traitement
-  des PDF via l'API Mistral.
-  - OCR (reconnaissance de texte)
-  - Extraction de métadonnées
-  - Analyse de sécurité
-  - Détection de contenu inapproprié
-end note
-
-note right of AuthenticationService
-  Gère l'authentification des utilisateurs
-  avec chiffrement des mots de passe
-  via PBKDF2-HMAC-SHA256 + salt.
-  Les données sensibles sont chiffrées
-  avec Fernet (AES-128).
-end note
-
-note right of FileService
-  Validation et gestion des fichiers
-  - Limite de taille: 200 MB
-  - Type accepté: PDF
-end note
-
-note bottom of UserRecord
-  Structure stockée en JSON
-  avec données sensibles chiffrées
-  (password_hash et salt)
-end note
+AuthService ..> UserRepository : uses
+DocumentProcessingService ..> DocumentRepository : uses
 
 @enduml
 
