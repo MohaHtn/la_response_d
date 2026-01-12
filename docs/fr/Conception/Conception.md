@@ -43,12 +43,6 @@ server/src/
 - `/api/admin` : Administration des utilisateurs
 - `/api/setup` : Configuration initiale du système
 
-#### Endpoint Legacy : `/api/send-book`
-- **Méthode** : POST
-- **Note** : Conservé pour compatibilité ascendante, redirige vers les services de traitement.
-- **Input** : Fichier PDF via multipart/form-data
-- **Output** : JSON complet avec OCR, analyses et markdown
-
 #### Endpoint de santé : `/health`
 - **Méthode** : GET
 - **Output** : Status de l'API
