@@ -74,7 +74,7 @@ python src/create_admin_user.py --username admin --password votre_password --ema
 Pour plus de détails, consultez les guides suivants :
 - [Guide de Déploiement Complet](docs/fr/Guide%20de%20déploiement.md)
 - [Documentation de Conception](docs/fr/Conception/Conception.md)
-- [Scénarios d'utilisation](docs/fr/Conception/Scenarios/_Scenarios.md)
+- [Scénarios d'utilisation](docs/fr/Conception/Scenarios/README.md)
 
 ## 🏗️ Structure du Projet
 
