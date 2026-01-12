@@ -128,10 +128,17 @@ via Github Actions et Docker, mais ayant trop peu d'expérience avec les différ
 j'ai laissé tombé, car les fichiers qui allaient dans les deux conteneurs (back et front) ne sont pas
 complets. 
 
-# Session 13 : 19 décembre 2025
+# Session 13 : 19 Décembre 2025
 Intégration d'i18n dans le front et le back, ajout de tests unitaires dans le back,
 tentative plus que bancale d'utiliser le SSE (Server Sent Events), pour avoir des données 
-en temps réel du traitement du document via le front, beaucoup de soucis pour intéger cela 
-avec i18n avec cela, j'ai aussi fini par laisser tomber.
+en temps réel du traitement du document via le front, beaucoup de soucis pour intéger i18n 
+avec cela, j'ai aussi fini par laisser tomber.
 
 Les strings i18n du back restent disponibles pour une éventuelle évolution.
+
+# Session 14 : 26 Décembre 2025
+Finalisation des tests unitaires, correction de bugs, et rédaction de la documentation technique
+et utilisateur.
+
+Ajout d'une preview du document en image générée par le back lors de l'upload du document,
+pour plus de lisibilité côté UX.
