@@ -1,6 +1,7 @@
-# La Réponse D - Bibliothèque Numérique Intelligente
+# La Réponse D - Bibliothèque Numérique
 
-Bienvenue dans le projet **La Réponse D**, une plateforme de bibliothèque numérique moderne intégrant des capacités d'OCR avancées et une gestion intelligente des œuvres.
+Bienvenue dans le projet **La Réponse D**, une plateforme de bibliothèque numérique moderne intégrant 
+des capacités d'OCR avancées.
 
 ## 🚀 Aperçu
 
