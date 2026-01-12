@@ -6,7 +6,7 @@
 * Test des différentes solutions d'OCR potentielles pour le projet (problèmes liés à l'installation sur machine)
 
 # Session 3 : 29 Septembre 2025
-* Continuation du glossaire technique 
+* Continuation du glossaire technique
 * Avancement sur la conversion d'un livre PDF en Markdown
 
 # Session 4 : 6 Octobre 2025
@@ -49,7 +49,34 @@ Refactorisation du code, en essayant d'avoir l'architecture la plus clean possib
 
 # Session 8 : 10 Novembre 2025
 Discussion sur le modèle de données de Document, et User.
+Un utilisateur contient : 
+* Un nom d'utilisateur
+* un Email
+* un Hash de mot de passe (avec un sel pour éviter les collisions)
+* Un rôle (Un enum : utilisateur ou administrateur)
 
+Un document contient :
+
+| Champ                | Type      | Description                                 |
+|----------------------|-----------|---------------------------------------------|
+| id                   | string    | Identifiant unique du document              |
+| title                | string    | Titre du document                           |
+| author               | string    | Auteur                                      |
+| parution_date        | string    | Date de parution                            |
+| is_appropriate       | boolean   | Contenu approprié ou non                    |
+| is_harmful           | boolean   | Contenu nuisible ou non                     |
+| is_compliant         | boolean   | Conforme aux règles                         |
+| uploader             | string    | Nom d'utilisateur ayant uploadé             |
+| upload_date          | datetime  | Date d'upload                               |
+| approval_status      | enum      | Statut de validation (OK, NOK, BIENTOT_LIBRE)|
+| approval_date        | datetime  | Date de validation                          |
+| approved_by          | array     | Liste des admins validateurs                |
+| markdown_content     | text      | Contenu converti en Markdown                |
+| preview              | string    | Aperçu du contenu                           |
+| cover_image          | base64    | Image de couverture encodée                 |
+| security_analysis    | objet     | Analyse sécurité IA                         |
+| content_analysis     | objet     | Analyse modération IA                       |
+| compliance_issues    | array     | Problèmes de conformité détectés            |
 # Session 9 : 17 Novembre 2025
 Présentation des modèles de conception aux autres !
 
@@ -60,5 +87,3 @@ des pages de modération, refactoring du front/back.
 # Session 11 : 07 Décembre 2025
 Création d'une page de "mise en place des 3 admins", finalisation
 des pages pour les admins, réalisation des tests unitaires.
-
-
