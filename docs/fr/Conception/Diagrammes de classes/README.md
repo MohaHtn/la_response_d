@@ -1,9 +1,5 @@
 # Diagramme de Classes - Bibliotheko
 
-## Vue d'ensemble de l'architecture
-
-Ce document présente le diagramme de classes du projet "Bibliotheko", une application de traitement de documents PDF avec OCR, authentification sécurisée et analyse de contenu. L'architecture suit une approche modulaire séparant les modèles, les services de domaine, l'infrastructure et la persistance.
-
 ## Diagramme de Classes
 
 ```mermaid
