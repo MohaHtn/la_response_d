@@ -55,34 +55,65 @@ Un utilisateur contient :
 * un Hash de mot de passe (avec un sel pour éviter les collisions)
 * Un rôle (Un enum : utilisateur ou administrateur)
 
-Un document contient :
+Une réponse d'appel API contiendra les champs `success` (bool), `message`(string) et `data`,
+qui contiendra :
 
-| Champ                | Type      | Description                                 |
-|----------------------|-----------|---------------------------------------------|
-| id                   | string    | Identifiant unique du document              |
-| title                | string    | Titre du document                           |
-| author               | string    | Auteur                                      |
-| parution_date        | string    | Date de parution                            |
-| is_appropriate       | boolean   | Contenu approprié ou non                    |
-| is_harmful           | boolean   | Contenu nuisible ou non                     |
-| is_compliant         | boolean   | Conforme aux règles                         |
-| uploader             | string    | Nom d'utilisateur ayant uploadé             |
-| upload_date          | datetime  | Date d'upload                               |
-| approval_status      | enum      | Statut de validation (OK, NOK, BIENTOT_LIBRE)|
-| approval_date        | datetime  | Date de validation                          |
-| approved_by          | array     | Liste des admins validateurs                |
-| markdown_content     | text      | Contenu converti en Markdown                |
-| preview              | string    | Aperçu du contenu                           |
-| cover_image          | base64    | Image de couverture encodée                 |
-| security_analysis    | objet     | Analyse sécurité IA                         |
-| content_analysis     | objet     | Analyse modération IA                       |
-| compliance_issues    | array     | Problèmes de conformité détectés            |
+## Groupe : metadata
+| Champ           | Type      | Description                      |
+|-----------------|-----------|----------------------------------|
+| title           | string    | Titre du document                |
+| author          | string    | Auteur                           |
+| parution_date   | string    | Date de parution                 |
+| is_appropriate  | boolean   | Contenu approprié ou non         |
+| is_harmful      | boolean   | Contenu nuisible ou non          |
+| is_compliant    | boolean   | Conforme aux règles              |
+
+## Groupe : uploader
+| Champ        | Type      | Description                      |
+|--------------|-----------|----------------------------------|
+| username     | string    | Nom d'utilisateur ayant uploadé  |
+| upload_date  | datetime  | Date d'upload                    |
+
+## Groupe : moderation
+| Champ                | Type      | Description                               |
+|----------------------|-----------|-------------------------------------------|
+| approval_status      | enum      | Statut de validation (OK, NOK)|
+| approval_date        | datetime  | Date de validation                        |
+| details              | string    | Détails de la modération                  |
+| approved_by          | array     | Liste des admins validateurs              |
+
+## Groupe : markdown
+| Champ            | Type      | Description                      |
+|------------------|-----------|----------------------------------|
+| content          | text      | Contenu converti en Markdown     |
+
+## Groupe : document
+| Champ         | Type      | Description                      |
+|--------------|-----------|----------------------------------|
+| document_id  | string    | Identifiant unique du document   |
+| preview      | string    | Aperçu du contenu                |
+| cover_image  | base64    | Image de couverture encodée      |
+
+## Groupe : analyses
+| Champ              | Type      | Description                      |
+|--------------------|-----------|----------------------------------|
+| security_analysis  | objet     | Analyse sécurité IA              |
+| content_analysis   | objet     | Analyse modération IA            |
+| compliance_issues  | array     | Problèmes de conformité détectés |
+
+
 # Session 9 : 17 Novembre 2025
 Présentation des modèles de conception aux autres !
 
 # Session 10 : 01 Décembre 2025
 Beaucoup de choses : intégration de la base "quarantaine", ajout 
 des pages de modération, refactoring du front/back.
+
+La base de quarantaine contiendra les livres en attente de validation, détectées par l'AI qu'elles
+sont potentiellement problématiques.
+
+Les admins peuvent voir la liste des livres en quarantaine, et décider de
+valider ou non leur contenu.
 
 # Session 11 : 07 Décembre 2025
 Création d'une page de "mise en place des 3 admins", finalisation
