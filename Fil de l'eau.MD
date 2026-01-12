@@ -115,6 +115,15 @@ sont potentiellement problématiques.
 Les admins peuvent voir la liste des livres en quarantaine, et décider de
 valider ou non leur contenu.
 
-# Session 11 : 07 Décembre 2025
+# Session 11 : 08 Décembre 2025
 Création d'une page de "mise en place des 3 admins", finalisation
 des pages pour les admins, réalisation des tests unitaires.
+
+On a décidé de laisser tomber le chiffrement pour le MVP, car 
+trop chronophage pour le moment.
+
+# Session 12 : 12 décembre 2025
+J'ai tenté de faire de la CI/CD, déployant la stack complète sur un serveur distant
+via Github Actions et Docker, mais ayant trop peu d'expérience avec les différents dockerfiles,
+j'ai laissé tombé, car les fichiers qui allaient dans les deux conteneurs (back et front) ne sont pas
+complets. 
