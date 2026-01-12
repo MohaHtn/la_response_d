@@ -3,7 +3,7 @@
 ## Table des matières
 1. [Prérequis](#prérequis)
 2. [Développement local](#développement-local)
-3. [Déploiement Docker](#déploiement-docker)
+3. [Configuration initiale (Admins)](#configuration-initiale-admins)
 4. [Déploiement production avec GitHub Actions](#déploiement-production)
 5. [Résolution des problèmes](#résolution-des-problèmes)
 
@@ -15,10 +15,6 @@
 - Python 3.12 ou supérieur
 - Node.js 18 ou supérieur
 - Redis (optionnel pour le dev local)
-
-### Déploiement Docker
-- Docker 24.0 ou supérieur
-- Docker Compose V2
 
 ### Production
 - Serveur Linux (Ubuntu 22.04 LTS recommandé)
@@ -98,79 +94,37 @@
 
 ---
 
-## Déploiement Docker
+## Configuration initiale (Admins)
 
-### Configuration
+Lors du premier démarrage de l'application, aucun utilisateur administrateur n'est créé par défaut. Vous avez deux options pour ajouter les premiers administrateurs.
 
-1. **Créer le fichier `.env` pour le serveur** (même contenu que pour le dev local) :
+### Option 1 : Via l'interface graphique (recommandé)
+
+Lorsque vous accédez à l'application pour la première fois (http://localhost:5173), vous serez automatiquement redirigé vers une page de configuration si aucun administrateur n'est détecté.
+
+1. **Remplir le formulaire** : Saisissez les informations pour 1 à 3 administrateurs.
+2. **Valider** : Cliquez sur le bouton de création.
+3. **Connexion** : Vous pourrez ensuite vous connecter avec ces identifiants.
+
+### Option 2 : Via le script CLI
+
+Si vous préférez utiliser la ligne de commande :
+
+1. **Accéder au dossier serveur** :
    ```bash
    cd server
-   cp .env.example .env
-   # Éditer .env avec vos vraies valeurs
    ```
 
-2. **Configurer les variables Redis** :
-   Le fichier `docker-compose.yml` configure automatiquement Redis. Dans votre `server/.env`, assurez-vous d'avoir :
-   ```env
-   REDIS_HOST=redis
-   REDIS_PORT=6379
-   REDIS_DB=0
-   REDIS_PASSWORD=
-   ```
-
-### Démarrage
-
-1. **Build et démarrage des conteneurs** :
+2. **Exécuter le script de création** :
    ```bash
-   docker compose up -d --build
+   python src/create_admin_user.py --username admin --password mon_mot_de_passe --email admin@example.com
    ```
 
-2. **Vérifier les logs** :
+3. **Forcer la mise à jour** (optionnel) :
+   Si l'utilisateur existe déjà mais n'est pas admin :
    ```bash
-   # Tous les services
-   docker compose logs -f
-   
-   # Serveur uniquement
-   docker compose logs -f server
-   
-   # Client uniquement
-   docker compose logs -f client
-   
-   # Redis uniquement
-   docker compose logs -f redis
+   python src/create_admin_user.py --username admin --password mon_mot_de_passe --email admin@example.com --force
    ```
-
-3. **Vérifier le statut** :
-   ```bash
-   docker compose ps
-   ```
-
-4. **Tester l'application** :
-   - Application complète : http://localhost:5187
-   - Health check : http://localhost:5187/health
-
-### Commandes utiles
-
-```bash
-# Arrêter les conteneurs
-docker compose down
-
-# Rebuild un service spécifique
-docker compose build server
-docker compose build client
-
-# Redémarrer un service
-docker compose restart server
-
-# Voir les logs en temps réel
-docker compose logs -f
-
-# Nettoyer les ressources Docker
-docker system prune -f
-
-# Supprimer les volumes (attention : perte de données Redis)
-docker compose down -v
-```
 
 ---
 
@@ -196,26 +150,15 @@ Allez dans Settings > Secrets and variables > Actions et ajoutez :
 
 #### Workflow de déploiement
 
-Le fichier `.github/workflows/deploy.yml` automatise :
-1. Connexion SSH au serveur
-2. Pull des dernières modifications
-3. Création du fichier `.env` avec les secrets
-4. Build et démarrage des conteneurs Docker
-5. Nettoyage des ressources Docker inutilisées
+Le fichier `.github/workflows/deploy.yml` automatise le déploiement.
 
 ### Configuration du serveur de production
 
 1. **Prérequis sur le serveur** :
    ```bash
-   # Installer Docker
-   curl -fsSL https://get.docker.com -o get-docker.sh
-   sudo sh get-docker.sh
-   
-   # Ajouter l'utilisateur au groupe docker
-   sudo usermod -aG docker $USER
-   
-   # Installer Docker Compose V2
-   # (inclus avec Docker depuis la version 24.0)
+   # Installer Python et Node.js
+   sudo apt update
+   sudo apt install python3.12 nodejs npm redis-server
    ```
 
 2. **Cloner le projet** :
@@ -225,27 +168,11 @@ Le fichier `.github/workflows/deploy.yml` automatise :
    cd la_response_d
    ```
 
-3. **Premier déploiement manuel** :
-   ```bash
-   # Le fichier .env sera créé automatiquement par GitHub Actions
-   # Mais pour un premier test manuel :
-   cd server
-   nano .env
-   # Copier les valeurs nécessaires
-   
-   cd ..
-   docker compose up -d --build
-   ```
-
 ### Vérification du déploiement
 
 ```bash
-# Sur le serveur
-docker compose ps
-docker compose logs -f server
-
 # Test depuis votre machine locale
-curl http://votre-serveur:5187/health
+curl http://votre-serveur:8000/health
 ```
 
 ---
@@ -268,10 +195,6 @@ curl http://votre-serveur:5187/health
 cd server
 nano .env
 # Ajouter PIXTRAL_API_KEY=votre_cle
-
-# Production Docker
-# Vérifier que le secret GitHub est configuré
-# Ou créer manuellement le fichier .env sur le serveur
 ```
 
 ### Erreur : `Connection refused` (Redis)
@@ -280,28 +203,10 @@ nano .env
 
 **Solution** :
 ```bash
-# En Docker
-docker compose up -d redis
-docker compose logs redis
-
 # En développement local
 # Installer et démarrer Redis
 sudo apt-get install redis-server
 sudo systemctl start redis-server
-```
-
-### Erreur : Build Docker échoue
-
-**Solution** :
-```bash
-# Nettoyer le cache Docker
-docker builder prune
-
-# Rebuild sans cache
-docker compose build --no-cache
-
-# Vérifier les logs de build
-docker compose build --progress=plain
 ```
 
 ### Port déjà utilisé
@@ -309,105 +214,19 @@ docker compose build --progress=plain
 **Solution** :
 ```bash
 # Trouver le processus utilisant le port
-sudo lsof -i :5187
-
-# Arrêter l'ancien conteneur
-docker compose down
-
-# Ou changer le port dans docker-compose.yml
+sudo lsof -i :5173
 ```
 
 ### Test complet du système
 
 ```bash
-# Script de test des imports (sur le serveur)
+# Script de test des imports
 cd server/src
 python test_imports.py
 
-# Test de connexion Redis
-docker compose exec server python -c "from app.infra.database import redis_manager; print(redis_manager.ping())"
-
 # Test des API endpoints
-curl http://localhost:5187/health
-curl http://localhost:5187/api/
-```
-
----
-
-## Logs et monitoring
-
-### Consulter les logs
-
-```bash
-# Logs de tous les services
-docker compose logs -f
-
-# Logs d'un service spécifique avec horodatage
-docker compose logs -f --timestamps server
-
-# Dernières 100 lignes
-docker compose logs --tail=100 server
-```
-
-### Monitoring Redis
-
-```bash
-# Entrer dans le conteneur Redis
-docker compose exec redis redis-cli
-
-# Commandes Redis utiles
-> PING
-> INFO
-> KEYS *
-> DBSIZE
-```
-
-### Monitoring du serveur
-
-```bash
-# Statistiques des conteneurs
-docker stats
-
-# Espace disque utilisé par Docker
-docker system df
-
-# Voir les processus dans un conteneur
-docker compose exec server ps aux
-```
-
----
-
-## Maintenance
-
-### Mise à jour de l'application
-
-```bash
-git pull origin main
-docker compose down
-docker compose up -d --build
-```
-
-### Sauvegarde des données Redis
-
-```bash
-# Créer une sauvegarde
-docker compose exec redis redis-cli SAVE
-
-# Copier le fichier de sauvegarde
-docker cp la_response_d-redis:/data/dump.rdb ./backup-$(date +%Y%m%d).rdb
-```
-
-### Restauration des données Redis
-
-```bash
-# Arrêter les services
-docker compose down
-
-# Restaurer le fichier
-docker cp backup-20240107.rdb la_response_d-redis:/data/dump.rdb
-
-# Redémarrer
-docker compose up -d
+curl http://localhost:8000/health
+curl http://localhost:8000/api/
 ```
 
 ---

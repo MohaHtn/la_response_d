@@ -145,7 +145,7 @@ pour plus de lisibilité côté UX. L'image est extrait à partir du markdown g�
 est encodé en base64.
 
 # Session 15 : 02 Janvier 2026 (dur dur la reprise...)
-Ajout de la page qui permet à 3 admins de valider un document.
+Finalisation de la page qui permet à 3 admins de valider un document.
 Il faut impérativement 3 admins pour valider un document.
 
 Le dernier admin qui valide fait passer le document en statut "OK",
