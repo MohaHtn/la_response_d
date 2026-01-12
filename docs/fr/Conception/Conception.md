@@ -19,25 +19,33 @@ Le système est conçu selon une architecture web moderne avec séparation clien
 ### 2.1 Structure modulaire
 ```
 server/src/
-├── app/
-│   ├── api/          # Intégrations externes (Mistral AI)
-│   ├── domain/       # Logique métier (vide actuellement)
-│   ├── infra/        # Infrastructure (vide actuellement)
-│   ├── main.py       # Point d'entrée FastAPI
-│   └── routes.py     # Définition des endpoints
-└── cli/              # Outils en ligne de commande
+└── app/
+    ├── api/          # Routeurs (auth, documents, moderation, admin, setup)
+    ├── domain/       # Logique métier (services, image_generator)
+    ├── infra/        # Infrastructure (repositories, database, security, ocr)
+    ├── main.py       # Point d'entrée FastAPI
+    └── routes.py     # Endpoint legacy send-book
 ```
 
 ### 2.2 Stack technique
 - **Framework web** : FastAPI (Python)
 - **IA et OCR** : Mistral AI (modèles Pixtral et OCR)
+- **Base de données** : Redis (via repositories)
 - **Format de sortie** : Markdown avec support LaTeX
-- **CORS** : Configuré pour permettre les requêtes cross-origin
+- **CORS** : Configuré pour React (dev: 5173, prod: 80/5187)
 
 ### 2.3 Points d'entrée API
 
-#### Endpoint principal : `/api/send-book`
+#### API Modulaire (V2)
+- `/api/auth` : Authentification et gestion des comptes
+- `/api/documents` : Gestion des documents et upload (`/upload`)
+- `/api/moderation` : Workflow de modération et quarantaine
+- `/api/admin` : Administration des utilisateurs
+- `/api/setup` : Configuration initiale du système
+
+#### Endpoint Legacy : `/api/send-book`
 - **Méthode** : POST
+- **Note** : Conservé pour compatibilité ascendante, redirige vers les services de traitement.
 - **Input** : Fichier PDF via multipart/form-data
 - **Output** : JSON complet avec OCR, analyses et markdown
 
@@ -84,15 +92,11 @@ Deux modes supportés :
 
 ## 4. Modules CLI (Interface en ligne de commande)
 
-### 4.1 Outils disponibles
-- `ocr.py` : Traitement OCR direct
-- `deposit.py` : Dépôt de documents
-- `moderate.py` : Modération de contenu
-- `export_md.py` : Export en Markdown
-- `format_small_book.py` : Formatage de petits livres
+### 4.1 État des outils
+Les outils CLI mentionnés initialement (`ocr.py`, `deposit.py`, etc.) ont été intégrés directement dans les services backend (`pixtral_service.py`, `document_service.py`) pour une meilleure cohésion architecturale.
 
-### 4.2 Architecture modulaire
-Les outils CLI permettent un traitement en lot et une automatisation des tâches.
+### 4.2 Automatisation
+Le traitement peut être automatisé via des scripts appelant les endpoints de l'API REST.
 
 ## 5. Sécurité et validation
 
@@ -115,11 +119,21 @@ Les outils CLI permettent un traitement en lot et une automatisation des tâches
 ### 6.1 Structure de la réponse JSON
 ```json
 {
-  "ocr": {
-    "pages": [...],
-    "model": "mistral-ocr-latest",
-    "usage_info": {...}
+  "success": true,
+  "message": "...",
+  "document_id": "...",
+  "quarantine_status": "approved/quarantined",
+  "is_compliant": true,
+  "compliance_issues": [],
+  "document": {
+    "title": "...",
+    "author": "...",
+    "uploader": "...",
+    "upload_date": "...",
+    "status": "WAITING",
+    "in_quarantine": false
   },
+  "preview": "...",
   "metadata": {
     "title": "...",
     "author": "...",
@@ -140,6 +154,11 @@ Les outils CLI permettent un traitement en lot et une automatisation des tâches
     "details": "..."
   },
   "markdown": "...",
+  "ocr": {
+    "pages": [],
+    "model": "mistral-ocr-latest",
+    "usage_info": {}
+  },
   "processing_info": {
     "file_name": "...",
     "total_pages": 5,
@@ -151,14 +170,11 @@ Les outils CLI permettent un traitement en lot et une automatisation des tâches
 ## 7. Points d'amélioration identifiés
 
 ### 7.1 Architecture
-- **Domain layer** : Actuellement vide, à développer pour la logique métier
-- **Infrastructure layer** : À implémenter pour la persistance et les services externes
-- **Tests** : Aucun test identifié dans le code actuel
+- **Tests** : Augmenter la couverture des tests (dossier `tests/` déjà présent)
+- **Découplage** : Poursuivre la migration du "legacy" vers les services modulaires
 
 ### 7.2 Fonctionnalités
-- **Base de données** : Pas de persistance actuellement
-- **Authentification** : Non implémentée
-- **Gestion des utilisateurs** : À développer
+- **Base de données** : Persistance partielle (Redis), migration vers SQL envisagée
 - **Cache** : Pas de mise en cache des résultats OCR
 
 ### 7.3 Performance
@@ -195,12 +211,15 @@ Les outils CLI permettent un traitement en lot et une automatisation des tâches
 ### 10.1 Phase 1 (Actuelle)
 - ✅ OCR et traitement de base
 - ✅ Analyse de contenu par IA
-- ✅ API REST fonctionnelle
+- ✅ API REST modulaire et fonctionnelle
+- ✅ Persistance des données (Redis)
+- ✅ Système d'authentification
+- ✅ Interface utilisateur de base (React)
 
 ### 10.2 Phase 2 (À venir)
-- 🔄 Persistance des données
-- 🔄 Interface utilisateur complète
-- 🔄 Système d'authentification
+- 🔄 Interface utilisateur complète et responsive
+- 🔄 Gestion avancée des rôles (Moderator/Admin)
+- 🔄 Amélioration de la persistance (SQL)
 
 ### 10.3 Phase 3 (Future)
 - 📋 Traitement en lot
