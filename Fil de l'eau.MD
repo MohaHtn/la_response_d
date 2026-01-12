@@ -122,7 +122,7 @@ des pages pour les admins, réalisation des tests unitaires.
 On a décidé de laisser tomber le chiffrement pour le MVP, car 
 trop chronophage pour le moment.
 
-# Session 12 : 12 décembre 2025
+# Session 12 : 12 Décembre 2025
 J'ai tenté de faire de la CI/CD, déployant la stack complète sur un serveur distant
 via Github Actions et Docker, mais ayant trop peu d'expérience avec les différents dockerfiles,
 j'ai laissé tombé, car les fichiers qui allaient dans les deux conteneurs (back et front) ne sont pas
@@ -141,4 +141,12 @@ Finalisation des tests unitaires, correction de bugs, et rédaction de la docume
 et utilisateur.
 
 Ajout d'une preview du document en image générée par le back lors de l'upload du document,
-pour plus de lisibilité côté UX.
+pour plus de lisibilité côté UX. L'image est extrait à partir du markdown généré, et le PNG
+est encodé en base64.
+
+# Session 15 : 02 Janvier 2026 (dur dur la reprise...)
+Ajout de la page qui permet à 3 admins de valider un document.
+Il faut impérativement 3 admins pour valider un document.
+
+Le dernier admin qui valide fait passer le document en statut "OK",
+et le rend public.
