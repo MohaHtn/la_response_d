@@ -104,6 +104,7 @@ qui contiendra :
 
 # Session 9 : 17 Novembre 2025
 Présentation des modèles de conception aux autres !
+Ajout de la visualisation par grille ou liste des documents dans le front.
 
 # Session 10 : 01 Décembre 2025
 Beaucoup de choses : intégration de la base "quarantaine", ajout 

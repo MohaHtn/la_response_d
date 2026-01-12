@@ -194,28 +194,6 @@ client/
 - `lint`: `eslint .` - Vérification du code
 - `preview`: `vite preview` - Prévisualisation du build
 
-## Points d'Amélioration Identifiés
-
-### 1. Architecture
-- **Séparation des responsabilités** : Le composant Upload.jsx est très volumineux (600+ lignes)
-- **Modularisation** : Diviser en composants plus petits et réutilisables
-- **Gestion d'état** : Considérer l'utilisation de Context API ou Redux pour un état global
-
-### 2. Performance
-- **Memoïsation** : Utiliser React.memo pour les composants lourds
-- **Lazy loading** : Chargement différé des images et du contenu Markdown
-- **Optimisation des re-rendus** : Utiliser useCallback et useMemo
-
-### 3. Qualité du Code
-- **TypeScript** : Migration vers TypeScript pour une meilleure sûreté de type
-- **Tests** : Ajout de tests unitaires et d'intégration
-- **Documentation** : JSDoc pour les fonctions complexes
-
-### 4. UX/UI
-- **Responsive design** : Amélioration pour les appareils mobiles
-- **Accessibilité** : Conformité WCAG
-- **Gestion d'erreurs** : Messages d'erreur plus informatifs
-
 ## Recommandations pour l'Évolution
 
 1. **Refactoring architectural** : Diviser Upload.jsx en composants métier distincts
