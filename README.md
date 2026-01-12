@@ -85,4 +85,4 @@ Pour plus de détails, consultez les guides suivants :
 
 ## 📄 Licence
 
-Ce projet est sous licence [LICENSE](LICENSE).
+Ce projet est sous licence [AGPL](LICENSE).
