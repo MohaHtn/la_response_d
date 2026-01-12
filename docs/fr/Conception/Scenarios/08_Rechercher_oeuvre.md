@@ -31,3 +31,19 @@ Un membre utilise les fonctionnalités de recherche avancée pour trouver une œ
 
 ## Résultat attendu
 Le membre obtient une liste d'œuvres correspondant à ses critères et peut accéder aux œuvres autorisées.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> FonctionRecherche : Accède à la recherche
+    FonctionRecherche --> CriteresSaisis : Saisit titre, auteur, etc.
+    CriteresSaisis --> FiltresAppliques : Applique des filtres
+    FiltresAppliques --> InterrogationIndex : Système cherche dans l'index
+    InterrogationIndex --> ApplicationDroits : Vérifie droits d'accès
+    ApplicationDroits --> AffichageResultats : Affiche la liste triée
+    AffichageResultats --> AffinageRecherche : Modifie critères
+    AffichageResultats --> ConsultationDetails : Sélectionne une œuvre
+    AffinageRecherche --> InterrogationIndex
+    ConsultationDetails --> EnregistrementHistorique : Recherche mémorisée
+    EnregistrementHistorique --> [*]
+```

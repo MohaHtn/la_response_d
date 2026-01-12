@@ -31,3 +31,20 @@ Un utilisateur s'inscrit à la bibliothèque numérique via l'application web po
 
 ## Résultat attendu
 L'utilisateur devient membre de la bibliothèque avec un compte actif et peut accéder aux fonctionnalités de base via l'application web.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> PageInscription : Accède à l'inscription
+    PageInscription --> InformationsSaisies : Saisit infos (nom, email, mdp)
+    InformationsSaisies --> Verification : Valide le formulaire
+    state Verification {
+        [*] --> VerifUniciteNom
+        VerifUniciteNom --> VerifUniciteEmail
+        VerifUniciteEmail --> VerifFormatEmail
+    }
+    Verification --> CompteCree : Succès
+    CompteCree --> EmailConfirmationEnvoye : Envoi email
+    EmailConfirmationEnvoye --> CompteActive : Clic sur lien (email)
+    CompteActive --> [*] : Membre actif
+```

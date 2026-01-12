@@ -27,3 +27,19 @@ Le processus de reconnaissance de texte échoue lors du traitement d'une œuvre 
 
 ## Résultat attendu
 L'échec OCR est géré gracieusement.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> LancementOCR : Système lance OCR
+    LancementOCR --> EnvoiAPI : Envoie à l'IA
+    EnvoiAPI --> ErreurDetectee : L'API retourne une erreur
+    state ErreurDetectee {
+        [*] --> QuotaDepasse
+        [*] --> ServiceIndisponible
+        [*] --> FichierNonSupporte
+    }
+    ErreurDetectee --> GestionEchec : Système détecte l'échec
+    GestionEchec --> UtilisateurNotifie : Affiche message d'erreur
+    UtilisateurNotifie --> [*]
+```

@@ -33,3 +33,26 @@ Un bibliothécaire examine une œuvre proposée par un membre, vérifie sa confo
 
 ## Résultat attendu
 L'œuvre est soit validée et disponible aux membres, soit rejetée avec justification.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> ListeModeration : Accède à la liste
+    ListeModeration --> ExamenOeuvre : Sélectionne une œuvre
+    ExamenOeuvre --> ConsultationContenu : Affiche métadonnées et PDF
+    ConsultationContenu --> VerificationDroits : Vérifie droits (aide IA)
+    VerificationDroits --> EnrichissementMetadonnees : Saisit ISBN, mots-clés
+    EnrichissementMetadonnees --> PriseDecision : Décide du sort
+    state PriseDecision {
+        [*] --> Choix
+        Choix --> Valider : Conforme
+        Choix --> Rejeter : Non conforme
+        Choix --> DemanderModifs : Corrections nécessaires
+    }
+    Valider --> OeuvreDisponible : Déplace répertoire
+    Rejeter --> MembreNotifie : Notification rejet
+    DemanderModifs --> MembreNotifie : Notification demande
+    OeuvreDisponible --> StatutMisAJour
+    MembreNotifie --> StatutMisAJour
+    StatutMisAJour --> [*]
+```

@@ -32,3 +32,23 @@ Un membre numérise une œuvre physique au format PDF et la propose pour partage
 
 ## Résultat attendu
 L'œuvre est stockée dans le répertoire de modération et en attente de validation par un bibliothécaire.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> SectionProposer : Accède à "Proposer une œuvre"
+    SectionProposer --> FichierSelectionne : Sélectionne PDF
+    FichierSelectionne --> MetadonneesSaisies : Saisit titre, auteur, droits
+    MetadonneesSaisies --> VerificationSysteme : Valide la proposition
+    state VerificationSysteme {
+        [*] --> VerifFormatTaille
+        VerifFormatTaille --> GenererID
+        GenererID --> AnalyseIA
+    }
+    AnalyseIA --> EnAttenteModeration : Anomalie détectée
+    AnalyseIA --> EnregistreBDD : Aucune anomalie
+    EnregistreBDD --> EnAttenteModeration : Enregistrement OK
+    EnAttenteModeration --> MembreNotifie : Notification membre
+    MembreNotifie --> BibliothecaireNotifie : Notification bibliothécaire
+    BibliothecaireNotifie --> [*]
+```

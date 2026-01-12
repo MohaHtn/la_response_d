@@ -23,3 +23,17 @@ Un utilisateur accède à la bibliothèque numérique décentralisée via son na
 
 ## Résultat attendu
 L'utilisateur accède à l'application web et peut utiliser ses fonctionnalités si il se connecte
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> NavigateurOuvert : Ouvre navigateur
+    NavigateurOuvert --> URLSaisie : Saisit URL
+    URLSaisie --> ReponseServeur : Envoie requête
+    ReponseServeur --> PageAccueil : Affiche accueil
+    PageAccueil --> [*] : Quitter
+    PageAccueil --> Inscription : S'inscrire
+    PageAccueil --> Connexion : Se connecter
+    Connexion --> FonctionnalitesAccessibles : Authentifié
+    FonctionnalitesAccessibles --> [*]
+```

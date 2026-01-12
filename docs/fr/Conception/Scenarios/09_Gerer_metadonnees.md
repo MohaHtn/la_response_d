@@ -39,3 +39,19 @@ que le bibliothécaire peut valider ou corriger pour améliorer la découvrabili
 
 ## Résultat attendu
 Les métadonnées de l'œuvre sont enrichies grâce à l'IA et à la validation humaine, ce qui améliore la découvrabilité dans la bibliothèque.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> FicheOeuvre : Accède à la fiche
+    FicheOeuvre --> ModeEdition : Clique sur "Modifier"
+    ModeEdition --> AnalyseIA : L'IA analyse le fichier
+    AnalyseIA --> SuggestionsAffichees : Propose titre, auteur, etc.
+    SuggestionsAffichees --> ValidationHumaine : Valide/Corrige suggestions
+    ValidationHumaine --> EnrichissementManuel : Ajoute catégories, dates, langue
+    EnrichissementManuel --> VerificationFormat : Système valide (ISBN, dates)
+    VerificationFormat --> Sauvegarde : Enregistre les modifications
+    Sauvegarde --> MiseAJourIndex : Actualise la recherche
+    MiseAJourIndex --> HistoriqueEnregistre : Archive les changements
+    HistoriqueEnregistre --> [*]
+```

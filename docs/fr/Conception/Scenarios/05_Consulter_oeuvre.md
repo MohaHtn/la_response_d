@@ -25,3 +25,14 @@ Un membre consulte une œuvre numérique.
 
 ## Résultat attendu
 Le membre peut consulter le document.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> RechercheOeuvre : Cherche une œuvre
+    RechercheOeuvre --> SelectionLivre : Sélectionne le livre
+    SelectionLivre --> IncrementationCompteur : Incrémente consultation
+    IncrementationCompteur --> Telechargement : Propose consultation
+    Telechargement --> ConsultationEnCours : Accède à l'œuvre
+    ConsultationEnCours --> [*]
+```

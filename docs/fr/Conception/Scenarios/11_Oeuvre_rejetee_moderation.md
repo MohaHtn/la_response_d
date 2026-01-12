@@ -35,3 +35,22 @@ Un bibliothécaire rejette une œuvre proposée par un membre lors du processus 
 
 ## Résultat attendu
 L'œuvre non conforme est rejetée avec justification claire et le membre est informé des possibilités de recours.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> ExamenOeuvre : Bibliothécaire examine
+    ExamenOeuvre --> ProblemeIdentifie : Identifie violation/droits
+    ProblemeIdentifie --> SuppressionLivre : Sélectionne "Supprimer"
+    SuppressionLivre --> DemandeMotif : Système demande motif
+    DemandeMotif --> MotifSelectionne : Choisit motif + commentaires
+    MotifSelectionne --> ActionSysteme : Valide le rejet
+    state ActionSysteme {
+        [*] --> SuppressionRepertoire
+        SuppressionRepertoire --> ArchivageMetadonnees
+        ArchivageMetadonnees --> EnvoiNotification
+        EnvoiNotification --> MajStatistiques
+    }
+    ActionSysteme --> MembreInforme : Reçoit l'email
+    MembreInforme --> [*]
+```

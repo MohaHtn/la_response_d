@@ -32,3 +32,17 @@ Un membre exporte une œuvre dont le texte a été reconnu par OCR vers un fichi
 
 ## Résultat attendu
 Le membre obtient un fichier Markdown structuré et lisible de l'œuvre avec préservation de la mise en page originale.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> ConsultationOeuvre : Consulte l'œuvre
+    ConsultationOeuvre --> VerificationDroits : Système vérifie accès
+    VerificationDroits --> RecuperationTexteOCR : Récupère texte structuré
+    RecuperationTexteOCR --> FormatageMarkdown : Applique le formatage
+    FormatageMarkdown --> GenerationEnTete : Ajoute métadonnées
+    GenerationEnTete --> TelechargementPropose : Propose le fichier .md
+    TelechargementPropose --> FichierTelecharge : Le membre télécharge
+    FichierTelecharge --> HistoriqueEnregistre : Enregistre l'export
+    HistoriqueEnregistre --> [*]
+```

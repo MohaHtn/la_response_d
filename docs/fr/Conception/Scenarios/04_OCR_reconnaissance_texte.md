@@ -30,3 +30,17 @@ Le système utilise l'intelligence artificielle pour extraire et reconnaître le
 
 ## Résultat attendu
 L'œuvre dispose d'une version texte searchable et exportable en Markdown avec préservation de la mise en page.
+
+## Diagramme de transitions
+```mermaid
+stateDiagram-v2
+    [*] --> DetectionFichier : Nouveau PDF détecté
+    DetectionFichier --> EnvoiIA : Envoie à l'API IA
+    EnvoiIA --> AnalyseIA : L'IA analyse le contenu
+    AnalyseIA --> ExtractionMiseEnPage : Identifie titres, paragraphes, etc.
+    ExtractionMiseEnPage --> AgregationResultats : Fusionne les pages
+    AgregationResultats --> StructurationMarkdown : Formatage Markdown
+    StructurationMarkdown --> SauvegardeBDD : Enregistre le texte
+    SauvegardeBDD --> StatutMisAJour : OCR effectué
+    StatutMisAJour --> [*]
+```
